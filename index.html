@@ -1037,17 +1037,21 @@ function calcNutr(px) {
   const gN2       = totProt / 6.25;
   const kcalProt  = totProt * 4;
   const kcalProp  = prop * 1.1;
-  const kcalCit   = S[px].citrate ? 500 : 0;
-  const npKcal    = totKcal - kcalProt - kcalProp - kcalCit;
+  const kcalCit   = S[px].citrate ? 300 : 0;
+  const kcalTarget= Math.max(0, totKcal - kcalProp - kcalCit);
+  const npBase    = Math.max(0, kcalTarget - kcalProt);
+  const hcDiscount= S[px].citrate ? Math.min(300, npBase * (hcPct / 100)) : 0;
+  const npKcal    = Math.max(0, npBase - hcDiscount);
   const ratio     = gN2 > 0 ? npKcal / gN2 : 0;
-  const kcalHC    = npKcal * (hcPct / 100);
-  const kcalLip   = npKcal * (lipPct / 100);
+  const kcalHCBase= npBase * (hcPct / 100);
+  const kcalLip   = npBase * (lipPct / 100);
+  const kcalHC    = Math.max(0, kcalHCBase - hcDiscount);
   const gHC       = kcalHC / 4;
   const gLip      = kcalLip / 9;
 
   return { ...p, kcalKg, protKg, prop, hcPct, lipPct,
            totKcal, totProt, gN2, kcalProt, kcalProp, kcalCit,
-           npKcal, ratio, kcalHC, kcalLip, gHC, gLip };
+           kcalTarget, npKcal, ratio, kcalHC, kcalLip, gHC, gLip };
 }
 
 /* ── Enteral ── */
@@ -1138,7 +1142,7 @@ function calcEnteral() {
     <div class="ri"><span class="rl">🟡 Lípidos (${r.lipPct}%)</span><span class="rv">${f1(r.gLip)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalLip)} kcal)</span></span></div>
     <div class="ri"><span class="rl">🟢 Proteínas</span><span class="rv">${f1(r.totProt)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalProt)} kcal)</span></span></div>
     ${r.prop>0?`<div class="ri"><span class="rl">⚗️ Propofol (${fi(r.prop)} ml/día)</span><span class="rv">${f1(r.kcalProp)}<span class="ru">kcal</span></span></div>`:''}
-    ${S.e.citrate?`<div class="ri"><span class="rl">🧪 Citrato</span><span class="rv">≈${fi(r.kcalCit)}<span class="ru">kcal</span></span></div>`:''}
+    ${S.e.citrate?`<div class="ri"><span class="rl">🧪 Citrato</span><span class="rv">≈${fi(r.kcalCit)}<span class="ru">kcal</span> <span style="color:var(--dim);font-size:.73rem">(−75 g HC)</span></span></div>`:''}
     <div class="ri" style="border-top:1px solid var(--border);padding-top:.65rem;margin-top:.15rem">
       <span class="rl" style="font-weight:700;color:var(--text)">Total Kcal/día</span>
       <span class="rv" style="font-size:1.05rem;color:#60a5fa">${fi(r.totKcal)}<span class="ru">kcal</span></span>
@@ -1153,7 +1157,7 @@ function calcEnteral() {
   S.e.selFormulaIdx = selIndex;
   if (FORMULAS.length > 0) {
     const f = FORMULAS[selIndex];
-    const vol24  = r.totKcal / f.kcal;
+    const vol24  = r.kcalTarget / f.kcal;
     const gN2_24 = (f.n2 / 100) * vol24;
     const dev    = r.gN2 - gN2_24;
     const renapro= dev / N2_RENAPRO;
@@ -1222,7 +1226,7 @@ function calcParenteral() {
       </div>
     </div>
     ${r.prop>0?`<div class="alert alert-warn" style="margin-top:.9rem">⚠️ Propofol ${fi(r.prop)} ml/día aporta ${f1(r.kcalProp)} kcal adicionales (ya descontadas del objetivo)</div>`:''}
-    ${S.p.citrate?`<div class="alert alert-info" style="margin-top:.9rem">ℹ️ Citrato activo — aporta kcal adicionales (≈500 kcal aprox., ya descontadas)</div>`:''}`;
+    ${S.p.citrate?`<div class="alert alert-info" style="margin-top:.9rem">ℹ️ Citrato activo — descuenta ≈300 kcal (−75 g HC) del objetivo nutricional</div>`:''}`;
 }
 
 /* ── Formula Table ── */
@@ -1241,7 +1245,7 @@ function renderTable(r) {
 
   $('ftbody').innerHTML = rows.map(f => {
     const idx = FORMULAS.indexOf(f);
-    const vol24  = r.totKcal / f.kcal;
+    const vol24  = r.kcalTarget / f.kcal;
     const gN2_24 = (f.n2 / 100) * vol24;
     const dev    = r.gN2 - gN2_24;      // positive = deficit, negative = excess
     const renapro= dev / N2_RENAPRO;
@@ -1381,9 +1385,11 @@ function selW(px, mode) {
 
 /* ── Citrate toggle ── */
 function setCit(px, val) {
-  S[px].citrate = val;
-  $(px+'-cit-no') .classList.toggle('active', !val);
-  $(px+'-cit-yes').classList.toggle('active',  val);
+  if (px !== 'e' && px !== 'p') return;
+  const isOn = val === true || val === 'true' || val === 1 || val === '1';
+  S[px].citrate = isOn;
+  $(px+'-cit-no') .classList.toggle('active', !isOn);
+  $(px+'-cit-yes').classList.toggle('active',  isOn);
   px==='e' ? calcEnteral() : calcParenteral();
 }
 
