@@ -289,6 +289,7 @@
     }
     .qb:hover { background: rgba(59,130,246,.18); }
     .qb-row { display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.4rem; }
+    .obj-gap { height: 1.85rem; margin-top: .4rem; }
 
     /* ===== ALERTS ===== */
     .alert {
@@ -385,6 +386,68 @@
     .cat-i::before { content:'›'; color:var(--dim); font-size:.95rem; }
     .cat-i.hl { color:#60a5fa; }
 
+    /* ===== FORMULA MANAGER ===== */
+    .fm-wrap {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: .7rem;
+    }
+    .fm-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .7rem;
+      flex-wrap: wrap;
+    }
+    .fm-count {
+      font-size: .73rem;
+      color: var(--muted);
+    }
+    .fm-row {
+      display: flex;
+      gap: .55rem;
+      flex-wrap: wrap;
+    }
+    .fm-btn {
+      border: 1px solid var(--border);
+      background: rgba(59,130,246,.1);
+      color: #93c5fd;
+      border-radius: 8px;
+      padding: .45rem .75rem;
+      font-size: .73rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .fm-btn.warn {
+      background: rgba(245,158,11,.1);
+      color: #fbbf24;
+      border-color: rgba(245,158,11,.3);
+    }
+    .fm-btn.ok {
+      background: rgba(16,185,129,.12);
+      color: #34d399;
+      border-color: rgba(16,185,129,.3);
+    }
+    .fm-btn:hover { opacity: .9; }
+    .fm-json {
+      width: 100%;
+      min-height: 230px;
+      resize: vertical;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0f172a;
+      color: var(--text);
+      padding: .8rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .72rem;
+      line-height: 1.4;
+    }
+    .fm-msg {
+      min-height: 1.1rem;
+      font-size: .73rem;
+      color: var(--muted);
+    }
+
     /* ===== SECTION TITLE ===== */
     .sec-t {
       font-size:1rem; font-weight:700; color:var(--text);
@@ -417,11 +480,19 @@
     .npt-green  { background:rgba(16,185,129,.08);  } .npt-green  .nv { color:#34d399; }
     .npt-amber  { background:rgba(245,158,11,.08);  } .npt-amber  .nv { color:#fbbf24; }
 
-    .tr-sel { background: rgba(59,130,246,.12) !important; }
-    .tr-rec { background: rgba(16,185,129,.13) !important; }
+    .tr-sel { background: rgba(59,130,246,.14) !important; }
+    .tr-rec {
+      background: rgba(16,185,129,.24) !important;
+      box-shadow: inset 0 0 0 1px rgba(16,185,129,.35);
+    }
+    .tr-nrec {
+      opacity: .45;
+      filter: saturate(.7);
+    }
     tr.tr-sel td:first-child { border-left: 4px solid var(--primary) !important; }
     tr.tr-rec td:first-child { border-left: 4px solid var(--accent) !important; }
-    tr.tr-rec:hover { background: rgba(16,185,129,.18) !important; }
+    tr.tr-rec:hover { background: rgba(16,185,129,.3) !important; }
+    tr.tr-nrec:hover { opacity: .62; }
 
     /* ===== NUTRIC SCORE BUTTON ===== */
     .btn-nutric {
@@ -452,11 +523,14 @@
       width: 100%; max-width: 540px;
       max-height: 92vh; overflow-y: auto;
       box-shadow: 0 20px 60px rgba(0,0,0,.6);
+      text-align: center;
     }
     .nutric-modal-head {
       display: flex; align-items: center; justify-content: space-between;
       padding: 1.1rem 1.4rem .9rem;
       border-bottom: 1px solid var(--border-dim);
+      position: relative;
+      justify-content: center;
     }
     .nutric-modal-title {
       font-size: 1rem; font-weight: 800; color: var(--text);
@@ -475,6 +549,10 @@
       width: 30px; height: 30px; font-size: 1.1rem;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: background .15s;
+      position: absolute;
+      right: 1.1rem;
+      top: 50%;
+      transform: translateY(-50%);
     }
     .nutric-close:hover { background: rgba(255,255,255,.14); color: var(--text); }
     .nutric-body { padding: 1.1rem 1.4rem 1.4rem; }
@@ -482,9 +560,11 @@
     .nutric-param-label {
       font-size: .78rem; font-weight: 700; color: var(--muted);
       text-transform: uppercase; letter-spacing: .055em; margin-bottom: .45rem;
+      text-align: center;
     }
     .nutric-opts {
       display: flex; flex-wrap: wrap; gap: .45rem;
+      justify-content: center;
     }
     .nutric-opts label {
       display: flex; align-items: center; gap: .35rem;
@@ -529,11 +609,13 @@
     .nutric-result.high .nutric-result-score { color: #f87171; }
     .nutric-result-risk {
       font-size: .85rem; font-weight: 700; margin-top: .25rem;
+      text-align: center;
     }
     .nutric-result.low  .nutric-result-risk { color: #34d399; }
     .nutric-result.high .nutric-result-risk { color: #f87171; }
     .nutric-result-detail {
       font-size: .78rem; color: var(--muted); margin-top: .3rem;
+      text-align: center;
     }
     .nutric-alert-precoz {
       margin-top: .75rem; padding: .65rem .9rem;
@@ -542,6 +624,17 @@
       border-radius: 9px;
       font-size: .82rem; font-weight: 700; color: #f87171;
       text-align: center; letter-spacing: .02em;
+    }
+
+    /* ===== FOOTER ===== */
+    .app-footer {
+      margin: 1rem auto 2rem;
+      max-width: 1450px;
+      padding: .75rem 2rem;
+      text-align: center;
+      font-size: .72rem;
+      color: var(--dim);
+      border-top: 1px solid var(--border-dim);
     }
 
     /* ===== PRINT ===== */
@@ -624,24 +717,15 @@
           <div class="fg">
             <label class="fl" for="e-kcalkg">Kcal / kg / día</label>
             <div class="fi-wrap"><input class="fi" type="number" id="e-kcalkg" value="25" min="10" max="40" step="1" oninput="calcEnteral()"><span class="fi-unit">kcal/kg</span></div>
-            <div class="qb-row">
-              <button class="qb" onclick="sv('e-kcalkg',15);calcEnteral()">15</button>
-              <button class="qb" onclick="sv('e-kcalkg',20);calcEnteral()">20</button>
-              <button class="qb" onclick="sv('e-kcalkg',25);calcEnteral()">25</button>
-              <button class="qb" onclick="sv('e-kcalkg',30);calcEnteral()">30</button>
-            </div>
+            <div class="obj-gap" aria-hidden="true"></div>
           </div>
           <div class="fg">
             <label class="fl" for="e-protkg">Proteínas g / kg / día</label>
             <div class="fi-wrap"><input class="fi" type="number" id="e-protkg" value="1.2" min="0.5" max="2.5" step="0.1" oninput="calcEnteral()"><span class="fi-unit">g/kg</span></div>
-            <div class="qb-row">
-              <button class="qb" onclick="sv('e-protkg',1.2);calcEnteral()">1.2</button>
-              <button class="qb" onclick="sv('e-protkg',1.5);calcEnteral()">1.5</button>
-              <button class="qb" onclick="sv('e-protkg',2.0);calcEnteral()">2.0</button>
-            </div>
+            <div class="obj-gap" aria-hidden="true"></div>
           </div>
         </div>
-        <div class="g2">
+        <div class="g2" style="grid-template-columns:1fr 1fr 1fr">
           <div class="fg">
             <label class="fl" for="e-propofol">Propofol (ml / día)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="e-propofol" value="0" min="0" max="500" step="10" oninput="calcEnteral()"><span class="fi-unit">ml/d</span></div>
@@ -653,13 +737,20 @@
               <button class="tgl"        id="e-cit-yes" onclick="setCit('e',true)">Sí</button>
             </div>
           </div>
+          <div class="fg">
+            <label class="fl">Yeyunostomía / SNY</label>
+            <div class="tgl-g" style="margin-top:.1rem">
+              <button class="tgl active" id="e-yey-no"  onclick="setYeyuno(false)">No</button>
+              <button class="tgl"        id="e-yey-yes" onclick="setYeyuno(true)">Sí</button>
+            </div>
+          </div>
         </div>
         <div class="fg">
-          <label class="fl">Relación HC : Lípidos</label>
+          <label class="fl">Relación Lípidos : HC</label>
           <div style="display:flex;align-items:center;gap:.9rem">
-            <span style="font-size:.8rem;color:var(--muted);white-space:nowrap">HC&nbsp;<span id="e-hcp" style="color:var(--secondary);font-weight:700">60</span>%</span>
-            <input type="range" id="e-hcs" min="40" max="70" value="60" oninput="updHC('e');calcEnteral()">
             <span style="font-size:.8rem;color:var(--muted);white-space:nowrap"><span id="e-lipp" style="color:var(--accent);font-weight:700">40</span>%&nbsp;Lípidos</span>
+            <input type="range" id="e-hcs" min="40" max="70" value="60" oninput="updHC('e');calcEnteral()">
+            <span style="font-size:.8rem;color:var(--muted);white-space:nowrap">HC&nbsp;<span id="e-hcp" style="color:var(--secondary);font-weight:700">60</span>%</span>
           </div>
         </div>
       </div>
@@ -805,20 +896,12 @@
           <div class="fg">
             <label class="fl" for="p-kcalkg">Kcal / kg / día</label>
             <div class="fi-wrap"><input class="fi" type="number" id="p-kcalkg" value="30" min="10" max="40" step="1" oninput="calcParenteral()"><span class="fi-unit">kcal/kg</span></div>
-            <div class="qb-row">
-              <button class="qb" onclick="sv('p-kcalkg',20);calcParenteral()">20</button>
-              <button class="qb" onclick="sv('p-kcalkg',25);calcParenteral()">25</button>
-              <button class="qb" onclick="sv('p-kcalkg',30);calcParenteral()">30</button>
-            </div>
+            <div class="obj-gap" aria-hidden="true"></div>
           </div>
           <div class="fg">
             <label class="fl" for="p-protkg">Proteínas g / kg / día</label>
             <div class="fi-wrap"><input class="fi" type="number" id="p-protkg" value="1.4" min="0.5" max="2.5" step="0.1" oninput="calcParenteral()"><span class="fi-unit">g/kg</span></div>
-            <div class="qb-row">
-              <button class="qb" onclick="sv('p-protkg',1.2);calcParenteral()">1.2</button>
-              <button class="qb" onclick="sv('p-protkg',1.5);calcParenteral()">1.5</button>
-              <button class="qb" onclick="sv('p-protkg',2.0);calcParenteral()">2.0</button>
-            </div>
+            <div class="obj-gap" aria-hidden="true"></div>
           </div>
         </div>
         <div class="g2">
@@ -835,24 +918,17 @@
           </div>
         </div>
         <div class="fg">
-          <label class="fl">Relación HC : Lípidos</label>
+          <label class="fl">Relación Lípidos : HC</label>
           <div style="display:flex;align-items:center;gap:.9rem">
-            <span style="font-size:.8rem;color:var(--muted);white-space:nowrap">HC&nbsp;<span id="p-hcp" style="color:var(--secondary);font-weight:700">55</span>%</span>
-            <input type="range" id="p-hcs" min="40" max="70" value="55" oninput="updHC('p');calcParenteral()">
             <span style="font-size:.8rem;color:var(--muted);white-space:nowrap"><span id="p-lipp" style="color:var(--accent);font-weight:700">45</span>%&nbsp;Lípidos</span>
+            <input type="range" id="p-hcs" min="40" max="70" value="55" oninput="updHC('p');calcParenteral()">
+            <span style="font-size:.8rem;color:var(--muted);white-space:nowrap">HC&nbsp;<span id="p-hcp" style="color:var(--secondary);font-weight:700">55</span>%</span>
           </div>
         </div>
       </div>
     </div>
 
     <div>
-      <div class="card">
-        <div class="card-head">
-          <div class="c-icon amber">📊</div>
-          <div><div class="c-title">Resumen NPT</div></div>
-        </div>
-        <div class="sg" id="p-stats"></div>
-      </div>
       <div class="card">
         <div class="card-head">
           <div class="c-icon cyan">⚗️</div>
@@ -971,6 +1047,43 @@
      TAB 5: CATÁLOGO FÓRMULAS
 ══════════════════════════════════════════════════ -->
 <div class="tab-panel" id="panel-catalogo">
+  <div class="card" style="margin-bottom:1rem">
+    <div class="card-head">
+      <div class="c-icon blue">🛠️</div>
+      <div><div class="c-title">Gestión de fórmulas</div><div class="c-sub">Protegido con contraseña</div></div>
+    </div>
+    <div id="fm-lock" class="fm-wrap">
+      <div class="alert alert-info" style="margin-bottom:0">
+        🔒 Área protegida. Introduce contraseña para gestionar fórmulas enterales.
+      </div>
+      <div class="fm-row" style="align-items:center">
+        <input class="fi" type="password" id="fm-pass" placeholder="Contraseña" style="max-width:220px">
+        <button class="fm-btn" onclick="unlockFormulaManager()">Desbloquear</button>
+      </div>
+      <div id="fm-lock-msg" class="fm-msg"></div>
+    </div>
+
+    <div id="fm-protected" class="fm-wrap" style="display:none">
+      <div class="fm-head">
+        <div class="fm-count" id="fm-count">Fórmulas activas: 0</div>
+        <div style="font-size:.7rem;color:var(--dim)">Formato: arreglo JSON de objetos de fórmula</div>
+      </div>
+      <div class="fm-row">
+        <button class="fm-btn" onclick="loadFormulasIntoEditor()">Cargar JSON actual</button>
+        <button class="fm-btn ok" onclick="saveFormulasFromEditor()">Guardar cambios</button>
+        <button class="fm-btn" onclick="importFormulasFile()">Importar .json</button>
+        <button class="fm-btn" onclick="exportFormulasFile()">Exportar .json</button>
+        <button class="fm-btn warn" onclick="resetFormulasToDefault()">Restaurar fórmulas base</button>
+      </div>
+      <textarea id="fm-json" class="fm-json" spellcheck="false" aria-label="Editor JSON de fórmulas"></textarea>
+      <input type="file" id="fm-file" accept="application/json,.json" style="display:none" onchange="handleImportFormulasFile(event)">
+      <div id="fm-msg" class="fm-msg"></div>
+      <div class="fm-row">
+        <button class="fm-btn warn" onclick="lockFormulaManager()">Bloquear gestión</button>
+      </div>
+    </div>
+  </div>
+
   <div class="card" style="margin-bottom:1.4rem">
     <div class="card-head">
       <div class="c-icon violet">📚</div>
@@ -1082,9 +1195,9 @@
       <div class="nutric-param">
         <div class="nutric-param-label">Edad (años)</div>
         <div class="nutric-opts">
-          <label><input type="radio" name="ns-age" value="0"><span>0 pts — &lt;50</span></label>
-          <label><input type="radio" name="ns-age" value="1"><span>1 pt — 50–74</span></label>
-          <label><input type="radio" name="ns-age" value="2"><span>2 pts — ≥75</span></label>
+          <label><input type="radio" name="ns-age" value="0"><span>&lt;50</span></label>
+          <label><input type="radio" name="ns-age" value="1"><span>50–74</span></label>
+          <label><input type="radio" name="ns-age" value="2"><span>≥75</span></label>
         </div>
       </div>
 
@@ -1092,10 +1205,10 @@
       <div class="nutric-param">
         <div class="nutric-param-label">APACHE II</div>
         <div class="nutric-opts">
-          <label><input type="radio" name="ns-apache" value="0"><span>0 pts — &lt;15</span></label>
-          <label><input type="radio" name="ns-apache" value="1"><span>1 pt — 15–19</span></label>
-          <label><input type="radio" name="ns-apache" value="2"><span>2 pts — 20–27</span></label>
-          <label><input type="radio" name="ns-apache" value="3"><span>3 pts — ≥28</span></label>
+          <label><input type="radio" name="ns-apache" value="0"><span>&lt;15</span></label>
+          <label><input type="radio" name="ns-apache" value="1"><span>15–19</span></label>
+          <label><input type="radio" name="ns-apache" value="2"><span>20–27</span></label>
+          <label><input type="radio" name="ns-apache" value="3"><span>≥28</span></label>
         </div>
       </div>
 
@@ -1103,9 +1216,9 @@
       <div class="nutric-param">
         <div class="nutric-param-label">SOFA Score</div>
         <div class="nutric-opts">
-          <label><input type="radio" name="ns-sofa" value="0"><span>0 pts — &lt;6</span></label>
-          <label><input type="radio" name="ns-sofa" value="1"><span>1 pt — 6–9</span></label>
-          <label><input type="radio" name="ns-sofa" value="2"><span>2 pts — ≥10</span></label>
+          <label><input type="radio" name="ns-sofa" value="0"><span>&lt;6</span></label>
+          <label><input type="radio" name="ns-sofa" value="1"><span>6–9</span></label>
+          <label><input type="radio" name="ns-sofa" value="2"><span>≥10</span></label>
         </div>
       </div>
 
@@ -1113,8 +1226,8 @@
       <div class="nutric-param">
         <div class="nutric-param-label">Nº de comorbilidades</div>
         <div class="nutric-opts">
-          <label><input type="radio" name="ns-comor" value="0"><span>0 pts — 0–1</span></label>
-          <label><input type="radio" name="ns-comor" value="1"><span>1 pt — ≥2</span></label>
+          <label><input type="radio" name="ns-comor" value="0"><span>0–1</span></label>
+          <label><input type="radio" name="ns-comor" value="1"><span>≥2</span></label>
         </div>
       </div>
 
@@ -1122,17 +1235,17 @@
       <div class="nutric-param">
         <div class="nutric-param-label">Días hospitalización hasta UCI</div>
         <div class="nutric-opts">
-          <label><input type="radio" name="ns-days" value="0"><span>0 pts — 0</span></label>
-          <label><input type="radio" name="ns-days" value="1"><span>1 pt — ≥1</span></label>
+          <label><input type="radio" name="ns-days" value="0"><span>0</span></label>
+          <label><input type="radio" name="ns-days" value="1"><span>≥1</span></label>
         </div>
       </div>
 
       <!-- IL-6 -->
       <div class="nutric-param">
-        <div class="nutric-param-label">IL-6 (µg/mL)</div>
+        <div class="nutric-param-label">IL-6 (µg/mL) (opcional)</div>
         <div class="nutric-opts">
-          <label><input type="radio" name="ns-il6" value="0"><span>0 pts — 0–399</span></label>
-          <label><input type="radio" name="ns-il6" value="1"><span>1 pt — ≥400</span></label>
+          <label><input type="radio" name="ns-il6" value="0"><span>0–399</span></label>
+          <label><input type="radio" name="ns-il6" value="1"><span>≥400</span></label>
         </div>
       </div>
 
@@ -1155,11 +1268,10 @@
 </div>
 
 
-══════════════════════════════════════════════════ -->
 <script>
 /* ── Formula database (from Excel: FÓRMULA N. ENTERAL sheet) ──
    Values per 100 ml unless noted */
-const FORMULAS = [
+const DEFAULT_FORMULAS = [
   { name:'Peptamen AF Enteral',           kcal:1.50, n2:1.50, prot:9.4,  fiber:0,   osm:380, type:'ol', typeL:'Oligomérica', phase:'aguda',  sub:'Peptídica hiperprot./hipercal.' },
   { name:'Diaba HP',                      kcal:1.00, n2:0.91, prot:5.7,  fiber:1.8, osm:345, type:'es', typeL:'Específica',  phase:'ambas',  sub:'Diabetes hiperproteica' },
   { name:'Atempero',                      kcal:1.25, n2:1.15, prot:7.2,  fiber:1.7, osm:400, type:'cr', typeL:'Esp. Críticos',phase:'aguda',  sub:'Fase aguda — especial críticos' },
@@ -1178,11 +1290,14 @@ const FORMULAS = [
   { name:'Nutrison Multifibre',           kcal:1.03, n2:0.64, prot:4.0,  fiber:1.5, osm:250, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Normoproteica con fibra' },
 ];
 
+let FORMULAS = DEFAULT_FORMULAS.map(f => ({ ...f }));
+const FORMULAS_STORAGE_KEY = 'nutri_enteral_formulas_v1';
+
 const N2_RENAPRO = 3.1; // g N2 per RENAPRO unit
 
 /* ── State ── */
 const S = {
-  e: { wMode: null, citrate:false, userSel: false, selFormulaIdx: 0 },
+  e: { wMode: null, citrate:false, yeyuno:false, userSel: false, selFormulaIdx: 0 },
   p: { wMode: null, citrate:false, userSel: false },
   rCtrl: '12',
   fase: 'aguda',
@@ -1196,6 +1311,206 @@ const sv = (id,v) => $(id).value = v;
 const f1 = n => (isNaN(n)||!isFinite(n)) ? '—' : n.toFixed(1);
 const f2 = n => (isNaN(n)||!isFinite(n)) ? '—' : n.toFixed(2);
 const fi = n => (isNaN(n)||!isFinite(n)) ? '—' : Math.round(n).toString();
+const FORMULA_MANAGER_PASSWORD = 'Nutr1';
+
+function isFormulaManagerUnlocked() {
+  return $('fm-protected')?.style.display !== 'none';
+}
+
+function setFormulaLockMessage(msg, isError=false) {
+  const el = $('fm-lock-msg');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = isError ? '#fca5a5' : '#93c5fd';
+}
+
+function ensureFormulaManagerUnlocked() {
+  if (isFormulaManagerUnlocked()) return true;
+  setFormulaLockMessage('Debes desbloquear la gestión de fórmulas.', true);
+  return false;
+}
+
+function unlockFormulaManager() {
+  const input = $('fm-pass');
+  const pass = (input?.value || '').trim();
+
+  if (pass !== FORMULA_MANAGER_PASSWORD) {
+    setFormulaLockMessage('Contraseña incorrecta.', true);
+    return;
+  }
+
+  $('fm-lock').style.display = 'none';
+  $('fm-protected').style.display = 'grid';
+  if (input) input.value = '';
+  setFormulaLockMessage('');
+  loadFormulasIntoEditor();
+  setFormulaManagerMessage('Gestión desbloqueada.');
+}
+
+function lockFormulaManager() {
+  $('fm-protected').style.display = 'none';
+  $('fm-lock').style.display = 'grid';
+  setFormulaLockMessage('Gestión bloqueada.');
+}
+
+function sanitizeFormula(raw, idx) {
+  const obj = raw && typeof raw === 'object' ? raw : {};
+  const name = String(obj.name || `Fórmula ${idx + 1}`).trim();
+  const type = String(obj.type || 'po').trim().toLowerCase();
+  const phaseRaw = String(obj.phase || 'cronica').trim().toLowerCase();
+  const phase = ['aguda', 'cronica', 'ambas'].includes(phaseRaw) ? phaseRaw : 'cronica';
+
+  return {
+    name,
+    kcal: Number(obj.kcal) || 0,
+    n2: Number(obj.n2) || 0,
+    prot: Number(obj.prot) || 0,
+    fiber: Number(obj.fiber) || 0,
+    osm: Number(obj.osm) || 0,
+    type,
+    typeL: String(obj.typeL || 'Polimérica').trim(),
+    phase,
+    sub: String(obj.sub || '').trim(),
+  };
+}
+
+function saveFormulasStorage() {
+  localStorage.setItem(FORMULAS_STORAGE_KEY, JSON.stringify(FORMULAS));
+}
+
+function loadFormulasStorage() {
+  const raw = localStorage.getItem(FORMULAS_STORAGE_KEY);
+  if (!raw) return;
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return;
+    FORMULAS = parsed.map((f, idx) => sanitizeFormula(f, idx)).filter(f => f.name);
+  } catch (_) {
+    // Ignore malformed persisted data and keep defaults.
+  }
+}
+
+function setFormulaManagerMessage(msg, isError=false) {
+  const el = $('fm-msg');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = isError ? '#fca5a5' : '#93c5fd';
+}
+
+function updateFormulaManagerCount() {
+  const el = $('fm-count');
+  if (!el) return;
+  el.textContent = `Fórmulas activas: ${FORMULAS.length}`;
+}
+
+function loadFormulasIntoEditor() {
+  if (!ensureFormulaManagerUnlocked()) return;
+  const ta = $('fm-json');
+  if (!ta) return;
+  ta.value = JSON.stringify(FORMULAS, null, 2);
+  updateFormulaManagerCount();
+  setFormulaManagerMessage('Editor cargado con las fórmulas activas.');
+}
+
+function refreshAfterFormulaUpdate() {
+  S.e.selFormulaIdx = 0;
+  calcEnteral();
+  updateFormulaManagerCount();
+}
+
+function applyFormulaArray(parsed) {
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    setFormulaManagerMessage('Debe ser un array JSON con al menos una fórmula.', true);
+    return false;
+  }
+
+  const clean = parsed.map((f, idx) => sanitizeFormula(f, idx)).filter(f => f.name);
+  if (clean.length === 0) {
+    setFormulaManagerMessage('No hay fórmulas válidas para guardar.', true);
+    return false;
+  }
+
+  FORMULAS = clean;
+  saveFormulasStorage();
+  refreshAfterFormulaUpdate();
+  loadFormulasIntoEditor();
+  return true;
+}
+
+function saveFormulasFromEditor() {
+  if (!ensureFormulaManagerUnlocked()) return;
+  const ta = $('fm-json');
+  if (!ta) return;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(ta.value);
+  } catch (err) {
+    setFormulaManagerMessage('JSON inválido. Revisa comas, comillas y estructura.', true);
+    return;
+  }
+
+  if (!applyFormulaArray(parsed)) return;
+  setFormulaManagerMessage('Fórmulas actualizadas y guardadas localmente.');
+}
+
+function importFormulasFile() {
+  if (!ensureFormulaManagerUnlocked()) return;
+  const fileInput = $('fm-file');
+  if (!fileInput) return;
+  fileInput.value = '';
+  fileInput.click();
+}
+
+function handleImportFormulasFile(event) {
+  if (!ensureFormulaManagerUnlocked()) return;
+  const input = event?.target;
+  const file = input?.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result || ''));
+      if (!applyFormulaArray(parsed)) return;
+      setFormulaManagerMessage(`Archivo importado: ${file.name}`);
+    } catch (_) {
+      setFormulaManagerMessage('No se pudo importar el archivo. Verifica que sea JSON válido.', true);
+    }
+  };
+  reader.onerror = () => setFormulaManagerMessage('Error al leer el archivo seleccionado.', true);
+  reader.readAsText(file);
+}
+
+function exportFormulasFile() {
+  if (!ensureFormulaManagerUnlocked()) return;
+  const payload = JSON.stringify(FORMULAS, null, 2);
+  const blob = new Blob([payload], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateTag = new Date().toISOString().slice(0, 10);
+
+  a.href = url;
+  a.download = `formulas-enterales-${dateTag}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  setFormulaManagerMessage('Exportación completada.');
+}
+
+function resetFormulasToDefault() {
+  if (!ensureFormulaManagerUnlocked()) return;
+  const ok = window.confirm('¿Restaurar las fórmulas base y reemplazar las actuales?');
+  if (!ok) return;
+
+  FORMULAS = DEFAULT_FORMULAS.map((f, idx) => sanitizeFormula(f, idx));
+  saveFormulasStorage();
+  refreshAfterFormulaUpdate();
+  loadFormulasIntoEditor();
+  setFormulaManagerMessage('Se restauraron las fórmulas base.');
+}
 
 /* ── Patient Calc ── */
 function calcPatient(px) {
@@ -1248,13 +1563,16 @@ function calcNutr(px) {
   const hcPct  = gv(px+'-hcs');
   const lipPct = 100 - hcPct;
 
-  const totKcal   = p.chosen * kcalKg;
+  const baseKcal  = p.chosen * kcalKg;
   const totProt   = p.chosen * protKg;
   const gN2       = totProt / 6.25;
   const kcalProt  = totProt * 4;
-  const kcalProp  = prop * 1.1;
-  const kcalCit   = S[px].citrate ? 500 : 0;
-  const npKcal    = totKcal - kcalProt - kcalProp - kcalCit;
+  const propLipg  = prop * 0.1;
+  const kcalProp  = propLipg * 9;
+  const kcalCit   = S[px].citrate ? 300 : 0;
+  const citHCg    = S[px].citrate ? 75 : 0;
+  const totKcal   = Math.max(0, baseKcal - kcalCit - kcalProp);
+  const npKcal    = totKcal - kcalProt - kcalProp;
   const ratio     = gN2 > 0 ? npKcal / gN2 : 0;
   const kcalHC    = npKcal * (hcPct / 100);
   const kcalLip   = npKcal * (lipPct / 100);
@@ -1262,27 +1580,89 @@ function calcNutr(px) {
   const gLip      = kcalLip / 9;
 
   return { ...p, kcalKg, protKg, prop, hcPct, lipPct,
-           totKcal, totProt, gN2, kcalProt, kcalProp, kcalCit,
+           baseKcal, totKcal, totProt, gN2, kcalProt, kcalProp, propLipg, kcalCit, citHCg,
            npKcal, ratio, kcalHC, kcalLip, gHC, gLip };
 }
 
 /* ── Enteral ── */
-function isFormulaRecommended(f, r) {
-  // Phase match
+function assessFormulaRecommendation(f, r) {
+  const yeyunoActive = !!S.e.yeyuno;
+  const isPeptamenAF = f.name === 'Peptamen AF Enteral';
+
   const phaseMatch = (S.fase === 'aguda' && (f.phase === 'aguda' || f.phase === 'ambas')) ||
                      (S.fase === 'cronica' && (f.phase === 'cronica' || f.phase === 'ambas'));
-  if (!phaseMatch) return false;
 
-  // Specific clinical adjustments
+  let bmiMatch = true;
   if (r.bmi > 30) {
-    // Obesity: prefers hyperproteic (prot >= 6.5 g / 100ml)
-    return f.prot >= 6.5;
+    // Obesity: prefers hyperproteic (prot >= 6.5 g / 100 ml)
+    bmiMatch = f.prot >= 6.5;
+  } else if (r.bmi < 18.5) {
+    // Underweight: prefers hypercaloric (kcal >= 1.3 kcal / ml)
+    bmiMatch = f.kcal >= 1.3;
   }
-  if (r.bmi < 18.5) {
-    // Underweight: prefers hypercaloric (kcal >= 1.3 kcal/ml)
-    return f.kcal >= 1.3;
+
+  const vol24 = r.totKcal / f.kcal;
+  const gN2_24 = (f.n2 / 100) * vol24;
+  const n2Dev = r.gN2 - gN2_24;
+  const n2Coverage = r.gN2 > 0 ? gN2_24 / r.gN2 : 1;
+  const n2Match = n2Coverage >= 0.70 && n2Coverage <= 1.10;
+  const yeyunoMatch = !yeyunoActive || isPeptamenAF;
+  const baseRecommended = phaseMatch && bmiMatch && n2Match;
+  const recommended = yeyunoActive ? isPeptamenAF : (baseRecommended && yeyunoMatch);
+
+  return {
+    vol24,
+    gN2_24,
+    n2Dev,
+    n2Coverage,
+    phaseMatch,
+    bmiMatch,
+    n2Match,
+    yeyunoMatch,
+    recommended,
+  };
+}
+
+function isFormulaRecommended(f, r) {
+  return assessFormulaRecommendation(f, r).recommended;
+}
+
+function getRecommendedFormulaIndices(r) {
+  return FORMULAS
+    .map((f, idx) => ({ idx, rec: assessFormulaRecommendation(f, r).recommended }))
+    .filter(x => x.rec)
+    .map(x => x.idx);
+}
+
+function syncEnteralFormulaSelect(r) {
+  const sel = $('e-sel-formula');
+  if (!sel) return null;
+  const currentIdx = parseInt(sel.value, 10);
+
+  const recommendedIdxs = getRecommendedFormulaIndices(r);
+  const peptamenIdx = FORMULAS.findIndex(f => f.name === 'Peptamen AF Enteral');
+  if (recommendedIdxs.length === 0) {
+    sel.innerHTML = `<option value="">Sin fórmulas recomendadas para los criterios actuales</option>`;
+    sel.value = '';
+    S.e.selFormulaIdx = -1;
+    return null;
   }
-  return true;
+
+  sel.innerHTML = recommendedIdxs
+    .map(i => `<option value="${i}">${FORMULAS[i].name} (${FORMULAS[i].typeL})</option>`)
+    .join('');
+
+  const selIdx = recommendedIdxs.includes(currentIdx)
+    ? currentIdx
+    : (recommendedIdxs.includes(S.e.selFormulaIdx)
+      ? S.e.selFormulaIdx
+      : (S.e.yeyuno && peptamenIdx >= 0 && recommendedIdxs.includes(peptamenIdx)
+        ? peptamenIdx
+        : recommendedIdxs[0]));
+
+  sel.value = String(selIdx);
+  S.e.selFormulaIdx = selIdx;
+  return selIdx;
 }
 
 function updateFaseInfo(r) {
@@ -1327,7 +1707,7 @@ function calcEnteral() {
     <div class="sb blue"><div class="sv">${fi(r.totKcal)}</div><div class="su">kcal/día</div><div class="sl">Energía Total</div></div>
     <div class="sb green"><div class="sv">${f1(r.totProt)}</div><div class="su">g/día</div><div class="sl">Proteínas</div></div>
     <div class="sb amber"><div class="sv">${f2(r.gN2)}</div><div class="su">g N₂/día</div><div class="sl">Nitrógeno</div></div>
-    <div class="sb violet"><div class="sv">${fi(r.npKcal)}</div><div class="su">kcal NP</div><div class="sl">Kcal No Proteicas</div></div>`;
+    <div class="sb violet"><div class="sv">${fi(r.npKcal)}</div><div class="su">kcal NP</div><div class="sl">Kcal No Proteicas</div><div class="sl" style="margin-top:.45rem;color:var(--text);font-size:.72rem">HC <strong>${f1(r.gHC)}</strong> g · Líp <strong>${f1(r.gLip)}</strong> g</div></div>`;
 
   /* Ratio */
   const rc = r.ratio < 80 ? '#ef4444' : r.ratio > 150 ? '#f59e0b' : '#34d399';
@@ -1353,8 +1733,8 @@ function calcEnteral() {
     <div class="ri"><span class="rl">🔵 Carbohidratos (${r.hcPct}%)</span><span class="rv">${f1(r.gHC)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalHC)} kcal)</span></span></div>
     <div class="ri"><span class="rl">🟡 Lípidos (${r.lipPct}%)</span><span class="rv">${f1(r.gLip)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalLip)} kcal)</span></span></div>
     <div class="ri"><span class="rl">🟢 Proteínas</span><span class="rv">${f1(r.totProt)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalProt)} kcal)</span></span></div>
-    ${r.prop>0?`<div class="ri"><span class="rl">⚗️ Propofol (${fi(r.prop)} ml/día)</span><span class="rv">${f1(r.kcalProp)}<span class="ru">kcal</span></span></div>`:''}
-    ${S.e.citrate?`<div class="ri"><span class="rl">🧪 Citrato</span><span class="rv">≈${fi(r.kcalCit)}<span class="ru">kcal</span></span></div>`:''}
+    ${r.prop>0?`<div class="ri"><span class="rl">⚗️ Propofol externo</span><span class="rv">${f1(r.propLipg)}<span class="ru">g lípidos</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalProp)} kcal)</span></span></div>`:''}
+    ${S.e.citrate?`<div class="ri"><span class="rl">🧪 Citrato externo</span><span class="rv">${f1(r.citHCg)}<span class="ru">g HC</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalCit)} kcal)</span></span></div>`:''}
     <div class="ri" style="border-top:1px solid var(--border);padding-top:.65rem;margin-top:.15rem">
       <span class="rl" style="font-weight:700;color:var(--text)">Total Kcal/día</span>
       <span class="rv" style="font-size:1.05rem;color:#60a5fa">${fi(r.totKcal)}<span class="ru">kcal</span></span>
@@ -1365,13 +1745,12 @@ function calcEnteral() {
   updateFaseInfo(r);
 
   /* Selected Formula Prescription */
-  const selIndex = parseInt($('e-sel-formula')?.value) || 0;
-  S.e.selFormulaIdx = selIndex;
-  if (FORMULAS.length > 0) {
+  const selIndex = syncEnteralFormulaSelect(r);
+  if (selIndex !== null) {
     const f = FORMULAS[selIndex];
-    const vol24  = r.totKcal / f.kcal;
-    const gN2_24 = (f.n2 / 100) * vol24;
-    const dev    = r.gN2 - gN2_24;
+    const a = assessFormulaRecommendation(f, r);
+    const vol24  = a.vol24;
+    const dev    = a.n2Dev;
     const renapro= dev / N2_RENAPRO;
     const rate   = vol24 / 24;
 
@@ -1379,8 +1758,15 @@ function calcEnteral() {
     if (dev > 0) {
       renaproHtml = `
         <div class="alert alert-warn" style="margin-top:.7rem;margin-bottom:0">
-          ⚠️ <strong>Suplementación necesaria:</strong><br>
-          Requiere <strong>${f2(renapro)} sobres de RENAPRO</strong> al día para cubrir el déficit de proteínas (${f1(dev * 6.25)} g).
+          <div style="font-weight:800;margin-bottom:.35rem">⚠️ Suplementación necesaria</div>
+          <div style="display:flex;justify-content:space-between;gap:.8rem;flex-wrap:wrap;margin-top:.2rem">
+            <span>Sobres de RENAPRO / día</span>
+            <strong>${f2(renapro)}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:.8rem;flex-wrap:wrap;margin-top:.15rem">
+            <span>Déficit proteico estimado</span>
+            <strong>${f1(dev * 6.25)} g</strong>
+          </div>
         </div>`;
     } else {
       renaproHtml = `
@@ -1395,12 +1781,20 @@ function calcEnteral() {
         <div class="ri"><span class="rl">Volumen total diario</span><span class="rv">${fi(vol24)}<span class="ru">ml</span></span></div>
         <div class="ri"><span class="rl">Ritmo continuo de infusión</span><span class="rv">${f1(rate)}<span class="ru">ml/h</span></span></div>
         <div class="ri"><span class="rl">Aporte energético (dieta)</span><span class="rv">${fi(f.kcal * vol24)}<span class="ru">kcal</span></span></div>
-        <div class="ri"><span class="rl">Aporte proteico (dieta)</span><span class="rv">${f1(f.prot * vol24 / 100)}<span class="ru">g</span></span></div>
+        <div class="ri"><span class="rl">Aporte Nitrógeno (dieta)</span><span class="rv">${f2(f.n2 * vol24 / 100)}<span class="ru">g N₂</span></span></div>
         ${renaproHtml}
         <button class="qb" style="width:100%;margin-top:.9rem;justify-content:center;padding:.5rem;font-size:.76rem" onclick="applyPrescription(${fi(vol24)})">
           🔗 Aplicar volumen a Tolerancia y Ritmo
         </button>
       `;
+    }
+  } else {
+    const pInfo = $('e-prescription-info');
+    if (pInfo) {
+      pInfo.innerHTML = `
+        <div class="alert alert-warn" style="margin-top:.2rem;margin-bottom:0">
+          ⚠️ No hay fórmulas que cumplan simultáneamente fase clínica, IMC y cobertura de nitrógeno (70–110%).
+        </div>`;
     }
   }
 
@@ -1412,16 +1806,21 @@ function calcParenteral() {
   const r = calcNutr('p');
   updHC('p');
 
-  $('p-stats').innerHTML = `
-    <div class="sb blue"><div class="sv">${fi(r.totKcal)}</div><div class="su">kcal/día</div><div class="sl">Energía Total</div></div>
-    <div class="sb green"><div class="sv">${f1(r.totProt)}</div><div class="su">g/día</div><div class="sl">Proteínas</div></div>
-    <div class="sb amber"><div class="sv">${f2(r.gN2)}</div><div class="su">g N₂/día</div><div class="sl">Nitrógeno</div></div>
-    <div class="sb violet"><div class="sv">${f1(r.ratio)}</div><div class="su">kcal/gN₂</div><div class="sl">Ratio NP/N₂</div></div>`;
+  const pStats = $('p-stats');
+  if (pStats) {
+    pStats.innerHTML = `
+      <div class="sb blue"><div class="sv">${fi(r.totKcal)}</div><div class="su">kcal/día</div><div class="sl">Energía Total</div></div>
+      <div class="sb green"><div class="sv">${f1(r.totProt)}</div><div class="su">g/día</div><div class="sl">Proteínas</div></div>
+      <div class="sb amber"><div class="sv">${f2(r.gN2)}</div><div class="su">g N₂/día</div><div class="sl">Nitrógeno</div></div>
+      <div class="sb violet"><div class="sv">${fi(r.npKcal)}</div><div class="su">kcal NP</div><div class="sl">Kcal No Proteicas</div><div class="sl" style="margin-top:.45rem;color:var(--text);font-size:.72rem">HC <strong>${f1(r.gHC)}</strong> g · Líp <strong>${f1(r.gLip)}</strong> g</div></div>`;
+  }
 
   $('p-comp').innerHTML = `
     <div class="ri"><span class="rl">N₂ total</span><span class="rv">${f2(r.gN2)}<span class="ru">g N₂</span></span></div>
     <div class="ri"><span class="rl">🔵 Glucosa / HC (${r.hcPct}%)</span><span class="rv">${f1(r.gHC)}<span class="ru">g</span></span></div>
     <div class="ri"><span class="rl">🟡 Lípidos (${r.lipPct}%)</span><span class="rv">${f1(r.gLip)}<span class="ru">g</span></span></div>
+    ${r.prop>0?`<div class="ri"><span class="rl">⚗️ Propofol externo</span><span class="rv">${f1(r.propLipg)}<span class="ru">g lípidos</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalProp)} kcal)</span></span></div>`:''}
+    ${S.p.citrate?`<div class="ri"><span class="rl">🧪 Citrato externo</span><span class="rv">${f1(r.citHCg)}<span class="ru">g HC</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalCit)} kcal)</span></span></div>`:''}
     <div style="background:rgba(59,130,246,.04);border:1px solid var(--border);border-radius:10px;padding:.9rem;margin-top:.9rem">
       <div style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.055em;margin-bottom:.65rem">Composición NPT Individualizada 24 h</div>
       <div class="npt-grid">
@@ -1437,8 +1836,8 @@ function calcParenteral() {
         <div style="display:flex;justify-content:space-between;margin-top:.25rem"><span>Ratio kcal NP / g N₂:</span><strong style="color:var(--text)">${f1(r.ratio)}</strong></div>
       </div>
     </div>
-    ${r.prop>0?`<div class="alert alert-warn" style="margin-top:.9rem">⚠️ Propofol ${fi(r.prop)} ml/día aporta ${f1(r.kcalProp)} kcal adicionales (ya descontadas del objetivo)</div>`:''}
-    ${S.p.citrate?`<div class="alert alert-info" style="margin-top:.9rem">ℹ️ Citrato activo — aporta kcal adicionales (≈500 kcal aprox., ya descontadas)</div>`:''}`;
+    ${r.prop>0?`<div class="alert alert-warn" style="margin-top:.9rem">⚠️ Propofol ${fi(r.prop)} ml/día aporta ${f1(r.propLipg)} g de lípidos (${fi(r.kcalProp)} kcal), ya descontados del objetivo</div>`:''}
+    ${S.p.citrate?`<div class="alert alert-info" style="margin-top:.9rem">ℹ️ Citrato activo — 75 g HC equivalentes a 300 kcal, ya descontadas</div>`:''}`;
 }
 
 /* ── Formula Table ── */
@@ -1457,9 +1856,10 @@ function renderTable(r) {
 
   $('ftbody').innerHTML = rows.map(f => {
     const idx = FORMULAS.indexOf(f);
-    const vol24  = r.totKcal / f.kcal;
-    const gN2_24 = (f.n2 / 100) * vol24;
-    const dev    = r.gN2 - gN2_24;      // positive = deficit, negative = excess
+    const a = assessFormulaRecommendation(f, r);
+    const vol24  = a.vol24;
+    const gN2_24 = a.gN2_24;
+    const dev    = a.n2Dev;      // positive = deficit, negative = excess
     const renapro= dev / N2_RENAPRO;
 
     let devHtml, supHtml;
@@ -1475,18 +1875,13 @@ function renderTable(r) {
     }
 
     const isSel = idx === selectedIdx;
-    const isRecommended = isFormulaRecommended(f, r);
+    const isRecommended = a.recommended;
     
-    let rowClass = '';
-    if (isSel) {
-      rowClass = 'tr-sel';
-    } else if (isRecommended) {
-      rowClass = 'tr-rec';
-    }
+    const rowClass = [isSel ? 'tr-sel' : '', isRecommended ? 'tr-rec' : 'tr-nrec'].filter(Boolean).join(' ');
 
     const recBadge = isRecommended ? `<span class="badge badge-ok" style="margin-left:.4rem;padding:.15rem .45rem;font-size:.62rem;font-weight:800;border:1px solid #10b981;background:rgba(16,185,129,.22);color:#34d399;box-shadow:0 0 8px rgba(16,185,129,.35)">⭐ Recomendada</span>` : '';
 
-    return `<tr onclick="selectFormula(${idx})"${rowClass ? ' class="' + rowClass + '"' : ''} style="cursor:pointer">
+    return `<tr${isRecommended ? ` onclick="selectFormula(${idx})"` : ''}${rowClass ? ' class="' + rowClass + '"' : ''} style="cursor:${isRecommended ? 'pointer' : 'default'}">
       <td class="fn">${f.name}${recBadge}<div style="margin-top:.15rem"><span style="font-size:.67rem;color:var(--dim)">${f.sub}</span></div></td>
       <td><span class="tt ${typeMap[f.type]||''}">${f.typeL}</span></td>
       <td class="nr">${f.kcal}</td>
@@ -1603,6 +1998,13 @@ function setCit(px, val) {
   px==='e' ? calcEnteral() : calcParenteral();
 }
 
+function setYeyuno(val) {
+  S.e.yeyuno = val;
+  $('e-yey-no') .classList.toggle('active', !val);
+  $('e-yey-yes').classList.toggle('active',  val);
+  calcEnteral();
+}
+
 /* ── Ritmo ctrl toggle ── */
 function setRCtrl(c) {
   S.rCtrl = c;
@@ -1628,10 +2030,14 @@ function showTab(name) {
 
 /* ── Formula Selection Helpers ── */
 function selectFormula(idx) {
+  const r = calcNutr('e');
+  if (!isFormulaRecommended(FORMULAS[idx], r)) return;
+
   const sel = $('e-sel-formula');
   if (sel) {
     sel.value = idx;
   }
+  S.e.selFormulaIdx = idx;
   calcEnteral();
 }
 
@@ -1687,15 +2093,21 @@ function nutricOverlayClick(e) {
 }
 
 function calcNutricScore() {
-  const fields = ['ns-age', 'ns-apache', 'ns-sofa', 'ns-comor', 'ns-days', 'ns-il6'];
+  const requiredFields = ['ns-age', 'ns-apache', 'ns-sofa', 'ns-comor', 'ns-days'];
   let total = 0;
-  for (const name of fields) {
+  for (const name of requiredFields) {
     const sel = document.querySelector(`input[name="${name}"]:checked`);
     if (!sel) {
       alert('Por favor, complete todos los campos antes de calcular.');
       return;
     }
     total += parseInt(sel.value, 10);
+  }
+
+  // IL-6 is optional. If omitted, it contributes 0 points.
+  const il6Sel = document.querySelector('input[name="ns-il6"]:checked');
+  if (il6Sel) {
+    total += parseInt(il6Sel.value, 10);
   }
 
   const mortalityMap = { 0:'~1%', 1:'~2%', 2:'~3%', 3:'~8%', 4:'~11%',
@@ -1720,16 +2132,16 @@ function calcNutricScore() {
 
 /* ── Init ── */
 window.addEventListener('DOMContentLoaded', () => {
-  const sel = $('e-sel-formula');
-  if (sel) {
-    sel.innerHTML = FORMULAS.map((f, i) => `<option value="${i}">${f.name} (${f.typeL})</option>`).join('');
-  }
+  loadFormulasStorage();
   calcEnteral();
   calcParenteral();
   calcTol();
   calcRitmo();
   setFase('aguda');
+  lockFormulaManager();
 });
 </script>
+
+<footer class="app-footer">Creado por luisherrerapara@gmail.com para UCI-H.Santa Lucía (Cartagena). Todos los derechos reservados.</footer>
 </body>
 </html>
