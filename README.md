@@ -180,7 +180,7 @@ index.html
 
 ## 🔐 Seguridad
 
-- **Gestor de fórmulas protegido** con contraseña: `Nutr1`
+- **Gestor de fórmulas protegido** con contraseña 
 - No hay backend — todo cálculo en cliente
 - Datos persisten en navegador (localStorage)
 
