@@ -1779,7 +1779,6 @@ function calcEnteral() {
     if (pInfo) {
       pInfo.innerHTML = `
         <div class="ri"><span class="rl">Volumen total diario</span><span class="rv">${fi(vol24)}<span class="ru">ml</span></span></div>
-        <div class="ri"><span class="rl">Ritmo continuo de infusión</span><span class="rv">${f1(rate)}<span class="ru">ml/h</span></span></div>
         <div class="ri"><span class="rl">Aporte energético (dieta)</span><span class="rv">${fi(f.kcal * vol24)}<span class="ru">kcal</span></span></div>
         <div class="ri"><span class="rl">Aporte Nitrógeno (dieta)</span><span class="rv">${f2(f.n2 * vol24 / 100)}<span class="ru">g N₂</span></span></div>
         ${renaproHtml}
