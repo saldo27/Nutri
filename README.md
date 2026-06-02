@@ -52,7 +52,7 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 - Recomendaciones según frecuencia
 
 ### 5. **Catálogo de Fórmulas**
-- Base de datos protegida por contraseña (Nutr1)
+- Base de datos protegida por contraseña 
 - Import/export JSON
 - 16 fórmulas preconfiguradas (poliméricas, oligoméricas, específicas)
 - Edición en línea con validación
