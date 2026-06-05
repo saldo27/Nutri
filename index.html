@@ -716,12 +716,12 @@
         <div class="g2">
           <div class="fg">
             <label class="fl" for="e-kcalkg">Kcal / kg / día</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="e-kcalkg" value="25" min="10" max="40" step="1" oninput="calcEnteral()"><span class="fi-unit">kcal/kg</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="e-kcalkg" value="15" min="5" max="40" step="1" oninput="calcEnteral()"><span class="fi-unit">kcal/kg</span></div>
             <div class="obj-gap" aria-hidden="true"></div>
           </div>
           <div class="fg">
             <label class="fl" for="e-protkg">Proteínas g / kg / día</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="e-protkg" value="1.2" min="0.5" max="2.5" step="0.1" oninput="calcEnteral()"><span class="fi-unit">g/kg</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="e-protkg" value="1" min="0.5" max="2.5" step="0.1" oninput="calcEnteral()"><span class="fi-unit">g/kg</span></div>
             <div class="obj-gap" aria-hidden="true"></div>
           </div>
         </div>
@@ -1672,7 +1672,7 @@ function updateFaseInfo(r) {
   
   if (f === 'aguda') {
     recs.push('Oligoméricas (Peptídicas)', 'Especial Críticos');
-    reason = 'En la <strong>Fase Aguda Temprana (0–72 h)</strong> se prioriza la tolerancia intestinal y un aporte energético controlado. Se recomiendan fórmulas oligoméricas o especiales para pacientes críticos.';
+    reason = 'En la <strong>Fase Aguda Temprana (0–72 h)</strong> se prioriza la tolerancia intestinal y un aporte energético y proteico controlado: iniciar con 15 Kcal/Kg/día y 1 g N/Kg/día). Se recomiendan fórmulas oligoméricas o especiales para pacientes críticos.';
   } else {
     recs.push('Poliméricas estándar');
     reason = 'En la <strong>Fase Crónica o de Estabilización (&gt;72 h)</strong> el objetivo es cubrir el 100% de los requerimientos y mantener la masa muscular. Se recomiendan fórmulas poliméricas generales.';
