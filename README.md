@@ -22,13 +22,17 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 
 ### 1. **Nutrición Enteral (N. Enteral)**
 - Cálculo automático de requerimientos por peso y protocolo (IBW, peso actual, peso ajustado)
-- Selección inteligente de fórmula basada en fase clínica (aguda/crónica), IMC y cobertura de nitrógeno
+- Selector de fase clínica en 3 etapas: aguda, subaguda y crónica
+- Ajuste automático de objetivos nutricionales según fase clínica
+- Selección inteligente de fórmula basada en fase clínica, IMC y cobertura de nitrógeno
 - Detección automática de necesidad de suplementación proteica con RENAPRO
 - Ajuste por Citrato externo (300 kcal/75 g HC)
 - Soporte para yeyunostomía (restringe a fórmulas oligoméricas)
 - Tabla comparativa de fórmulas con desviación de N₂ calculada
 
 ### 2. **Nutrición Parenteral (N. Parenteral)**
+- Selector de fase clínica en 3 etapas: aguda, subaguda y crónica
+- Ajuste automático de objetivos nutricionales según fase clínica
 - NPT individualizada con composición macronutrientes (N₂, glucosa, lípidos)
 - Relación ajustable lípidos:HC
 - Propofol externo integrado (descuento automático de kcal/lípidos)
@@ -52,7 +56,7 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 - Recomendaciones según frecuencia
 
 ### 5. **Catálogo de Fórmulas**
-- Base de datos protegida por contraseña 
+- Base de datos protegida por contraseña (Nutr1)
 - Import/export JSON
 - 16 fórmulas preconfiguradas (poliméricas, oligoméricas, específicas)
 - Edición en línea con validación
@@ -81,8 +85,9 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
    - ¿Citrato activo? Sí/No
 
 3. **Elegir fase clínica**
-   - Aguda (0–72 h): recomienda oligoméricas/especiales
-   - Crónica (>72 h): recomienda poliméricas
+   - Aguda (0–72 h): 15 → 20 kcal/kg/día y 0.8 → 1 g prot/kg/día
+   - Subaguda (4º–7º día): 20 → 25 kcal/kg/día y 1 → 1 g prot/kg/día
+   - Crónica (>1 semana): 25 → 30 kcal/kg/día y 1 → 1.2–1.3 g prot/kg/día
 
 4. **Relación HC:Lípidos** — slider ajustable (40–70% HC)
 
@@ -119,7 +124,7 @@ index.html
 ├── BODY
 │   ├── Header + Navegación tabs
 │   ├── main.main
-│   │   ├── panel-enteral (3 columnas)
+│   │   ├── panel-enteral (2 columnas)
 │   │   ├── panel-parenteral (2 columnas)
 │   │   ├── panel-tolerancia (2 columnas)
 │   │   ├── panel-ritmo (2 columnas)
@@ -173,6 +178,7 @@ index.html
   - `--bg` / `--card` / `--border` (colores base)
   - `--text` / `--muted` / `--dim` (textos)
   - `--primary` / `--secondary` / `--accent` (acentos)
+- Fondo general más claro y contraste reforzado para mejorar la lectura de paneles y mensajes contextuales
 - **Responsive**: grid auto-fit para tablets/móviles
 - **Dark mode**: compatible (usa CSS variables)
 
@@ -180,7 +186,7 @@ index.html
 
 ## 🔐 Seguridad
 
-- **Gestor de fórmulas protegido** con contraseña 
+- **Gestor de fórmulas protegido** con contraseña: `Nutr1`
 - No hay backend — todo cálculo en cliente
 - Datos persisten en navegador (localStorage)
 
@@ -203,7 +209,7 @@ index.html
 Al cargar la página:
 1. Se restauran fórmulas desde localStorage (o usa defaults)
 2. Se calculan todos los tabs (calcEnteral, calcParenteral, etc.)
-3. Se establece fase clínica por defecto (aguda)
+3. Se establece fase clínica por defecto (aguda) en Enteral y Parenteral
 4. Se bloquea gestor de fórmulas
 
 ---

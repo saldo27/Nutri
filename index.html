@@ -11,12 +11,12 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:          #070c18;
-      --surface:     #0b1223;
-      --card:        #0f1729;
-      --card-hover:  #162038;
-      --border:      rgba(59,130,246,.18);
-      --border-dim:  rgba(148,163,184,.07);
+      --bg:          #0d1525;
+      --surface:     #121e35;
+      --card:        #172240;
+      --card-hover:  #1e2f52;
+      --border:      rgba(59,130,246,.22);
+      --border-dim:  rgba(148,163,184,.11);
       --primary:     #3b82f6;
       --primary-gl:  rgba(59,130,246,.18);
       --secondary:   #06b6d4;
@@ -90,28 +90,38 @@
 
     /* ===== TABS ===== */
     .tab-nav {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border-dim);
+      background: linear-gradient(180deg, rgba(11,18,35,.98), rgba(8,13,26,.98));
+      border-bottom: 1px solid rgba(148,163,184,.12);
       padding: 0 2rem;
-      display: flex; gap: .15rem;
+      display: flex; gap: .35rem;
       overflow-x: auto; scrollbar-width: none;
+      box-shadow: inset 0 -1px 0 rgba(255,255,255,.03);
     }
     .tab-nav::-webkit-scrollbar { display:none; }
     .tab-btn {
-      padding: .85rem 1.1rem;
-      border: none; background: none;
-      color: var(--muted);
-      font-family: inherit; font-size: .82rem; font-weight: 500;
+      padding: .95rem 1.05rem;
+      border: 1px solid transparent;
+      background: rgba(255,255,255,.02);
+      color: #cbd5e1;
+      font-family: inherit; font-size: .83rem; font-weight: 700;
       cursor: pointer;
       border-bottom: 2px solid transparent;
-      transition: all .2s; white-space: nowrap;
+      border-radius: 12px 12px 0 0;
+      transition: all .2s ease; white-space: nowrap;
       display: flex; align-items: center; gap: .45rem;
+      box-shadow: 0 1px 0 rgba(255,255,255,.02);
     }
-    .tab-btn:hover { color: var(--text); }
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(59,130,246,.09);
+      border-color: rgba(59,130,246,.18);
+    }
     .tab-btn.active {
-      color: var(--primary);
+      color: #fff;
+      border-color: rgba(59,130,246,.28);
       border-bottom-color: var(--primary);
-      background: rgba(59,130,246,.05);
+      background: linear-gradient(180deg, rgba(59,130,246,.22), rgba(59,130,246,.08));
+      box-shadow: 0 -1px 0 rgba(59,130,246,.4), 0 8px 24px rgba(59,130,246,.12);
     }
 
     /* ===== LAYOUT ===== */
@@ -562,6 +572,17 @@
       text-transform: uppercase; letter-spacing: .055em; margin-bottom: .45rem;
       text-align: center;
     }
+    .nutric-help-link {
+      display: inline-block;
+      margin-left: .35rem;
+      font-size: .68rem;
+      font-weight: 700;
+      color: #93c5fd;
+      text-transform: none;
+      letter-spacing: 0;
+      text-decoration: none;
+    }
+    .nutric-help-link:hover { text-decoration: underline; }
     .nutric-opts {
       display: flex; flex-wrap: wrap; gap: .45rem;
       justify-content: center;
@@ -761,22 +782,14 @@
           <div class="c-icon cyan">⚗️</div>
           <div><div class="c-title">Composición Teórica 24h</div><div class="c-sub">Requerimientos calculados</div></div>
         </div>
-        <div id="e-comp"></div>
+        <div class="sg" id="e-stats" style="margin-bottom:.9rem"></div>
+        <div id="e-ratio"></div>
+        <div id="e-comp" style="margin-top:.9rem"></div>
       </div>
     </div><!-- end left -->
 
     <!-- ── RIGHT column ── -->
     <div>
-      <!-- Stats -->
-      <div class="card">
-        <div class="card-head">
-          <div class="c-icon amber">📊</div>
-          <div><div class="c-title">Resumen de Objetivos</div><div class="c-sub">Totales diarios calculados</div></div>
-        </div>
-        <div class="sg" id="e-stats"></div>
-        <div id="e-ratio"></div>
-      </div>
-
       <!-- Fase clínica -->
       <div class="card">
         <div class="card-head">
@@ -784,8 +797,9 @@
           <div><div class="c-title">Fase Clínica</div><div class="c-sub">Recomendaciones según momento evolutivo</div></div>
         </div>
         <div class="tgl-g" style="margin-bottom:.9rem">
-          <button class="tgl active" id="faseA-btn" onclick="setFase('aguda')" style="padding:.6rem">⚡ Fase Aguda</button>
-          <button class="tgl" id="faseC-btn" onclick="setFase('cronica')" style="padding:.6rem">🔄 Fase Crónica</button>
+          <button class="tgl active" id="faseA-btn"  onclick="setFase('aguda')"    style="padding:.6rem">⚡ Fase Aguda</button>
+          <button class="tgl"        id="faseS-btn"  onclick="setFase('subaguda')" style="padding:.6rem">🔶 Fase Subaguda</button>
+          <button class="tgl"        id="faseC-btn"  onclick="setFase('cronica')"  style="padding:.6rem">🔄 Fase Crónica</button>
         </div>
         <div id="fase-info"></div>
       </div>
@@ -817,9 +831,10 @@
       <div style="margin-left:auto;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
         <input class="fi" type="text" id="flt" placeholder="🔍 Filtrar fórmula..." style="width:175px;padding:.42rem .75rem" oninput="filterTbl()">
         <div class="tgl-g" style="width:auto">
-          <button class="tgl active" id="flt-all"   onclick="setFltType('all')">Todas</button>
-          <button class="tgl" id="flt-aguda"  onclick="setFltType('aguda')">⚡ Agudas</button>
-          <button class="tgl" id="flt-cronica" onclick="setFltType('cronica')">🔄 Crónicas</button>
+          <button class="tgl" id="flt-all"      onclick="setFltType('all')">Todas</button>
+          <button class="tgl active" id="flt-aguda"    onclick="setFltType('aguda')">⚡ Agudas</button>
+          <button class="tgl" id="flt-subaguda" onclick="setFltType('subaguda')">🔶 Subagudas</button>
+          <button class="tgl" id="flt-cronica"  onclick="setFltType('cronica')">🔄 Crónicas</button>
         </div>
       </div>
     </div>
@@ -926,9 +941,25 @@
           </div>
         </div>
       </div>
+
     </div>
 
     <div>
+      <!-- Fase Clínica columna derecha -->
+      <div class="card">
+        <div class="card-head">
+          <div class="c-icon violet">💡</div>
+          <div><div class="c-title">Fase Clínica</div><div class="c-sub">Recomendaciones según momento evolutivo</div></div>
+        </div>
+        <div class="tgl-g" style="margin-bottom:.9rem">
+          <button class="tgl active" id="p-faseA-btn"  onclick="setFaseP('aguda')"    style="padding:.6rem">⚡ Fase Aguda</button>
+          <button class="tgl"        id="p-faseS-btn"  onclick="setFaseP('subaguda')" style="padding:.6rem">🔶 Fase Subaguda</button>
+          <button class="tgl"        id="p-faseC-btn"  onclick="setFaseP('cronica')"  style="padding:.6rem">🔄 Fase Crónica</button>
+        </div>
+        <div id="p-fase-info"></div>
+      </div>
+
+      <!-- Composición NPT -->
       <div class="card">
         <div class="card-head">
           <div class="c-icon cyan">⚗️</div>
@@ -1224,7 +1255,7 @@
 
       <!-- Comorbilidades -->
       <div class="nutric-param">
-        <div class="nutric-param-label">Nº de comorbilidades</div>
+        <div class="nutric-param-label">Nº de comorbilidades <a class="nutric-help-link" href="#ns-comor-list" onclick="openComorListModal(event)">Ver listado aclaratorio</a></div>
         <div class="nutric-opts">
           <label><input type="radio" name="ns-comor" value="0"><span>0–1</span></label>
           <label><input type="radio" name="ns-comor" value="1"><span>≥2</span></label>
@@ -1260,9 +1291,45 @@
         <div class="nutric-result-detail" id="nutric-result-detail"></div>
         <div class="nutric-alert-precoz" id="nutric-alert-precoz" style="display:none">
           ⚠️ INICIAR SOPORTE NUTRICIONAL PRECOZ
+          <div style="margin-top:.4rem;font-size:.92rem;color:#fbbf24;line-height:1.45;font-weight:600">
+            Valora el riesgo de Sd. de Realimentación. Inicia TIAMINA iv y control de Fósforo a las 48h.
+          </div>
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<div class="nutric-overlay" id="comor-overlay" onclick="comorOverlayClick(event)">
+  <div class="nutric-modal" id="comor-modal" style="max-width:560px;text-align:left">
+    <div class="nutric-modal-head" style="justify-content:center">
+      <div class="nutric-modal-title" style="text-align:center">
+        <span class="icon">📋</span>
+        Listado aclaratorio de comorbilidades
+      </div>
+      <button class="nutric-close" onclick="closeComorListModal()" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="nutric-body">
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.85rem">
+        Use este listado como referencia para el ítem "Nº de comorbilidades" del NUTRIC Score.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:.35rem;font-size:.82rem;color:var(--text)">
+        <div>• IAM</div>
+        <div>• ICC</div>
+        <div>• Vasculopatía Periférica</div>
+        <div>• ACV/AIT</div>
+        <div>• Demencia</div>
+        <div>• EPOC</div>
+        <div>• Conectivopatía</div>
+        <div>• Úlcera Péptica</div>
+        <div>• Hepatopatía Crónica</div>
+        <div>• DM</div>
+        <div>• Hemiplejia</div>
+        <div>• Enfermedad Renal Crónica Moderada/Severa</div>
+        <div>• Neoplasia Activa (Sólida/Hematológica)</div>
+        <div>• SIDA</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1298,10 +1365,10 @@ const N2_RENAPRO = 3.1; // g N2 per RENAPRO unit
 /* ── State ── */
 const S = {
   e: { wMode: null, citrate:false, yeyuno:false, userSel: false, selFormulaIdx: 0 },
-  p: { wMode: null, citrate:false, userSel: false },
+  p: { wMode: null, citrate:false, userSel: false, fase: 'aguda' },
   rCtrl: '12',
   fase: 'aguda',
-  fltType: 'all',
+  fltType: 'aguda',
 };
 
 /* ── Helpers ── */
@@ -1590,6 +1657,7 @@ function assessFormulaRecommendation(f, r) {
   const isPeptamenAF = f.name === 'Peptamen AF Enteral';
 
   const phaseMatch = (S.fase === 'aguda' && (f.phase === 'aguda' || f.phase === 'ambas')) ||
+                     (S.fase === 'subaguda' && (f.phase === 'aguda' || f.phase === 'ambas')) ||
                      (S.fase === 'cronica' && (f.phase === 'cronica' || f.phase === 'ambas'));
 
   let bmiMatch = true;
@@ -1668,32 +1736,55 @@ function syncEnteralFormulaSelect(r) {
 function updateFaseInfo(r) {
   const f = S.fase;
   let recs = [];
-  let reason = '';
-  
+
   if (f === 'aguda') {
     recs.push('Oligoméricas (Peptídicas)', 'Especial Críticos');
-    reason = 'En la <strong>Fase Aguda Temprana (0–72 h)</strong> se prioriza la tolerancia intestinal y un aporte energético y proteico controlado: iniciar con 15 Kcal/Kg/día y 1 g N/Kg/día). Se recomiendan fórmulas oligoméricas o especiales para pacientes críticos.';
+  } else if (f === 'subaguda') {
+    recs.push('Oligoméricas', 'Poliméricas hiperprot.');
   } else {
     recs.push('Poliméricas estándar');
-    reason = 'En la <strong>Fase Crónica o de Estabilización (&gt;72 h)</strong> el objetivo es cubrir el 100% de los requerimientos y mantener la masa muscular. Se recomiendan fórmulas poliméricas generales.';
   }
-  
+
   if (r.bmi > 30) {
     recs.push('Fórmulas Hiperproteicas (Proteína ≥6.5%)');
-    reason += '<br><br>⚠️ <strong>Ajuste por Obesidad (IMC > 30):</strong> Se requiere nutrición hiperproteica para preservar masa magra sin sobrealimentar.';
   } else if (r.bmi < 18.5) {
     recs.push('Fórmulas Hipercalóricas (Kcal ≥1.3/ml)');
-    reason += '<br><br>⚠️ <strong>Ajuste por Bajo Peso (IMC < 18.5):</strong> Se recomiendan fórmulas con alta densidad calórica para favorecer la recuperación nutricional.';
   }
-  
+
   const recsHtml = recs.map(t => `<span class="badge badge-ok" style="margin-right:.4rem;margin-bottom:.4rem;padding:.25rem .6rem;font-size:.73rem">⭐ ${t}</span>`).join('');
-  
+
+  const icons  = { aguda:'⚡', subaguda:'🔶', cronica:'🔄' };
+  const titles = { aguda:'Fase Aguda · 0–72 h', subaguda:'Fase Subaguda · 4º–7º día', cronica:'Fase Crónica · > 1 semana' };
+  const rows = {
+    aguda:    [['Inicio',    '15 Kcal/Kg/día', '0.8 g prot/Kg/día'], ['Objetivo', '20 Kcal/Kg/día', '1 g prot/Kg/día']],
+    subaguda: [['Inicio',    '20 Kcal/Kg/día', '1 g prot/Kg/día'],   ['Objetivo', '25 Kcal/Kg/día', '1 g prot/Kg/día']],
+    cronica:  [['Inicio',    '25 Kcal/Kg/día', '1 g prot/Kg/día'],   ['Objetivo', '30 Kcal/Kg/día', '1.2–1.3 g prot/Kg/día']],
+  };
+  const rowsHtml = (rows[f] || []).map(([label, kcal, prot]) => `
+    <tr>
+      <td style="padding:.28rem .55rem;font-size:.72rem;color:var(--muted);white-space:nowrap">${label}</td>
+      <td style="padding:.28rem .55rem;font-size:.8rem;font-weight:700;color:#60a5fa;white-space:nowrap">${kcal}</td>
+      <td style="padding:.28rem .55rem;font-size:.8rem;font-weight:700;color:#34d399;white-space:nowrap">${prot}</td>
+    </tr>`).join('');
+
   $('fase-info').innerHTML = `
-    <div class="alert ${f==='aguda'?'alert-warn':'alert-ok'}" style="margin-bottom:0">
-      <div>
-        <div style="margin-bottom:.65rem">${reason}</div>
-        <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">Tipos de Dieta Sugeridos:</div>
-        <div style="display:flex;flex-wrap:wrap;margin-top:.35rem">${recsHtml}</div>
+    <div style="border-radius:11px;overflow:hidden;border:1px solid var(--border)">
+      <div style="padding:.6rem .85rem;display:flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.04);border-bottom:1px solid var(--border-dim)">
+        <span style="font-size:1rem">${icons[f]||''}</span>
+        <span style="font-size:.85rem;font-weight:800;color:var(--text)">${titles[f]||''}</span>
+      </div>
+      <div style="padding:.7rem .85rem;background:rgba(255,255,255,.02)">
+        <table style="border-collapse:collapse;width:100%;margin-bottom:.6rem">
+          <thead><tr>
+            <th style="padding:.2rem .55rem;font-size:.65rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;text-align:left"></th>
+            <th style="padding:.2rem .55rem;font-size:.65rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;text-align:left">🔵 Energía</th>
+            <th style="padding:.2rem .55rem;font-size:.65rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;text-align:left">🟢 Proteínas</th>
+          </tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+        <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem">Dietas sugeridas</div>
+        <div style="display:flex;flex-wrap:wrap;gap:.35rem">${recsHtml}</div>
+        <div style="margin-top:.55rem;font-size:.73rem;color:#fbbf24">⚠️ Aumentar progresivamente según tolerancia.</div>
       </div>
     </div>`;
 }
@@ -1730,6 +1821,7 @@ function calcEnteral() {
 
   /* Composition */
   $('e-comp').innerHTML = `
+    <div style="height:1px;background:var(--border-dim);margin-bottom:.75rem"></div>
     <div class="ri"><span class="rl">🔵 Carbohidratos (${r.hcPct}%)</span><span class="rv">${f1(r.gHC)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalHC)} kcal)</span></span></div>
     <div class="ri"><span class="rl">🟡 Lípidos (${r.lipPct}%)</span><span class="rv">${f1(r.gLip)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalLip)} kcal)</span></span></div>
     <div class="ri"><span class="rl">🟢 Proteínas</span><span class="rv">${f1(r.totProt)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalProt)} kcal)</span></span></div>
@@ -1848,8 +1940,9 @@ function renderTable(r) {
 
   const rows = FORMULAS.filter(f => {
     if (txt && !f.name.toLowerCase().includes(txt) && !f.sub.toLowerCase().includes(txt)) return false;
-    if (S.fltType === 'aguda'  && f.phase !== 'aguda'  && f.phase !== 'ambas') return false;
-    if (S.fltType === 'cronica'&& f.phase !== 'cronica'&& f.phase !== 'ambas') return false;
+    if (S.fltType === 'aguda'    && f.phase !== 'aguda'  && f.phase !== 'ambas') return false;
+    if (S.fltType === 'subaguda' && f.phase !== 'aguda'  && f.phase !== 'ambas') return false;
+    if (S.fltType === 'cronica'  && f.phase !== 'cronica'&& f.phase !== 'ambas') return false;
     return true;
   });
 
@@ -1901,7 +1994,7 @@ function filterTbl() { renderTable(null); }
 
 function setFltType(t) {
   S.fltType = t;
-  ['all','aguda','cronica'].forEach(x => $('flt-'+x)?.classList.toggle('active', x===t));
+  ['all','aguda','subaguda','cronica'].forEach(x => $('flt-'+x)?.classList.toggle('active', x===t));
   renderTable(null);
 }
 
@@ -1971,11 +2064,71 @@ function calcRitmo() {
 }
 
 /* ── Fase clínica ── */
+const FASE_DEFAULTS = {
+  aguda:    { kcalkg: 15, protkg: 0.8 },
+  subaguda: { kcalkg: 20, protkg: 1.0 },
+  cronica:  { kcalkg: 25, protkg: 1.0 },
+};
+
 function setFase(f) {
   S.fase = f;
   $('faseA-btn').classList.toggle('active', f==='aguda');
+  $('faseS-btn').classList.toggle('active', f==='subaguda');
   $('faseC-btn').classList.toggle('active', f==='cronica');
+  // Auto-adjust nutritional objectives
+  const d = FASE_DEFAULTS[f];
+  if (d) { sv('e-kcalkg', d.kcalkg); sv('e-protkg', d.protkg); }
+  setFltType(f);
   calcEnteral();
+}
+
+function setFaseP(f) {
+  S.p.fase = f;
+  $('p-faseA-btn').classList.toggle('active', f==='aguda');
+  $('p-faseS-btn').classList.toggle('active', f==='subaguda');
+  $('p-faseC-btn').classList.toggle('active', f==='cronica');
+  // Auto-adjust nutritional objectives
+  const d = FASE_DEFAULTS[f];
+  if (d) { sv('p-kcalkg', d.kcalkg); sv('p-protkg', d.protkg); }
+  // Update fase-info for parenteral
+  updateFaseInfoP(f);
+  calcParenteral();
+}
+
+function updateFaseInfoP(f) {
+  const el = $('p-fase-info');
+  if (!el) return;
+  const icons  = { aguda:'⚡', subaguda:'🔶', cronica:'🔄' };
+  const titles = { aguda:'Fase Aguda · 0–72 h', subaguda:'Fase Subaguda · 4º–7º día', cronica:'Fase Crónica · > 1 semana' };
+  const rows = {
+    aguda:    [['Inicio', '15 Kcal/Kg/día', '0.8 g prot/Kg/día'], ['Objetivo', '20 Kcal/Kg/día', '1 g prot/Kg/día']],
+    subaguda: [['Inicio', '20 Kcal/Kg/día', '1 g prot/Kg/día'],   ['Objetivo', '25 Kcal/Kg/día', '1 g prot/Kg/día']],
+    cronica:  [['Inicio', '25 Kcal/Kg/día', '1 g prot/Kg/día'],   ['Objetivo', '30 Kcal/Kg/día', '1.2–1.3 g prot/Kg/día']],
+  };
+  const rowsHtml = (rows[f] || []).map(([label, kcal, prot]) => `
+    <tr>
+      <td style="padding:.28rem .55rem;font-size:.72rem;color:var(--muted);white-space:nowrap">${label}</td>
+      <td style="padding:.28rem .55rem;font-size:.8rem;font-weight:700;color:#60a5fa;white-space:nowrap">${kcal}</td>
+      <td style="padding:.28rem .55rem;font-size:.8rem;font-weight:700;color:#34d399;white-space:nowrap">${prot}</td>
+    </tr>`).join('');
+  el.innerHTML = `
+    <div style="border-radius:11px;overflow:hidden;border:1px solid var(--border)">
+      <div style="padding:.6rem .85rem;display:flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.04);border-bottom:1px solid var(--border-dim)">
+        <span style="font-size:1rem">${icons[f]||''}</span>
+        <span style="font-size:.85rem;font-weight:800;color:var(--text)">${titles[f]||''}</span>
+      </div>
+      <div style="padding:.7rem .85rem;background:rgba(255,255,255,.02)">
+        <table style="border-collapse:collapse;width:100%;margin-bottom:.45rem">
+          <thead><tr>
+            <th style="padding:.2rem .55rem;font-size:.65rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;text-align:left"></th>
+            <th style="padding:.2rem .55rem;font-size:.65rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;text-align:left">🔵 Energía</th>
+            <th style="padding:.2rem .55rem;font-size:.65rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;text-align:left">🟢 Proteínas</th>
+          </tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+        <div style="margin-top:.35rem;font-size:.73rem;color:#fbbf24">⚠️ Aumentar progresivamente</div>
+      </div>
+    </div>`;
 }
 
 /* ── Weight selection ── */
@@ -2091,6 +2244,19 @@ function nutricOverlayClick(e) {
   if (e.target === document.getElementById('nutric-overlay')) closeNutricModal();
 }
 
+function openComorListModal(e) {
+  if (e) e.preventDefault();
+  document.getElementById('comor-overlay').classList.add('open');
+}
+
+function closeComorListModal() {
+  document.getElementById('comor-overlay').classList.remove('open');
+}
+
+function comorOverlayClick(e) {
+  if (e.target === document.getElementById('comor-overlay')) closeComorListModal();
+}
+
 function calcNutricScore() {
   const requiredFields = ['ns-age', 'ns-apache', 'ns-sofa', 'ns-comor', 'ns-days'];
   let total = 0;
@@ -2137,6 +2303,7 @@ window.addEventListener('DOMContentLoaded', () => {
   calcTol();
   calcRitmo();
   setFase('aguda');
+  setFaseP('aguda');
   lockFormulaManager();
 });
 </script>
