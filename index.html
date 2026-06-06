@@ -781,11 +781,11 @@
           </div>
         </div>
         <div class="fg">
-          <label class="fl">Relación Lípidos : HC</label>
-          <div style="display:flex;align-items:center;gap:.9rem">
-            <span style="font-size:.8rem;color:var(--muted);white-space:nowrap"><span id="e-lipp" style="color:var(--accent);font-weight:700">40</span>%&nbsp;Lípidos</span>
-            <input type="range" id="e-hcs" min="40" max="70" value="60" oninput="updHC('e');calcEnteral()">
-            <span style="font-size:.8rem;color:var(--muted);white-space:nowrap">HC&nbsp;<span id="e-hcp" style="color:var(--secondary);font-weight:700">60</span>%</span>
+          <label class="fl" style="margin-bottom:.5rem">Relación Lípidos : HC</label>
+          <div style="display:flex;align-items:center;gap:.7rem">
+            <span style="font-size:.78rem;color:var(--muted);font-weight:600;white-space:nowrap;min-width:4.2rem"><span id="e-lipp" style="color:var(--accent);font-weight:800;font-size:.95rem">40</span>% Líp.</span>
+            <input type="range" id="e-hcs" min="40" max="70" value="60" oninput="updHC('e');calcEnteral()" style="flex:1;height:6px;cursor:pointer">
+            <span style="font-size:.78rem;color:var(--muted);font-weight:600;white-space:nowrap;min-width:4.2rem;text-align:right"><span id="e-hcp" style="color:var(--secondary);font-weight:800;font-size:.95rem">60</span>% HC</span>
           </div>
         </div>
       </div>
@@ -923,7 +923,7 @@
       <div class="card">
         <div class="card-head">
           <div class="c-icon green">🎯</div>
-          <div><div class="c-title">Objetivos NPT</div></div>
+          <div><div class="c-title">Objetivos Nutricionales</div></div>
         </div>
         <div class="g2">
           <div class="fg">
@@ -937,16 +937,18 @@
             <div class="obj-gap" aria-hidden="true"></div>
           </div>
         </div>
-        <div class="fg">
-          <label class="fl" for="p-propofol">Propofol (ml / día)</label>
-          <div class="fi-wrap"><input class="fi" type="number" id="p-propofol" value="0" min="0" max="500" step="10" oninput="calcParenteral()"><span class="fi-unit">ml/d</span></div>
-        </div>
-        <div class="fg">
-          <label class="fl">Relación Lípidos : HC</label>
-          <div style="display:flex;align-items:center;gap:.9rem">
-            <span style="font-size:.8rem;color:var(--muted);white-space:nowrap"><span id="p-lipp" style="color:var(--accent);font-weight:700">45</span>%&nbsp;Lípidos</span>
-            <input type="range" id="p-hcs" min="40" max="70" value="55" oninput="updHC('p');calcParenteral()">
-            <span style="font-size:.8rem;color:var(--muted);white-space:nowrap">HC&nbsp;<span id="p-hcp" style="color:var(--secondary);font-weight:700">55</span>%</span>
+        <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:1.2rem;align-items:flex-start">
+          <div class="fg" style="margin-bottom:0">
+            <label class="fl" for="p-propofol">Propofol (ml / día)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="p-propofol" value="0" min="0" max="500" step="10" oninput="calcParenteral()"><span class="fi-unit">ml/d</span></div>
+          </div>
+          <div class="fg" style="margin-bottom:0">
+            <label class="fl" style="margin-bottom:.5rem">Relación Lípidos : HC</label>
+            <div style="display:flex;align-items:center;gap:.7rem">
+              <span style="font-size:.78rem;color:var(--muted);font-weight:600;white-space:nowrap;min-width:4.2rem"><span id="p-lipp" style="color:var(--accent);font-weight:800;font-size:.95rem">45</span>% Líp.</span>
+              <input type="range" id="p-hcs" min="40" max="70" value="55" oninput="updHC('p');calcParenteral()" style="flex:1;height:6px;cursor:pointer">
+              <span style="font-size:.78rem;color:var(--muted);font-weight:600;white-space:nowrap;min-width:4.2rem;text-align:right"><span id="p-hcp" style="color:var(--secondary);font-weight:800;font-size:.95rem">55</span>% HC</span>
+            </div>
           </div>
         </div>
       </div>
@@ -995,7 +997,7 @@
         <div class="alert alert-info">ℹ️ Protocolo de inicio de N. Enteral. Se controla el débito gástrico cada 12 horas para ajustar el ritmo.</div>
         <div class="fg">
           <label class="fl" for="t-vol">Volumen objetivo total (ml/24h)</label>
-          <div class="fi-wrap"><input class="fi" type="number" id="t-vol" value="500" min="100" max="3000" step="50" oninput="calcTol()"><span class="fi-unit">ml</span></div>
+          <div class="fi-wrap"><input class="fi" type="number" id="t-vol" value="500" min="100" max="3000" step="50" oninput="calcTol()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#60a5fa">ml</span></div>
         </div>
         <div style="height:.4rem"></div>
         <div class="phase ph1">
@@ -1005,15 +1007,15 @@
           </div>
           <div class="fg">
             <label class="fl">Pausas para débito</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="t-pause-base1" value="20" min="0" max="720" step="5" oninput="calcTol()" readonly><span class="fi-unit">min</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-pause-base1" value="20" min="0" max="720" step="5" oninput="calcTol()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
           </div>
           <div class="fg">
             <label class="fl" for="t-extra1">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="t-extra1" value="0" min="0" max="720" step="5" oninput="calcTol()"><span class="fi-unit">min</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-extra1" value="0" min="0" max="720" step="5" oninput="calcTol()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
           </div>
           <div class="fg" style="margin-bottom:0">
             <label class="fl" for="t-r1">Ritmo (ml/h)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="t-r1" value="20" min="5" max="200" step="5" readonly><span class="fi-unit">ml/h</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-r1" value="20" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
             <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen objetivo y pausas</div>
           </div>
           <div id="t-p1r" style="padding-top:.9rem"></div>
@@ -1025,15 +1027,15 @@
           </div>
           <div class="fg">
             <label class="fl">Pausas para débito</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="t-pause-base2" value="20" min="0" max="720" step="5" oninput="calcTol()" readonly><span class="fi-unit">min</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-pause-base2" value="20" min="0" max="720" step="5" oninput="calcTol()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
           </div>
           <div class="fg">
             <label class="fl" for="t-extra2">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="t-extra2" value="0" min="0" max="720" step="5" oninput="calcTol()"><span class="fi-unit">min</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-extra2" value="0" min="0" max="720" step="5" oninput="calcTol()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
           </div>
           <div class="fg" style="margin-bottom:0">
             <label class="fl" for="t-r2">Ritmo (ml/h)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="t-r2" value="40" min="5" max="200" step="5" readonly><span class="fi-unit">ml/h</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-r2" value="40" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
             <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático: 2x ritmo de la Fase 1</div>
           </div>
           <div id="t-p2r" style="padding-top:.9rem"></div>
@@ -1068,7 +1070,7 @@
         <div style="background:rgba(96,165,250,.08);border-left:3px solid #60a5fa;padding:.9rem;margin-bottom:.9rem;border-radius:8px">
           <div class="fg" style="margin-bottom:0">
             <label class="fl" for="r-vol" style="font-weight:700;font-size:.95rem">Volumen objetivo (ml/24h)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r-vol" value="1200" min="100" max="3000" step="50" oninput="calcRitmo()" style="font-weight:600;font-size:1.1rem"><span class="fi-unit">ml</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="r-vol" value="1200" min="100" max="3000" step="50" oninput="calcRitmo()" style="font-weight:600;font-size:1.1rem"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#60a5fa">ml</span></div>
           </div>
         </div>
         <div class="phase ph1">
@@ -1078,11 +1080,11 @@
           </div>
           <div class="fg">
             <label class="fl">Pausas para débito (C/12 horas)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r-pause2" value="40" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit">min</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="r-pause2" value="40" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
           </div>
           <div class="fg">
             <label class="fl" for="r-extra2">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r-extra2" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit">min</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="r-extra2" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
           </div>
         </div>
         <div class="phase ph2">
@@ -1092,11 +1094,11 @@
           </div>
           <div class="fg">
             <label class="fl">Pausas para débito (C/24 horas)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r-pause3" value="20" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit">min</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="r-pause3" value="20" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
           </div>
           <div class="fg">
             <label class="fl" for="r-extra3">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r-extra3" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit">min</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="r-extra3" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
           </div>
         </div>
       </div>
@@ -1396,7 +1398,7 @@
         <div class="nutric-param-label" style="text-align:center">Técnica continua</div>
         <div style="display:flex;justify-content:center;text-align:center">
           <label style="display:inline-flex;align-items:center;gap:.45rem;font-size:.8rem;color:var(--text);cursor:pointer">
-          <input type="checkbox" id="rm-citrate" style="width:16px;height:16px;accent-color:#3b82f6">
+          <input type="checkbox" id="rm-citrate" style="width:16px;height:16px;accent-color:#3b82f6" onchange="toggleCitModal(this.checked)">
           <span>CITRATO</span>
           </label>
         </div>
@@ -1412,22 +1414,22 @@
 /* ── Formula database (from Excel: FÓRMULA N. ENTERAL sheet) ──
    Values per 100 ml unless noted */
 const DEFAULT_FORMULAS = [
-  { name:'Peptamen AF Enteral',           kcal:1.50, n2:1.50, prot:9.4,  fiber:0,   osm:380, type:'ol', typeL:'Oligomérica', phase:'aguda',  sub:'Peptídica hiperprot./hipercal.' },
-  { name:'Diaba HP',                      kcal:1.00, n2:0.91, prot:5.7,  fiber:1.8, osm:345, type:'es', typeL:'Específica',  phase:'ambas',  sub:'Diabetes hiperproteica' },
-  { name:'Atempero',                      kcal:1.25, n2:1.15, prot:7.2,  fiber:1.7, osm:400, type:'cr', typeL:'Esp. Críticos',phase:'aguda',  sub:'Fase aguda — especial críticos' },
-  { name:'Ensure Plus Advance RTH',       kcal:1.50, n2:1.28, prot:8.0,  fiber:1.4, osm:432, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hiperproteica hipercalórica' },
-  { name:'Impact Enteral',                kcal:1.01, n2:0.90, prot:5.6,  fiber:0,   osm:298, type:'im', typeL:'Inmunomol.',  phase:'aguda',  sub:'Inmunomoduladora' },
-  { name:'Nutrison Adv. DIASON ENERGY HP',kcal:1.50, n2:1.23, prot:7.7,  fiber:1.5, osm:360, type:'es', typeL:'Específica',  phase:'ambas',  sub:'Diabetes HP hipercalórica' },
-  { name:'Tdiet HP',                      kcal:1.25, n2:1.00, prot:6.3,  fiber:1.7, osm:424, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hiperproteica con fibra' },
-  { name:'Isosource Protein',             kcal:1.30, n2:1.07, prot:6.7,  fiber:0,   osm:319, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hiperproteica sin fibra' },
-  { name:'Isosource Protein Fibre',       kcal:1.30, n2:1.07, prot:6.7,  fiber:1.5, osm:311, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hiperproteica con fibra' },
-  { name:'Novasource GI Protein',         kcal:1.17, n2:0.98, prot:6.1,  fiber:2.2, osm:349, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Normoprot. con fibra' },
-  { name:'Fresubin 2 HP Fibra',           kcal:2.00, n2:1.60, prot:10.0, fiber:1.5, osm:395, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hipercalórica hiperprot. fibra' },
-  { name:'Isosource 2.0 Protein Fibre',   kcal:2.03, n2:1.60, prot:10.0, fiber:2.0, osm:395, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hipercalórica hiperprot. fibra' },
-  { name:'Novasource Protein Plus Energy',kcal:1.50, n2:1.20, prot:7.5,  fiber:1.5, osm:390, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hiperproteica hipercalórica' },
-  { name:'Novasource Diabet',             kcal:1.07, n2:0.77, prot:4.8,  fiber:2.0, osm:225, type:'es', typeL:'Específica',  phase:'ambas',  sub:'Diabetes isocalórica' },
-  { name:'SondAvant Estándar',            kcal:1.00, n2:0.64, prot:4.0,  fiber:0,   osm:276, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Normoproteica sin fibra' },
-  { name:'Nutrison Multifibre',           kcal:1.03, n2:0.64, prot:4.0,  fiber:1.5, osm:250, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Normoproteica con fibra' },
+  { name:'Peptamen AF Enteral',           kcal:1.50, n2:1.50, prot:9.4,  hc:14,    lip:6.5,  fiber:0,   osm:380, type:'ol', typeL:'Oligomérica', phase:'aguda',  sub:'Peptídica hiperprot./hipercal.' },
+  { name:'Diaba HP',                      kcal:1.00, n2:0.91, prot:5.7,  hc:8.4,   lip:4.4,  fiber:1.8, osm:345, type:'es', typeL:'Específica',  phase:'ambas',  sub:'Diabetes hiperproteica' },
+  { name:'Atempero',                      kcal:1.25, n2:1.15, prot:7.2,  hc:17.3,  lip:5,    fiber:1.7, osm:400, type:'cr', typeL:'Esp. Críticos',phase:'aguda',  sub:'Fase aguda — especial críticos' },
+  { name:'Ensure Plus Advance RTH',       kcal:1.50, n2:1.28, prot:8.0,  hc:18,    lip:4.85, fiber:1.4, osm:432, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hiperproteica hipercalórica' },
+  { name:'Impact Enteral',                kcal:1.01, n2:0.90, prot:5.6,  hc:16.75, lip:2.8,  fiber:0,   osm:298, type:'im', typeL:'Inmunomol.',  phase:'aguda',  sub:'Inmunomoduladora' },
+  { name:'Nutrison Adv. DIASON ENERGY HP',kcal:1.50, n2:1.23, prot:7.7,  hc:11.7,  lip:7.7,  fiber:1.5, osm:360, type:'es', typeL:'Específica',  phase:'ambas',  sub:'Diabetes HP hipercalórica' },
+  { name:'Tdiet HP',                      kcal:1.25, n2:1.00, prot:6.3,  hc:13.3,  lip:4.9,  fiber:1.7, osm:424, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hiperproteica con fibra' },
+  { name:'Isosource Protein',             kcal:1.30, n2:1.07, prot:6.7,  hc:16,    lip:4.4,  fiber:0,   osm:319, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hiperproteica sin fibra' },
+  { name:'Isosource Protein Fibre',       kcal:1.30, n2:1.07, prot:6.7,  hc:16,    lip:4.4,  fiber:1.5, osm:311, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hiperproteica con fibra' },
+  { name:'Novasource GI Protein',         kcal:1.17, n2:0.98, prot:6.1,  hc:14.5,  lip:4.25, fiber:2.2, osm:349, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Normoprot. con fibra' },
+  { name:'Fresubin 2 HP Fibra',           kcal:2.00, n2:1.60, prot:10.0, hc:16.2,  lip:5.8,  fiber:1.5, osm:395, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hipercalórica hiperprot. fibra' },
+  { name:'Isosource 2.0 Protein Fibre',   kcal:2.03, n2:1.60, prot:10.0, hc:20.4,  lip:8.4,  fiber:2.0, osm:395, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hipercalórica hiperprot. fibra' },
+  { name:'Novasource Protein Plus Energy',kcal:1.50, n2:1.20, prot:7.5,  hc:16.9,  lip:5.8,  fiber:1.5, osm:390, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Hiperproteica hipercalórica' },
+  { name:'Novasource Diabet',             kcal:1.07, n2:0.77, prot:4.8,  hc:10.5,  lip:4.6,  fiber:2.0, osm:225, type:'es', typeL:'Específica',  phase:'ambas',  sub:'Diabetes isocalórica' },
+  { name:'SondAvant Estándar',            kcal:1.00, n2:0.64, prot:4.0,  hc:12.4,  lip:3.8,  fiber:0,   osm:276, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Normoproteica sin fibra' },
+  { name:'Nutrison Multifibre',           kcal:1.03, n2:0.64, prot:4.0,  hc:12.3,  lip:3.9,  fiber:1.5, osm:250, type:'po', typeL:'Polimérica',  phase:'cronica', sub:'Normoproteica con fibra' },
 ];
 
 let FORMULAS = DEFAULT_FORMULAS.map(f => ({ ...f }));
@@ -1436,7 +1438,7 @@ const FORMULAS_STORAGE_KEY = 'nutri_enteral_formulas_v1';
 const N2_RENAPRO = 2.88; // g N2 per RENAPRO unit
 
 const BASE_RENAL_PROFILE = {
-  label: 'Sin selección (valores originales)',
+  label: 'No',
   defaults: { aguda: 0.8, subaguda: 1.0, cronica: 1.0 },
   proteins: {
     aguda: { ini: '0.8 g prot/Kg/día', obj: '1.0 g prot/Kg/día' },
@@ -1553,6 +1555,8 @@ function sanitizeFormula(raw, idx) {
     kcal: Number(obj.kcal) || 0,
     n2: Number(obj.n2) || 0,
     prot: Number(obj.prot) || 0,
+    hc: Number(obj.hc) || 0,
+    lip: Number(obj.lip) || 0,
     fiber: Number(obj.fiber) || 0,
     osm: Number(obj.osm) || 0,
     type,
@@ -1925,7 +1929,7 @@ function updateFaseInfo(r) {
   const recsHtml = recs.map(t => `<span class="badge badge-ok" style="margin-right:.4rem;margin-bottom:.4rem;padding:.25rem .6rem;font-size:.73rem">⭐ ${t}</span>`).join('');
 
   const icons  = { aguda:'⚡', subaguda:'🔶', cronica:'🔄' };
-  const titles = { aguda:'Fase Aguda · 0–72 h', subaguda:'Fase Estabilización · 4º–7º día', cronica:'Fase de Recuperación · > 1 semana' };
+  const titles = { aguda:'Fase Aguda ·  0 – 72 h', subaguda:'Fase Estabilización · 4º – 7º día', cronica:'Fase de Recuperación ·  > 1 semana' };
   const protRows = protocol ? protocol.proteins : BASE_RENAL_PROFILE.proteins;
   const rows = {
     aguda:    [['Inicio', '15 Kcal/Kg/día', protRows.aguda.ini], ['Objetivo', '20 Kcal/Kg/día', protRows.aguda.obj]],
@@ -1974,7 +1978,9 @@ function calcEnteral() {
     <div class="sb blue"><div class="sv">${fi(r.totalKcalDay)}</div><div class="su">kcal/día</div><div class="sl">Energía Total</div></div>
     <div class="sb green"><div class="sv">${f1(r.totProt)}</div><div class="su">g/día</div><div class="sl">Proteínas</div></div>
     <div class="sb amber"><div class="sv">${f2(r.gN2)}</div><div class="su">g N₂/día</div><div class="sl">Nitrógeno</div></div>
-    <div class="sb violet"><div class="sv">${fi(r.npKcal)}</div><div class="su">kcal NP</div><div class="sl">Kcal No Proteicas</div><div class="sl" style="margin-top:.45rem;color:var(--text);font-size:.72rem">HC <strong>${f1(r.totalGHC)}</strong> g · Líp <strong>${f1(r.totalGLip)}</strong> g</div></div>`;
+    <div class="sb violet"><div class="sv">${fi(r.npKcal)}</div><div class="su">kcal NP</div><div class="sl">Kcal No Proteicas</div></div>
+    <div class="sb cyan"><div class="sv">${f1(r.totalGHC)}</div><div class="su">g/día</div><div class="sl">Hidratos de Carbono</div></div>
+    <div class="sb cyan"><div class="sv">${f1(r.totalGLip)}</div><div class="su">g/día</div><div class="sl">Lípidos</div></div>`;
 
   /* Ratio */
   const rc = r.ratio < 80 ? '#ef4444' : r.ratio > 150 ? '#f59e0b' : '#34d399';
@@ -1998,13 +2004,12 @@ function calcEnteral() {
   /* Composition */
   $('e-comp').innerHTML = `
     <div style="height:1px;background:var(--border-dim);margin-bottom:.75rem"></div>
-    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(59,130,246,.08);border-radius:7px">📋 Aportes completos</div>
-    <div class="ri" style="padding:.7rem .6rem"><span class="rl">🔵 Carbohidratos (${f1(r.hcPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.gHC)}<span class="ru">g</span> <span style="color:#60a5fa;font-size:.8rem;font-weight:600">(${fi(r.kcalHC)} kcal)</span></span></div>
-    <div class="ri" style="padding:.7rem .6rem"><span class="rl">🟡 Lípidos (${f1(r.lipPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.gLip)}<span class="ru">g</span> <span style="color:#22d3ee;font-size:.8rem;font-weight:600">(${fi(r.kcalLip)} kcal)</span></span></div>
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(59,130,246,.08);border-radius:7px">📋 Aportes Completos Teóricos</div>
+    <div class="ri" style="padding:.7rem .6rem"><span class="rl">🔵 Carbohidratos (${f1(r.effHcPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.totalGHC)}<span class="ru">g</span> <span style="color:#60a5fa;font-size:.8rem;font-weight:600">(${fi(r.totalKcalHC)} kcal)</span></span></div>
+    ${S.e.citrate?`<div class="ri" style="padding:.4rem .6rem;font-size:.73rem;color:var(--dim)"><span class="rl" style="margin-left:1.2rem">Dieta: ${f1(r.gHC)} g + Citrato: ${f1(r.citHCg)} g</span></div>`:``}
+    <div class="ri" style="padding:.7rem .6rem"><span class="rl">🟡 Lípidos (${f1(r.effLipPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.totalGLip)}<span class="ru">g</span> <span style="color:#22d3ee;font-size:.8rem;font-weight:600">(${fi(r.totalKcalLip)} kcal)</span></span></div>
+    ${r.prop>0?`<div class="ri" style="padding:.4rem .6rem;font-size:.73rem;color:var(--dim)"><span class="rl" style="margin-left:1.2rem">Dieta: ${f1(r.gLip)} g + Propofol: ${f1(r.propLipg)} g</span></div>`:``}
     <div class="ri" style="padding:.7rem .6rem"><span class="rl">🟢 Proteínas</span><span class="rv" style="font-size:.95rem">${f1(r.totProt)}<span class="ru">g</span> <span style="color:#34d399;font-size:.8rem;font-weight:600">(${fi(r.kcalProt)} kcal)</span></span></div>
-    ${(r.prop>0 || S.e.citrate)?`<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;margin:.6rem .6rem .5rem;padding:.4rem .6rem;background:rgba(139,92,246,.08);border-radius:7px">⚗️ Suplementos Externos</div>`:''} 
-    ${r.prop>0?`<div class="ri" style="padding:.7rem .6rem"><span class="rl">⚗️ Propofol</span><span class="rv" style="font-size:.95rem">${f1(r.propLipg)}<span class="ru">g lípidos</span> <span style="color:#a78bfa;font-size:.8rem;font-weight:600">(${fi(r.kcalProp)} kcal)</span></span></div>`:''}
-    ${S.e.citrate?`<div class="ri" style="padding:.7rem .6rem"><span class="rl">🧪 Citrato</span><span class="rv" style="font-size:.95rem">${f1(r.citHCg)}<span class="ru">g HC</span> <span style="color:#a78bfa;font-size:.8rem;font-weight:600">(${fi(r.kcalCit)} kcal)</span></span></div>`:''}
     <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
       <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔥 Total Kcal/día</span>
       <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${fi(r.totalKcalDay)}<span class="ru">kcal</span></span>
@@ -2045,12 +2050,39 @@ function calcEnteral() {
         </div>`;
     }
 
+    // Calculate HC and Lipids from formula composition using actual values
+    const gHC_diet = (f.hc * vol24) / 100;
+    const gLip_diet = (f.lip * vol24) / 100;
+    
+    // Add citrate and propofol contributions
+    const gHC_total = gHC_diet + (S.e.citrate ? r.citHCg : 0);
+    const gLip_total = gLip_diet + r.propLipg;
+
     const pInfo = $('e-prescription-info');
     if (pInfo) {
       pInfo.innerHTML = `
-        <div class="ri"><span class="rl">Volumen total diario</span><span class="rv">${fi(vol24)}<span class="ru">ml</span></span></div>
-        <div class="ri"><span class="rl">Aporte energético (dieta)</span><span class="rv">${fi(f.kcal * vol24)}<span class="ru">kcal</span></span></div>
-        <div class="ri"><span class="rl">Aporte Nitrógeno (dieta)</span><span class="rv">${f2(f.n2 * vol24 / 100)}<span class="ru">g N₂</span></span></div>
+        <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">📏 Volumen total diario</span>
+          <span class="rv" style="font-size:.95rem">${fi(vol24)}<span class="ru">ml</span></span>
+        </div>
+        <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔥 Aporte energético (dieta)</span>
+          <span class="rv" style="font-size:.95rem">${fi(f.kcal * vol24)}<span class="ru">kcal</span></span>
+        </div>
+        <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🟤 Aporte Nitrógeno (dieta)</span>
+          <span class="rv" style="font-size:.95rem">${f2(f.n2 * vol24 / 100)}<span class="ru">g N₂</span></span>
+        </div>
+        <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔵 Aporte de HC</span>
+          <span class="rv" style="font-size:.95rem">${f1(gHC_total)}<span class="ru">g</span></span>
+        </div>
+        <div class="ri" style="padding:.7rem .6rem"><span class="rl" style="font-size:.75rem;color:var(--muted)">Dieta: ${f1(gHC_diet)} g ${S.e.citrate ? `+ Citrato: ${f1(r.citHCg)} g` : ''}</span></div>
+        <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🟡 Aporte de Lípidos</span>
+          <span class="rv" style="font-size:.95rem">${f1(gLip_total)}<span class="ru">g</span></span>
+        </div>
+        <div class="ri" style="padding:.7rem .6rem"><span class="rl" style="font-size:.75rem;color:var(--muted)">Dieta: ${f1(gLip_diet)} g ${r.prop > 0 ? `+ Propofol: ${f1(r.propLipg)} g` : ''}</span></div>
         ${renaproHtml}
         <button class="qb" style="width:100%;margin-top:.9rem;justify-content:center;padding:.5rem;font-size:.76rem" onclick="applyPrescription(${fi(vol24)})">
           🔗 Aplicar volumen a Tolerancia y Ritmo
@@ -2083,17 +2115,18 @@ function calcParenteral() {
       <div class="sb blue"><div class="sv">${fi(r.totalKcalDay)}</div><div class="su">kcal/día</div><div class="sl">Energía Total</div></div>
       <div class="sb green"><div class="sv">${f1(r.totProt)}</div><div class="su">g/día</div><div class="sl">Proteínas</div></div>
       <div class="sb amber"><div class="sv">${f2(r.gN2)}</div><div class="su">g N₂/día</div><div class="sl">Nitrógeno</div></div>
-      <div class="sb violet"><div class="sv">${fi(r.npKcal)}</div><div class="su">kcal NP</div><div class="sl">Kcal No Proteicas</div><div class="sl" style="margin-top:.45rem;color:var(--text);font-size:.72rem">HC <strong>${f1(r.totalGHC)}</strong> g · Líp <strong>${f1(r.totalGLip)}</strong> g</div></div>`;
+      <div class="sb violet"><div class="sv">${fi(r.npKcal)}</div><div class="su">kcal NP</div><div class="sl">Kcal No Proteicas</div></div>
+      <div class="sb cyan"><div class="sv">${f1(r.totalGHC)}</div><div class="su">g/día</div><div class="sl">Hidratos de Carbono</div></div>
+      <div class="sb cyan"><div class="sv">${f1(r.totalGLip)}</div><div class="su">g/día</div><div class="sl">Lípidos</div></div>`;
   }
 
   $('p-comp').innerHTML = `
     <div style="height:1px;background:var(--border-dim);margin-bottom:.75rem"></div>
     <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(6,182,212,.08);border-radius:7px">🏥 Nutrición Parenteral</div>
     <div class="ri" style="padding:.7rem .6rem"><span class="rl">🔵 Glucosa / HC (${f1(r.effHcPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.totalGHC)}<span class="ru">g</span> <span style="color:#06b6d4;font-size:.8rem;font-weight:600">(${fi(r.totalKcalHC)} kcal)</span></span></div>
+    ${S.p.citrate?`<div class="ri" style="padding:.4rem .6rem;font-size:.73rem;color:var(--dim)"><span class="rl" style="margin-left:1.2rem">Glucosa: ${f1(r.gHC)} g + Citrato: ${f1(r.citHCg)} g</span></div>`:``}
     <div class="ri" style="padding:.7rem .6rem"><span class="rl">🟡 Lípidos (${f1(r.effLipPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.totalGLip)}<span class="ru">g</span> <span style="color:#06b6d4;font-size:.8rem;font-weight:600">(${fi(r.totalKcalLip)} kcal)</span></span></div>
-    ${(r.prop>0 || S.p.citrate)?`<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;margin:.6rem .6rem .5rem;padding:.4rem .6rem;background:rgba(139,92,246,.08);border-radius:7px">⚗️ Suplementos Externos</div>`:''} 
-    ${r.prop>0?`<div class="ri" style="padding:.7rem .6rem"><span class="rl">⚗️ Propofol</span><span class="rv" style="font-size:.95rem">${f1(r.propLipg)}<span class="ru">g lípidos</span> <span style="color:#a78bfa;font-size:.8rem;font-weight:600">(${fi(r.kcalProp)} kcal)</span></span></div>`:''}
-    ${S.p.citrate?`<div class="ri" style="padding:.7rem .6rem"><span class="rl">🧪 Citrato</span><span class="rv" style="font-size:.95rem">${f1(r.citHCg)}<span class="ru">g HC</span> <span style="color:#a78bfa;font-size:.8rem;font-weight:600">(${fi(r.kcalCit)} kcal)</span></span></div>`:''}
+    ${r.prop>0?`<div class="ri" style="padding:.4rem .6rem;font-size:.73rem;color:var(--dim)"><span class="rl" style="margin-left:1.2rem">Dieta: ${f1(r.gLip)} g + Propofol: ${f1(r.propLipg)} g</span></div>`:``}
     <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
       <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔥 Total Kcal/día</span>
       <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${fi(r.totalKcalDay)}<span class="ru">kcal</span></span>
@@ -2113,9 +2146,7 @@ function calcParenteral() {
         <div style="display:flex;justify-content:space-between;margin-top:.25rem"><span>Kcal no proteicas:</span><strong style="color:var(--text)">${fi(r.npDietKcal)} kcal</strong></div>
         <div style="display:flex;justify-content:space-between;margin-top:.25rem"><span>Ratio kcal NP / g N₂:</span><strong style="color:var(--text)">${f1(r.gN2 > 0 ? r.npDietKcal / r.gN2 : 0)}</strong></div>
       </div>
-    </div>
-    ${r.prop>0?`<div class="alert alert-warn" style="margin-top:.9rem">⚠️ Propofol ${fi(r.prop)} ml/día aporta ${f1(r.propLipg)} g de lípidos (${fi(r.kcalProp)} kcal), ya descontados del objetivo</div>`:''}
-    ${S.p.citrate?`<div class="alert alert-info" style="margin-top:.9rem">ℹ️ Citrato activo — 75 g HC equivalentes a 300 kcal, ya descontadas</div>`:''}`;
+    </div>`;
 }
 
 /* ── Formula Table ── */
@@ -2363,7 +2394,7 @@ function updateFaseInfoP(f) {
   const protocol = getRenalProtocol('p');
   const protocolLabel = protocol ? protocol.label : BASE_RENAL_PROFILE.label;
   const icons  = { aguda:'⚡', subaguda:'🔶', cronica:'🔄' };
-  const titles = { aguda:'Fase Aguda · 0–72 h', subaguda:'Fase Estabilización · 4º–7º día', cronica:'Fase de Recuperación · > 1 semana' };
+  const titles = { aguda:'Fase Aguda · 0 – 72 h', subaguda:'Fase Estabilización ·  4º – 7º día', cronica:'Fase de Recuperación ·  >  1 semana' };
   const protRows = protocol ? protocol.proteins : BASE_RENAL_PROFILE.proteins;
   const rows = {
     aguda:    [['Inicio', '15 Kcal/Kg/día', protRows.aguda.ini], ['Objetivo', '20 Kcal/Kg/día', protRows.aguda.obj]],
@@ -2461,6 +2492,11 @@ function setCit(px, val) {
   S[px].citrate = val;
   updateRenalChip(px);
   px==='e' ? calcEnteral() : calcParenteral();
+}
+
+function toggleCitModal(val) {
+  const px = S.renalModal.px || 'e';
+  setCit(px, val);
 }
 
 function setYeyuno(val) {
