@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CalcNutrición UCI — Calculadora de Nutrición en Paciente Crítico</title>
-  <meta name="description" content="Calculadora de nutrición artificial (enteral y parenteral) para paciente crítico en UCI. Basada en hoja de cálculo clínica v13.">
+  <meta name="description" content="Calculadora de nutrición artificial (enteral y parenteral) para paciente crítico en UCI.">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* ===== RESET & BASE ===== */
@@ -96,6 +96,8 @@
       display: flex; gap: .35rem;
       overflow-x: auto; scrollbar-width: none;
       box-shadow: inset 0 -1px 0 rgba(255,255,255,.03);
+      position: fixed; top: 65px; left: 0; right: 0; width: 100%;
+      z-index: 199;
     }
     .tab-nav::-webkit-scrollbar { display:none; }
     .tab-btn {
@@ -125,7 +127,7 @@
     }
 
     /* ===== LAYOUT ===== */
-    .main { max-width: 1450px; margin: 0 auto; padding: 1.5rem 2rem 5rem; }
+    .main { max-width: 1450px; margin: 0 auto; padding: 1.5rem 2rem 5rem; margin-top: 55px; }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; animation: fadeUp .25s ease; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
@@ -162,6 +164,7 @@
     .c-icon.cyan   { background: rgba(6,182,212,.14); }
     .c-icon.violet { background: rgba(139,92,246,.14); }
     .c-title { font-size: .88rem; font-weight: 700; }
+    .c-title.tab-title { font-size: 1.02rem; font-weight: 800; color: var(--text); letter-spacing: -.01em; }
     .c-sub   { font-size: .68rem; color: var(--muted); margin-top: .05rem; }
 
     /* ===== FORM ===== */
@@ -688,7 +691,7 @@
   <div class="hdr-icon">🏥</div>
   <div class="hdr-text">
     <h1>CalcNutrición UCI</h1>
-    <p>Calculadora de Nutrición Artificial en Paciente Crítico · versión 13</p>
+    <p>Calculadora de Nutrición Artificial en Paciente Crítico.</p>
   </div>
   <div class="hdr-badge">Sistema activo</div>
 </header>
@@ -716,11 +719,11 @@
       <div class="card">
         <div class="card-head">
           <div class="c-icon blue">👤</div>
-          <div><div class="c-title">Datos del Paciente</div><div class="c-sub">Antropometría</div></div>
+          <div><div class="c-title tab-title">🧪 Datos del Paciente</div><div class="c-sub">Antropometría</div></div>
         </div>
         <div class="g2" style="grid-template-columns:1fr 1fr 1fr 1fr">
           <div class="fg">
-            <label class="fl" for="e-peso">Peso actual (kg)</label>
+            <label class="fl" for="e-peso">Peso (kg)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="e-peso" value="76" min="30" max="250" step="0.5" oninput="S.e.userSel = false; calcEnteral()"><span class="fi-unit">kg</span></div>
           </div>
           <div class="fg">
@@ -791,7 +794,7 @@
       <div class="card">
         <div class="card-head">
           <div class="c-icon cyan">⚗️</div>
-          <div><div class="c-title">Composición Teórica 24h</div><div class="c-sub">Requerimientos calculados</div></div>
+          <div><div class="c-title">Aportes por Nutrición Enteral</div><div class="c-sub">Composición de la dieta (sin suplementos externos)</div></div>
         </div>
         <div class="sg" id="e-stats" style="margin-bottom:.9rem"></div>
         <div id="e-ratio"></div>
@@ -887,11 +890,11 @@
       <div class="card">
         <div class="card-head">
           <div class="c-icon blue">👤</div>
-          <div><div class="c-title">Datos del Paciente — NPT</div><div class="c-sub">Nutrición Parenteral Total</div></div>
+          <div><div class="c-title tab-title">💉 Datos del Paciente — NPT</div><div class="c-sub">Nutrición Parenteral Total</div></div>
         </div>
         <div class="g2" style="grid-template-columns:1fr 1fr 1fr 1fr">
           <div class="fg">
-            <label class="fl" for="p-peso">Peso actual (kg)</label>
+            <label class="fl" for="p-peso">Peso (kg)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="p-peso" value="69" min="30" max="250" step="0.5" oninput="S.p.userSel = false; calcParenteral()"><span class="fi-unit">kg</span></div>
           </div>
           <div class="fg">
@@ -987,12 +990,12 @@
       <div class="card">
         <div class="card-head">
           <div class="c-icon blue">📋</div>
-          <div><div class="c-title">Inicio y Progresión N. Enteral</div><div class="c-sub">Pauta de tolerancia · primeras 24 horas</div></div>
+          <div><div class="c-title tab-title">📋 Inicio y Progresión N. Enteral</div><div class="c-sub">Pauta de tolerancia · primeras 24 horas</div></div>
         </div>
         <div class="alert alert-info">ℹ️ Protocolo de inicio de N. Enteral. Se controla el débito gástrico cada 12 horas para ajustar el ritmo.</div>
         <div class="fg">
           <label class="fl" for="t-vol">Volumen objetivo total (ml/24h)</label>
-          <div class="fi-wrap"><input class="fi" type="number" id="t-vol" value="1200" min="100" max="3000" step="50" oninput="calcTol()"><span class="fi-unit">ml</span></div>
+          <div class="fi-wrap"><input class="fi" type="number" id="t-vol" value="500" min="100" max="3000" step="50" oninput="calcTol()"><span class="fi-unit">ml</span></div>
         </div>
         <div style="height:.4rem"></div>
         <div class="phase ph1">
@@ -1000,28 +1003,40 @@
             <span class="ph-num">1</span>
             <strong style="font-size:.83rem">Primeras 12 h — hasta 1.er control de débito</strong>
           </div>
-          <div class="g2">
-            <div class="fg" style="margin-bottom:0">
-              <label class="fl" for="t-r1">Ritmo (ml/h)</label>
-              <div class="fi-wrap"><input class="fi" type="number" id="t-r1" value="20" min="5" max="200" step="5" oninput="calcTol()"><span class="fi-unit">ml/h</span></div>
-              <div class="qb-row"><button class="qb" onclick="sv('t-r1',10);calcTol()">10</button><button class="qb" onclick="sv('t-r1',20);calcTol()">20</button><button class="qb" onclick="sv('t-r1',30);calcTol()">30</button></div>
-            </div>
-            <div id="t-p1r" style="padding-top:1.4rem"></div>
+          <div class="fg">
+            <label class="fl">Pausas para débito</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-pause-base1" value="20" min="0" max="720" step="5" oninput="calcTol()" readonly><span class="fi-unit">min</span></div>
           </div>
+          <div class="fg">
+            <label class="fl" for="t-extra1">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-extra1" value="0" min="0" max="720" step="5" oninput="calcTol()"><span class="fi-unit">min</span></div>
+          </div>
+          <div class="fg" style="margin-bottom:0">
+            <label class="fl" for="t-r1">Ritmo (ml/h)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-r1" value="20" min="5" max="200" step="5" readonly><span class="fi-unit">ml/h</span></div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen objetivo y pausas</div>
+          </div>
+          <div id="t-p1r" style="padding-top:.9rem"></div>
         </div>
         <div class="phase ph2">
           <div style="display:flex;align-items:center;margin-bottom:.7rem">
             <span class="ph-num">2</span>
             <strong style="font-size:.83rem">Siguientes 12 h — hasta 2.º control de débito</strong>
           </div>
-          <div class="g2">
-            <div class="fg" style="margin-bottom:0">
-              <label class="fl" for="t-r2">Ritmo (ml/h)</label>
-              <div class="fi-wrap"><input class="fi" type="number" id="t-r2" value="40" min="5" max="200" step="5" oninput="calcTol()"><span class="fi-unit">ml/h</span></div>
-              <div class="qb-row"><button class="qb" onclick="sv('t-r2',20);calcTol()">20</button><button class="qb" onclick="sv('t-r2',40);calcTol()">40</button><button class="qb" onclick="sv('t-r2',60);calcTol()">60</button></div>
-            </div>
-            <div id="t-p2r" style="padding-top:1.4rem"></div>
+          <div class="fg">
+            <label class="fl">Pausas para débito</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-pause-base2" value="20" min="0" max="720" step="5" oninput="calcTol()" readonly><span class="fi-unit">min</span></div>
           </div>
+          <div class="fg">
+            <label class="fl" for="t-extra2">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-extra2" value="0" min="0" max="720" step="5" oninput="calcTol()"><span class="fi-unit">min</span></div>
+          </div>
+          <div class="fg" style="margin-bottom:0">
+            <label class="fl" for="t-r2">Ritmo (ml/h)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-r2" value="40" min="5" max="200" step="5" readonly><span class="fi-unit">ml/h</span></div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático: 2x ritmo de la Fase 1</div>
+          </div>
+          <div id="t-p2r" style="padding-top:.9rem"></div>
         </div>
       </div>
     </div>
@@ -1047,23 +1062,42 @@
       <div class="card">
         <div class="card-head">
           <div class="c-icon cyan">⏱</div>
-          <div><div class="c-title">Ritmo de Nutrición Enteral</div><div class="c-sub">Tras completar la Pauta de Tolerancia</div></div>
+          <div><div class="c-title tab-title">⏱ Ritmo de Nutrición Enteral</div><div class="c-sub">Tras completar la Pauta de Tolerancia</div></div>
         </div>
         <div class="alert alert-ok">✅ Pauta de tolerancia completada. Calcule el ritmo de mantenimiento.</div>
-        <div class="fg">
-          <label class="fl" for="r-vol">Volumen objetivo (ml/24h)</label>
-          <div class="fi-wrap"><input class="fi" type="number" id="r-vol" value="1200" min="100" max="3000" step="50" oninput="calcRitmo()"><span class="fi-unit">ml</span></div>
-        </div>
-        <div class="fg">
-          <label class="fl">Control de débito gástrico</label>
-          <div class="tgl-g">
-            <button class="tgl active" id="r-12" onclick="setRCtrl('12')">Cada 12 h</button>
-            <button class="tgl"        id="r-24" onclick="setRCtrl('24')">Cada 24 h</button>
+        <div style="background:rgba(96,165,250,.08);border-left:3px solid #60a5fa;padding:.9rem;margin-bottom:.9rem;border-radius:8px">
+          <div class="fg" style="margin-bottom:0">
+            <label class="fl" for="r-vol" style="font-weight:700;font-size:.95rem">Volumen objetivo (ml/24h)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="r-vol" value="1200" min="100" max="3000" step="50" oninput="calcRitmo()" style="font-weight:600;font-size:1.1rem"><span class="fi-unit">ml</span></div>
           </div>
         </div>
-        <div class="fg">
-          <label class="fl" for="r-prev">Volumen ya administrado en 24h de tolerancia (ml)</label>
-          <div class="fi-wrap"><input class="fi" type="number" id="r-prev" value="0" min="0" max="3000" step="50" oninput="calcRitmo()"><span class="fi-unit">ml</span></div>
+        <div class="phase ph1">
+          <div style="display:flex;align-items:center;margin-bottom:.7rem">
+            <span class="ph-num">1</span>
+            <strong style="font-size:.83rem">2º día</strong>
+          </div>
+          <div class="fg">
+            <label class="fl">Pausas para débito (C/12 horas)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="r-pause2" value="40" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit">min</span></div>
+          </div>
+          <div class="fg">
+            <label class="fl" for="r-extra2">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="r-extra2" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit">min</span></div>
+          </div>
+        </div>
+        <div class="phase ph2">
+          <div style="display:flex;align-items:center;margin-bottom:.7rem">
+            <span class="ph-num">2</span>
+            <strong style="font-size:.83rem">A partir de 3er día</strong>
+          </div>
+          <div class="fg">
+            <label class="fl">Pausas para débito (C/24 horas)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="r-pause3" value="20" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit">min</span></div>
+          </div>
+          <div class="fg">
+            <label class="fl" for="r-extra3">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="r-extra3" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit">min</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1087,7 +1121,7 @@
   <div class="card" style="margin-bottom:1rem">
     <div class="card-head">
       <div class="c-icon blue">🛠️</div>
-      <div><div class="c-title">Gestión de fórmulas</div><div class="c-sub">Protegido con contraseña</div></div>
+      <div><div class="c-title tab-title">📚 Gestión de fórmulas</div><div class="c-sub">Protegido con contraseña</div></div>
     </div>
     <div id="fm-lock" class="fm-wrap">
       <div class="alert alert-info" style="margin-bottom:0">
@@ -1124,7 +1158,7 @@
   <div class="card" style="margin-bottom:1.4rem">
     <div class="card-head">
       <div class="c-icon violet">📚</div>
-      <div><div class="c-title">Dietas Enterales Disponibles en Farmacia</div><div class="c-sub">Actualización Diciembre 2023</div></div>
+      <div><div class="c-title tab-title">📚 Catálogo Fórmulas Disponibles</div><div class="c-sub">Actualización Diciembre 2023</div></div>
     </div>
     <div class="alert alert-info" style="margin-bottom:0">ℹ️ Los nombres en <span style="color:#60a5fa;font-weight:600">azul</span> son las dietas incluidas para formular en la calculadora.</div>
   </div>
@@ -1353,7 +1387,7 @@
       <div class="nutric-param">
         <div class="nutric-param-label" style="text-align:center">Tipo de depuración</div>
         <div class="nutric-opts" style="justify-content:center;text-align:center">
-          <button class="tgl" type="button" data-rm-mode="none" onclick="toggleRenalChoice('none')">No Depuración</button>
+          <button class="tgl" type="button" data-rm-mode="none" onclick="toggleRenalChoice('none')">FG < 60 ml/min. No Depuración extrarrenal</button>
           <button class="tgl" type="button" data-rm-mode="crrt" onclick="toggleRenalChoice('crrt')">Técnica continua</button>
           <button class="tgl" type="button" data-rm-mode="ihd" onclick="toggleRenalChoice('ihd')">Hemodiálisis intermitente</button>
         </div>
@@ -1454,7 +1488,6 @@ const S = {
   e: { wMode: null, citrate:false, yeyuno:false, userSel: false, selFormulaIdx: 0, renal: null },
   p: { wMode: null, citrate:false, userSel: false, fase: 'aguda', renal: null },
   renalModal: { px: 'e', mode: null },
-  rCtrl: '12',
   fase: 'aguda',
   fltType: 'aguda',
 };
@@ -1810,7 +1843,7 @@ function assessFormulaRecommendation(f, r) {
   const gN2_24 = (f.n2 / 100) * vol24;
   const n2Dev = r.gN2 - gN2_24;
   const n2Coverage = r.gN2 > 0 ? gN2_24 / r.gN2 : 1;
-  const n2Match = n2Coverage >= 0.70 && n2Coverage <= 1.10;
+  const n2Match = n2Coverage <= 1.10;
   const yeyunoMatch = !yeyunoActive || isPeptamenAF;
   const baseRecommended = phaseMatch && bmiMatch && n2Match;
   const recommended = yeyunoActive ? isPeptamenAF : (baseRecommended && yeyunoMatch);
@@ -1965,16 +1998,18 @@ function calcEnteral() {
   /* Composition */
   $('e-comp').innerHTML = `
     <div style="height:1px;background:var(--border-dim);margin-bottom:.75rem"></div>
-    <div class="ri"><span class="rl">🔵 Carbohidratos (${f1(r.effHcPct)}%)</span><span class="rv">${f1(r.totalGHC)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.totalKcalHC)} kcal)</span></span></div>
-    <div class="ri"><span class="rl">🟡 Lípidos (${f1(r.effLipPct)}%)</span><span class="rv">${f1(r.totalGLip)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.totalKcalLip)} kcal)</span></span></div>
-    <div class="ri"><span class="rl">🟢 Proteínas</span><span class="rv">${f1(r.totProt)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalProt)} kcal)</span></span></div>
-    ${r.prop>0?`<div class="ri"><span class="rl">⚗️ Propofol externo</span><span class="rv">${f1(r.propLipg)}<span class="ru">g lípidos</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalProp)} kcal)</span></span></div>`:''}
-    ${S.e.citrate?`<div class="ri"><span class="rl">🧪 Citrato externo</span><span class="rv">${f1(r.citHCg)}<span class="ru">g HC</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalCit)} kcal)</span></span></div>`:''}
-    <div class="ri" style="border-top:1px solid var(--border);padding-top:.65rem;margin-top:.15rem">
-      <span class="rl" style="font-weight:700;color:var(--text)">Total Kcal/día</span>
-      <span class="rv" style="font-size:1.05rem;color:#60a5fa">${fi(r.totalKcalDay)}<span class="ru">kcal</span></span>
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(59,130,246,.08);border-radius:7px">📋 Aportes completos</div>
+    <div class="ri" style="padding:.7rem .6rem"><span class="rl">🔵 Carbohidratos (${f1(r.hcPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.gHC)}<span class="ru">g</span> <span style="color:#60a5fa;font-size:.8rem;font-weight:600">(${fi(r.kcalHC)} kcal)</span></span></div>
+    <div class="ri" style="padding:.7rem .6rem"><span class="rl">🟡 Lípidos (${f1(r.lipPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.gLip)}<span class="ru">g</span> <span style="color:#22d3ee;font-size:.8rem;font-weight:600">(${fi(r.kcalLip)} kcal)</span></span></div>
+    <div class="ri" style="padding:.7rem .6rem"><span class="rl">🟢 Proteínas</span><span class="rv" style="font-size:.95rem">${f1(r.totProt)}<span class="ru">g</span> <span style="color:#34d399;font-size:.8rem;font-weight:600">(${fi(r.kcalProt)} kcal)</span></span></div>
+    ${(r.prop>0 || S.e.citrate)?`<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;margin:.6rem .6rem .5rem;padding:.4rem .6rem;background:rgba(139,92,246,.08);border-radius:7px">⚗️ Suplementos Externos</div>`:''} 
+    ${r.prop>0?`<div class="ri" style="padding:.7rem .6rem"><span class="rl">⚗️ Propofol</span><span class="rv" style="font-size:.95rem">${f1(r.propLipg)}<span class="ru">g lípidos</span> <span style="color:#a78bfa;font-size:.8rem;font-weight:600">(${fi(r.kcalProp)} kcal)</span></span></div>`:''}
+    ${S.e.citrate?`<div class="ri" style="padding:.7rem .6rem"><span class="rl">🧪 Citrato</span><span class="rv" style="font-size:.95rem">${f1(r.citHCg)}<span class="ru">g HC</span> <span style="color:#a78bfa;font-size:.8rem;font-weight:600">(${fi(r.kcalCit)} kcal)</span></span></div>`:''}
+    <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+      <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔥 Total Kcal/día</span>
+      <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${fi(r.totalKcalDay)}<span class="ru">kcal</span></span>
     </div>
-    <div class="ri"><span class="rl">N₂ total/día</span><span class="rv">${f2(r.gN2)}<span class="ru">g N₂</span></span></div>`;
+    <div class="ri" style="padding:.7rem .6rem"><span class="rl">N₂ total/día</span><span class="rv" style="font-size:.95rem">${f2(r.gN2)}<span class="ru">g N₂</span></span></div>`;
 
   /* Update recommendation card dynamically */
   updateFaseInfo(r);
@@ -2027,7 +2062,7 @@ function calcEnteral() {
     if (pInfo) {
       pInfo.innerHTML = `
         <div class="alert alert-warn" style="margin-top:.2rem;margin-bottom:0">
-          ⚠️ No hay fórmulas que cumplan simultáneamente fase clínica, IMC y cobertura de nitrógeno (70–110%).
+          ⚠️ No hay fórmulas que cumplan simultáneamente fase clínica, IMC y cobertura de nitrógeno (≤ 110%).
         </div>`;
     }
   }
@@ -2052,13 +2087,19 @@ function calcParenteral() {
   }
 
   $('p-comp').innerHTML = `
-    <div class="ri"><span class="rl">N₂ total</span><span class="rv">${f2(r.gN2)}<span class="ru">g N₂</span></span></div>
-    <div class="ri"><span class="rl">🔵 Glucosa / HC (${f1(r.effHcPct)}%)</span><span class="rv">${f1(r.totalGHC)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.totalKcalHC)} kcal)</span></span></div>
-    <div class="ri"><span class="rl">🟡 Lípidos (${f1(r.effLipPct)}%)</span><span class="rv">${f1(r.totalGLip)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.totalKcalLip)} kcal)</span></span></div>
-    <div class="ri"><span class="rl">🔥 Kcal administradas (Nutrición + Propofol + Citrato)</span><span class="rv">${fi(r.totalKcalDay)}<span class="ru">kcal</span></span></div>
-    ${r.prop>0?`<div class="ri"><span class="rl">⚗️ Propofol externo</span><span class="rv">${f1(r.propLipg)}<span class="ru">g lípidos</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalProp)} kcal)</span></span></div>`:''}
-    ${S.p.citrate?`<div class="ri"><span class="rl">🧪 Citrato externo</span><span class="rv">${f1(r.citHCg)}<span class="ru">g HC</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalCit)} kcal)</span></span></div>`:''}
-    <div style="background:rgba(59,130,246,.04);border:1px solid var(--border);border-radius:10px;padding:.9rem;margin-top:.9rem">
+    <div style="height:1px;background:var(--border-dim);margin-bottom:.75rem"></div>
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(6,182,212,.08);border-radius:7px">🏥 Nutrición Parenteral</div>
+    <div class="ri" style="padding:.7rem .6rem"><span class="rl">🔵 Glucosa / HC (${f1(r.effHcPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.totalGHC)}<span class="ru">g</span> <span style="color:#06b6d4;font-size:.8rem;font-weight:600">(${fi(r.totalKcalHC)} kcal)</span></span></div>
+    <div class="ri" style="padding:.7rem .6rem"><span class="rl">🟡 Lípidos (${f1(r.effLipPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.totalGLip)}<span class="ru">g</span> <span style="color:#06b6d4;font-size:.8rem;font-weight:600">(${fi(r.totalKcalLip)} kcal)</span></span></div>
+    ${(r.prop>0 || S.p.citrate)?`<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;margin:.6rem .6rem .5rem;padding:.4rem .6rem;background:rgba(139,92,246,.08);border-radius:7px">⚗️ Suplementos Externos</div>`:''} 
+    ${r.prop>0?`<div class="ri" style="padding:.7rem .6rem"><span class="rl">⚗️ Propofol</span><span class="rv" style="font-size:.95rem">${f1(r.propLipg)}<span class="ru">g lípidos</span> <span style="color:#a78bfa;font-size:.8rem;font-weight:600">(${fi(r.kcalProp)} kcal)</span></span></div>`:''}
+    ${S.p.citrate?`<div class="ri" style="padding:.7rem .6rem"><span class="rl">🧪 Citrato</span><span class="rv" style="font-size:.95rem">${f1(r.citHCg)}<span class="ru">g HC</span> <span style="color:#a78bfa;font-size:.8rem;font-weight:600">(${fi(r.kcalCit)} kcal)</span></span></div>`:''}
+    <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+      <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔥 Total Kcal/día</span>
+      <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${fi(r.totalKcalDay)}<span class="ru">kcal</span></span>
+    </div>
+    <div class="ri" style="padding:.7rem .6rem"><span class="rl">N₂ total/día</span><span class="rv" style="font-size:.95rem">${f2(r.gN2)}<span class="ru">g N₂</span></span></div>
+    <div style="background:rgba(6,182,212,.04);border:1px solid var(--border);border-radius:10px;padding:.9rem;margin-top:.9rem">
       <div style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.055em;margin-bottom:.65rem">Composición NPT Individualizada 24 h</div>
       <div class="npt-grid">
         <div class="npt-cell npt-blue"><div class="nv">${f2(r.gN2)}</div><div class="nl">g N₂</div></div>
@@ -2146,26 +2187,56 @@ function setFltType(t) {
 
 /* ── Tolerancia ── */
 function calcTol() {
-  const vol  = gv('t-vol');
-  const r1   = gv('t-r1');
-  const r2   = gv('t-r2');
-  const v1   = r1 * 12;
-  const v2   = r2 * 12;
+  const vol             = gv('t-vol');
+  const periodHours     = 12;
+  const basePause1      = gv('t-pause-base1');
+  const extraPause1     = gv('t-extra1');
+  const basePause2      = gv('t-pause-base2');
+  const extraPause2     = gv('t-extra2');
+  const totalPause1     = basePause1 + extraPause1;
+  const totalPause2     = basePause2 + extraPause2;
+  const infusedHours1   = Math.max(0, periodHours - (totalPause1 / 60));
+  const infusedHours2   = Math.max(0, periodHours - (basePause2 / 60));
+  const infusedHours2Real = Math.max(0, periodHours - (totalPause2 / 60));
+  const denom           = infusedHours1 + (2 * infusedHours2);
+  const reqR1           = vol > 0 && denom > 0 ? vol / denom : 0;
+  const r1              = reqR1;
+  const r2              = reqR1 * 2;
+  const v1              = r1 * infusedHours1;
+  const v2              = r2 * infusedHours2;
+  const r2Real          = infusedHours2Real > 0 ? v2 / infusedHours2Real : r2;
   const tot  = v1 + v2;
   const pct  = vol > 0 ? (tot / vol) * 100 : 0;
   const over = pct > 100;
+  const reqR2 = reqR1 * 2;
 
-  $('t-p1r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado 12 h</div>
+  sv('t-r1', f1(reqR1));
+  sv('t-r2', f1(r2Real));
+
+  $('t-p1r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours1)} h de infusion)</div>
     <div style="font-size:1.35rem;font-weight:800;color:#60a5fa">${fi(v1)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
-  $('t-p2r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado 12 h</div>
+  $('t-p2r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours2)} h de infusion)</div>
     <div style="font-size:1.35rem;font-weight:800;color:#22d3ee">${fi(v2)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
 
   const pc = Math.min(pct, 100);
   $('t-res').innerHTML = `
     <div class="sg" style="margin-bottom:.9rem">
-      <div class="sb blue"><div class="sv">${fi(v1)}</div><div class="su">ml</div><div class="sl">Fase 1 (12 h)</div></div>
-      <div class="sb cyan"><div class="sv">${fi(v2)}</div><div class="su">ml</div><div class="sl">Fase 2 (12 h)</div></div>
+      <div class="sb blue"><div class="sv">${fi(v1)}</div><div class="su">ml</div><div class="sl">Fase 1 (${f1(infusedHours1)} h infusion)</div></div>
+      <div class="sb cyan"><div class="sv">${fi(v2)}</div><div class="su">ml</div><div class="sl">Fase 2 (${f1(infusedHours2)} h infusion)</div></div>
       <div class="sb green"><div class="sv">${fi(tot)}</div><div class="su">ml</div><div class="sl">Total 24 h</div></div>
+    </div>
+    <div class="sg" style="margin-bottom:.9rem">
+      <div class="sb blue"><div class="sv">${f1(r1)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Fase 1</div></div>
+      <div class="sb cyan"><div class="sv">${f1(r2Real)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo Fase 2</div></div>
+    </div>
+    <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem;margin-bottom:.9rem">
+      <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.055em;margin-bottom:.65rem">Ajuste por pausas de control de debito</div>
+      <div class="ri"><span class="rl">Pausa Fase 1</span><span class="rv">${fi(basePause1)} + ${fi(extraPause1)} = ${fi(totalPause1)} min</span></div>
+      <div class="ri"><span class="rl">Pausa Fase 2</span><span class="rv">${fi(basePause2)} + ${fi(extraPause2)} = ${fi(totalPause2)} min</span></div>
+      <div class="ri"><span class="rl">Pausas totales 24 h</span><span class="rv">${fi(totalPause1 + totalPause2)} min</span></div>
+      <div class="ri"><span class="rl">Ritmo Fase 2</span><span class="rv">2x Fase 1</span></div>
+      <div class="ri"><span class="rl">Ritmo calculado Fase 1</span><span class="rv">${f1(reqR1)}<span class="ru">ml/h</span></span></div>
+      <div class="ri"><span class="rl">Ritmo calculado Fase 2</span><span class="rv">${f1(r2Real)}<span class="ru">ml/h</span></span></div>
     </div>
     <div style="padding:.9rem;background:rgba(255,255,255,.02);border-radius:11px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.45rem">
@@ -2182,31 +2253,42 @@ function calcTol() {
 
 /* ── Ritmo ── */
 function calcRitmo() {
-  const vol  = gv('r-vol');
-  const prev = gv('r-prev');
-  const ctrl = S.rCtrl;
-  const remaining = Math.max(0, vol - prev);
-  const rate = vol / 24;
+  const vol         = gv('r-vol');
+  const basePause2  = 40;
+  const basePause3  = 20;
+  const extraPause2 = gv('r-extra2');
+  const extraPause3 = gv('r-extra3');
+  const totalPause2 = basePause2 + extraPause2;
+  const totalPause3 = basePause3 + extraPause3;
+  const infHours2   = Math.max(0, 24 - (totalPause2 / 60));
+  const infHours3   = Math.max(0, 24 - (totalPause3 / 60));
+
+  const volDay2     = vol;
+  const volDay3     = vol;
+  const rateDay2    = infHours2 > 0 ? volDay2 / infHours2 : 0;
+  const rateDay3    = infHours3 > 0 ? volDay3 / infHours3 : 0;
 
   $('r-res').innerHTML = `
     <div class="sg" style="margin-bottom:.9rem">
-      <div class="sb blue"><div class="sv">${f1(rate)}</div><div class="su">ml/h</div><div class="sl">Ritmo continuo</div></div>
-      <div class="sb cyan"><div class="sv">${fi(remaining)}</div><div class="su">ml</div><div class="sl">Volumen restante</div></div>
+      <div class="sb blue"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${f1(rateDay2)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo 2º día</div></div>
+      <div class="sb cyan"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${f1(rateDay3)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo ≥3er día</div></div>
+      <div class="sb green"><div class="sv">${fi(volDay2)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
     </div>
     <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
-      <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.055em;margin-bottom:.65rem">Modalidad: control cada ${ctrl} h</div>
       <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
-      <div class="ri"><span class="rl">Vol. ya administrado (tolerancia)</span><span class="rv">${fi(prev)}<span class="ru">ml</span></span></div>
-      <div class="ri"><span class="rl">Volumen restante</span><span class="rv">${fi(remaining)}<span class="ru">ml</span></span></div>
-      <div class="ri" style="border-top:1px solid var(--border);padding-top:.65rem;margin-top:.15rem">
-        <span class="rl" style="font-weight:700;color:var(--text)">Ritmo N. Enteral</span>
-        <span class="rv" style="font-size:1.15rem;color:#60a5fa">${f1(rate)}<span class="ru">ml/h</span></span>
+      <div class="ri"><span class="rl">Volumen total 2º día</span><span class="rv">${fi(volDay2)}<span class="ru">ml</span></span></div>
+      <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+        <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔵 Ritmo N. Enteral 2º día</span>
+        <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${f1(rateDay2)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</span></span>
       </div>
-      <div class="ri"><span class="rl">Control débito gástrico</span><span class="rv">c/${ctrl} h</span></div>
-    </div>
-    ${ctrl==='12'
-      ? `<div class="alert alert-info" style="margin-top:.9rem">ℹ️ <strong>c/12 h:</strong> Si débito &gt;200 ml → reducir ritmo a la mitad. Si débito ≤200 ml → mantener o aumentar hasta objetivo.</div>`
-      : `<div class="alert alert-info" style="margin-top:.9rem">ℹ️ <strong>c/24 h:</strong> Monitorización diaria. Adecuado para pacientes con tolerancia establecida.</div>`}`;
+      <div class="ri" style="padding:.7rem .6rem"><span class="rl">Control débito c/12H</span><span class="rv">${fi(basePause2)} + ${fi(extraPause2)} = ${fi(totalPause2)} min pausas</span></div>
+      <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+        <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo N. Enteral ≥3º día</span>
+        <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${f1(rateDay3)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</span></span>
+      </div>
+      <div class="ri" style="padding:.7rem .6rem"><span class="rl">Control débito c/24H</span><span class="rv">${fi(basePause3)} + ${fi(extraPause3)} = ${fi(totalPause3)} min pausas</span></div>
+    </div>`;
+
 }
 
 /* ── Fase clínica ── */
@@ -2386,14 +2468,6 @@ function setYeyuno(val) {
   $('e-yey-no') .classList.toggle('active', !val);
   $('e-yey-yes').classList.toggle('active',  val);
   calcEnteral();
-}
-
-/* ── Ritmo ctrl toggle ── */
-function setRCtrl(c) {
-  S.rCtrl = c;
-  $('r-12').classList.toggle('active', c==='12');
-  $('r-24').classList.toggle('active', c==='24');
-  calcRitmo();
 }
 
 /* ── HC slider ── */
