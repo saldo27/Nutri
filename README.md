@@ -1,240 +1,103 @@
 # CalcNutrición UCI
 
-**Calculadora de Nutrición Artificial en Paciente Crítico**  
-Versión 13 | Basada en protocolo clínico para UCI
+Calculadora web para soporte nutricional en paciente crítico (UCI), con módulos de nutrición enteral y parenteral, pauta de tolerancia, ritmo de mantenimiento y NUTRIC Score.
 
----
+## Resumen
 
-## 📋 Descripción
+- Archivo principal: `index.html` (app cliente, sin backend).
+- Persistencia local de fórmulas enterales por `localStorage`.
+- Enfoque clínico: cálculo por fase, peso seleccionado, y ajustes por aportes externos.
 
-CalcNutrición UCI es una herramienta web interactiva para calcular requerimientos nutricionales en pacientes críticos hospitalizados. Integra:
+## Funcionalidades
 
-- **Nutrición Enteral (NE)** — entubación gástrica, yeyunal o SNY
-- **Nutrición Parenteral (NPT)** — soporte nutricional intravenoso
-- **Pauta de Tolerancia** — protocolo de inicio progresivo (primeras 24 h)
-- **Ritmo de Mantenimiento** — ajuste post-tolerancia
-- **Catálogo de Fórmulas** — base editable de dietas enterales disponibles
-- **NUTRIC Score** — evaluación del riesgo nutricional
+### N. Enteral
 
----
+- Cálculo por peso actual/ideal/ajustado.
+- Fase clínica: Aguda, Estabilización, Recuperación.
+- Recomendación de fórmulas por fase/IMC/cobertura de N2.
+- Cálculo de suplementación con RENAPRO cuando hay déficit.
+- Soporte de yeyunostomía (prioriza Peptamen AF).
 
-## 🎯 Características Principales
+### N. Parenteral
 
-### 1. **Nutrición Enteral (N. Enteral)**
-- Cálculo automático de requerimientos por peso y protocolo (IBW, peso actual, peso ajustado)
-- Selector de fase clínica en 3 etapas: aguda, subaguda y crónica
-- Ajuste automático de objetivos nutricionales según fase clínica
-- Selección inteligente de fórmula basada en fase clínica, IMC y cobertura de nitrógeno
-- Detección automática de necesidad de suplementación proteica con RENAPRO
-- Ajuste por Citrato externo (300 kcal/75 g HC)
-- Soporte para yeyunostomía (restringe a fórmulas oligoméricas)
-- Tabla comparativa de fórmulas con desviación de N₂ calculada
+- Cálculo por fase clínica y objetivos por kg.
+- Bloque superior de composición con valores totales (incluye aportes externos).
+- Bloque interno “Composición NPT Individualizada 24 h” con gramos y kcal base de dieta (sin aportes externos), para preparación.
+- Tarjeta “Aporte Individualizado 24h” con fila de kcal administradas totales.
 
-### 2. **Nutrición Parenteral (N. Parenteral)**
-- Selector de fase clínica en 3 etapas: aguda, subaguda y crónica
-- Ajuste automático de objetivos nutricionales según fase clínica
-- NPT individualizada con composición macronutrientes (N₂, glucosa, lípidos)
-- Relación ajustable lípidos:HC
-- Propofol externo integrado (descuento automático de kcal/lípidos)
-- Citrato activo (igual que enteral)
-- Bloque visual de composición 24 h
+### INSUF.RENAL (modal)
 
-### 3. **Pauta de Tolerancia (24 h)**
-- Dos fases de 12 h con ritmos independientes (ml/h)
-- Cálculo de volumen total administrado en 24 h
-- Barra de progreso del objetivo
-- Alertas clínicas:
-  - <50%: déficit crítico
-  - 50–100%: déficit parcial (se completa en ritmo)
-  - ≥100%: objetivo cubierto
-- Botón para aplicar automáticamente volumen desde prescripción enteral
+- Botón dedicado en Enteral y Parenteral.
+- Opciones:
+  - No Depuración
+  - Técnica continua
+  - Hemodiálisis intermitente
+- Selección reversible (se puede dejar sin selección).
+- Si no hay selección: se mantienen los valores base de proteínas por fase.
+- En Técnica continua aparece checkbox de CITRATO.
 
-### 4. **Ritmo de Mantenimiento**
-- Cálculo del ritmo de continuación post-tolerancia
-- Contador de volumen restante
-- Modalidad de control: c/12 h o c/24 h (para débito gástrico)
-- Recomendaciones según frecuencia
+### Aportes externos: Propofol y Citrato
 
-### 5. **Catálogo de Fórmulas**
-- Base de datos protegida por contraseña (Nutr1)
-- Import/export JSON
-- 16 fórmulas preconfiguradas (poliméricas, oligoméricas, específicas)
-- Edición en línea con validación
-- Restauración a valores por defecto
+- Se consideran como aporte energético y de macronutrientes:
+  - Propofol suma lípidos y kcal.
+  - Citrato suma HC y kcal.
+- El ratio/porcentaje HC-Lípidos mostrado en composición y en etiquetas del slider se calcula sobre el total efectivo (incluyendo aportes externos).
+- En NPT, el bloque interno de “Composición NPT Individualizada 24 h” mantiene valores base de dieta para formulación.
 
-### 6. **NUTRIC Score**
-- Cálculo automático de riesgo nutricional
-- Parámetros: edad, APACHE II, SOFA, comorbilidades, días pre-UCI, IL-6 (opcional)
-- Scoring 0–10 con categorización riesgo bajo/alto
-- Estimación de mortalidad a 28 días
-- Alerta para soporte nutricional precoz
+### Pauta de Tolerancia y Ritmo
 
----
+- Pauta 24 h en dos tramos (12 h + 12 h).
+- Barra de cobertura y alertas de déficit/cobertura.
+- Ritmo de continuidad post-tolerancia con control c/12 h o c/24 h.
 
-## 🛠️ Cómo Usar
+### Catálogo de fórmulas
 
-### Flujo Básico Enteral
+- Gestor protegido con contraseña `Nutr1`.
+- Edición JSON, import/export, restauración por defecto.
+- Persistencia en `nutri_enteral_formulas_v1`.
 
-1. **Ingresar datos del paciente**
-   - Peso, talla (se calcula BMI, IBW, peso ajustado)
-   - Elegir peso a usar (actual, IBW, ajustado)
+### NUTRIC Score
 
-2. **Definir objetivos nutricionales**
-   - kcal/kg, g proteína/kg
-   - Propofol externo (si aplica)
-   - ¿Citrato activo? Sí/No
+- Cálculo de score 0–10 con estratificación de riesgo.
+- Estimación de mortalidad y alerta de soporte precoz.
 
-3. **Elegir fase clínica**
-   - Aguda (0–72 h): 15 → 20 kcal/kg/día y 0.8 → 1 g prot/kg/día
-   - Subaguda (4º–7º día): 20 → 25 kcal/kg/día y 1 → 1 g prot/kg/día
-   - Crónica (>1 semana): 25 → 30 kcal/kg/día y 1 → 1.2–1.3 g prot/kg/día
+## Fases clínicas (base)
 
-4. **Relación HC:Lípidos** — slider ajustable (40–70% HC)
+Cuando no hay perfil renal seleccionado:
 
-5. **Sistema recomienda fórmula**
-   - Se filtra según fase, IMC y cobertura N₂ (70–110%)
-   - Muestra volumen 24h, ritmo, déficit proteico
+- Aguda (0–72 h): 15 -> 20 kcal/kg/día; 0.8 -> 1.0 g prot/kg/día.
+- Estabilización (4º–7º día): 20 -> 25 kcal/kg/día; 1.0 -> 1.0 g prot/kg/día.
+- Recuperación (>1 semana): 25 -> 30 kcal/kg/día; 1.0 -> 1.2–1.3 g prot/kg/día.
 
-6. **Aplicar a Pauta de Tolerancia**
-   - Botón automático copia volumen → Pauta → Ritmo
+## Estructura técnica (alto nivel)
 
-### Pauta de Tolerancia (primeras 24 h)
+- `DEFAULT_FORMULAS` / `FORMULAS`: base y conjunto activo de fórmulas enterales.
+- `S`: estado global (fase, filtros, selección renal, citrato, etc.).
+- `calcPatient()`: IMC, IBW y peso ajustado.
+- `calcNutr()`: núcleo de cálculos energéticos y macronutrientes.
+- `calcEnteral()` / `calcParenteral()`: render de paneles y resultados.
+- `calcTol()` / `calcRitmo()`: módulos de pauta y ritmo.
+- `calcNutricScore()`: modal NUTRIC.
 
-1. Ingresar ritmo fase 1 (ml/h × 12 h)
-2. Ingresar ritmo fase 2 (ml/h × 12 h)
-3. Ver resultado: volumen total, % cobertura, alertas
+## Uso local
 
-### Ritmo de Mantenimiento (post-tolerancia)
+Al ser estática, basta abrir `index.html` en navegador.
 
-1. Confirmar volumen objetivo 24h
-2. Ingresar volumen ya administrado en tolerancia
-3. Elegir modalidad control (c/12 h o c/24 h)
-4. Se calcula ritmo de continuidad
+Opcionalmente, servir por HTTP local:
 
----
-
-## 📐 Estructura del Código
-
-```
-index.html
-├── HEAD
-│   ├── Metadatos
-│   ├── CSS variables (tema claro/oscuro)
-│   └── Estilos (cards, badges, tablas, modal)
-├── BODY
-│   ├── Header + Navegación tabs
-│   ├── main.main
-│   │   ├── panel-enteral (2 columnas)
-│   │   ├── panel-parenteral (2 columnas)
-│   │   ├── panel-tolerancia (2 columnas)
-│   │   ├── panel-ritmo (2 columnas)
-│   │   └── panel-catalogo (gestión + catálogo)
-│   ├── Modal NUTRIC Score
-│   └── Script <script>
-│       ├── Datos (DEFAULT_FORMULAS)
-│       ├── Estado global (S = state)
-│       ├── Helpers (formatters, $, gv, sv)
-│       ├── Gestión fórmulas (CRUD, import/export)
-│       ├── Cálculos
-│       │   ├── calcPatient() — BMI, IBW, peso ajustado
-│       │   ├── calcNutr() — requerimientos macro
-│       │   ├── calcEnteral() — stats + tabla
-│       │   ├── calcParenteral() — composición NPT
-│       │   ├── calcTol() — pauta 24h
-│       │   ├── calcRitmo() — mantenimiento
-│       │   └── calcNutricScore() — riesgo nutricional
-│       ├── UI (renderTable, updates)
-│       └── Init
+```bash
+python -m http.server 8000
 ```
 
----
+Luego abrir `http://localhost:8000`.
 
-## 🔧 Parámetros Clave
+## Seguridad y alcance
 
-| Parámetro | Descripción | Valores Típicos |
-|-----------|-------------|-----------------|
-| **kcal/kg** | Necesidad calórica diaria | 25–35 kcal/kg |
-| **g prot/kg** | Aporte proteico | 1.0–2.0 g/kg |
-| **Propofol** | Infusión sedativa | 0–500 ml/día |
-| **Citrato** | Anticoagulante externo | 300 kcal / 75 g HC |
-| **HC/Lípidos** | Ratio energético | 40–70% HC; 30–60% Lip |
-| **N₂ óptimo** | Relación kcal NP / g N₂ | 100–130 kcal/g N₂ |
-| **RENAPRO** | Suplemento proteico | 1 sobre ≈ 19.4 g proteínas |
+- Sin envío de datos a servidor.
+- Todo se procesa en navegador.
+- Herramienta de apoyo: no sustituye juicio clínico.
 
----
+## Contacto
 
-## 💾 Persistencia de Datos
-
-### LocalStorage
-- **nutri_enteral_formulas_v1** — array JSON de fórmulas personalizadas
-- Se carga automáticamente al iniciar
-- Se sincroniza con cambios en gestor
-
----
-
-## 🎨 Tema Visual
-
-- **Variables CSS**:
-  - `--bg` / `--card` / `--border` (colores base)
-  - `--text` / `--muted` / `--dim` (textos)
-  - `--primary` / `--secondary` / `--accent` (acentos)
-- Fondo general más claro y contraste reforzado para mejorar la lectura de paneles y mensajes contextuales
-- **Responsive**: grid auto-fit para tablets/móviles
-- **Dark mode**: compatible (usa CSS variables)
-
----
-
-## 🔐 Seguridad
-
-- **Gestor de fórmulas protegido** con contraseña: `Nutr1`
-- No hay backend — todo cálculo en cliente
-- Datos persisten en navegador (localStorage)
-
----
-
-## 📱 Navegación
-
-| Pestaña | Descripción |
-|---------|-------------|
-| 🧪 N. Enteral | Cálculo de dieta enteral + fórmulas |
-| 💉 N. Parenteral | Composición NPT + macronutrientes |
-| 📋 Pauta Tolerancia | Protocolo 24 h (primeras 24 h) |
-| ⏱ Ritmo N. Enteral | Ritmo mantenimiento post-tolerancia |
-| 📚 Catálogo Fórmulas | Gestión + catálogo farmacia |
-
----
-
-## 🚀 Inicialización
-
-Al cargar la página:
-1. Se restauran fórmulas desde localStorage (o usa defaults)
-2. Se calculan todos los tabs (calcEnteral, calcParenteral, etc.)
-3. Se establece fase clínica por defecto (aguda) en Enteral y Parenteral
-4. Se bloquea gestor de fórmulas
-
----
-
-## 📝 Fórmulas Base Incluidas
-
-**Poliméricas:**
-- Isosource Protein, Fresubin 2 HP Fibra, Novasource GI Protein, Nutrison Multifibre
-
-**Oligoméricas:**
-- Peptamen AF Enteral (recomendada para yeyuno)
-
-**Específicas:**
-- Diaba HP, Novasource Diabet, Atempero (críticos), Impact Enteral (inmunomol.)
-
----
-
-## 📞 Contacto
-
-**Creado para:** UCI — H. Santa Lucía (Cartagena)  
-**Autor:** luisherrerapara@gmail.com  
-**Todos los derechos reservados.**
-
----
-
-## 📄 Licencia
-
-Uso exclusivo clínico — Hospital Santa Lucía.
+- Autor: luisherrerapara@gmail.com
+- Entorno de uso: UCI H. Santa Lucía (Cartagena)

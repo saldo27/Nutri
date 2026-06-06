@@ -340,6 +340,19 @@
     .badge-warn   { background:rgba(245,158,11,.14); border:1px solid rgba(245,158,11,.28); color:#fbbf24; }
     .badge-danger { background:rgba(239,68,68,.1);   border:1px solid rgba(239,68,68,.2);   color:#fca5a5; }
     .badge-ok     { background:rgba(16,185,129,.1);  border:1px solid rgba(16,185,129,.2);  color:#6ee7b7; }
+    .badge-renal-none { background:rgba(148,163,184,.12); border:1px solid rgba(148,163,184,.25); color:#cbd5e1; }
+    .badge-renal-crrt { background:rgba(6,182,212,.12); border:1px solid rgba(6,182,212,.3); color:#67e8f9; }
+    .badge-renal-ihd  { background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.3); color:#93c5fd; }
+    .badge-cit-on     { background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.3); color:#6ee7b7; }
+    .badge-cit-off    { background:rgba(100,116,139,.12); border:1px solid rgba(100,116,139,.3); color:#cbd5e1; }
+
+    .renal-chip {
+      margin-top: .45rem;
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      flex-wrap: wrap;
+    }
 
     /* formula type tags */
     .tt { display:inline-block; padding:.13rem .45rem; border-radius:100px; font-size:.63rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
@@ -515,6 +528,7 @@
       box-shadow: 0 3px 12px rgba(59,130,246,.35);
       transition: opacity .15s, transform .1s;
     }
+    .btn-renal { min-height: 39px; }
     .btn-nutric:hover { opacity: .88; transform: translateY(-1px); }
     .btn-nutric:active { transform: translateY(0); }
 
@@ -704,7 +718,7 @@
           <div class="c-icon blue">👤</div>
           <div><div class="c-title">Datos del Paciente</div><div class="c-sub">Antropometría</div></div>
         </div>
-        <div class="g2" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="g2" style="grid-template-columns:1fr 1fr 1fr 1fr">
           <div class="fg">
             <label class="fl" for="e-peso">Peso actual (kg)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="e-peso" value="76" min="30" max="250" step="0.5" oninput="S.e.userSel = false; calcEnteral()"><span class="fi-unit">kg</span></div>
@@ -712,6 +726,10 @@
           <div class="fg">
             <label class="fl" for="e-talla">Talla (m)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="e-talla" value="1.65" min="1.3" max="2.2" step="0.01" oninput="S.e.userSel = false; calcEnteral()"><span class="fi-unit">m</span></div>
+          </div>
+          <div class="fg">
+            <button class="btn-nutric btn-renal" type="button" onclick="openRenalModal('e')" style="width:100%">🩺 INSUF.RENAL</button>
+            <div id="e-renal-chip" class="renal-chip"></div>
           </div>
           <div class="fg" style="display:flex;align-items:flex-end">
             <button class="btn-nutric" onclick="openNutricModal()">📊 NUTRIC SCORE</button>
@@ -746,17 +764,10 @@
             <div class="obj-gap" aria-hidden="true"></div>
           </div>
         </div>
-        <div class="g2" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="g2" style="grid-template-columns:1fr 1fr">
           <div class="fg">
             <label class="fl" for="e-propofol">Propofol (ml / día)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="e-propofol" value="0" min="0" max="500" step="10" oninput="calcEnteral()"><span class="fi-unit">ml/d</span></div>
-          </div>
-          <div class="fg">
-            <label class="fl">Citrato</label>
-            <div class="tgl-g" style="margin-top:.1rem">
-              <button class="tgl active" id="e-cit-no"  onclick="setCit('e',false)">No</button>
-              <button class="tgl"        id="e-cit-yes" onclick="setCit('e',true)">Sí</button>
-            </div>
           </div>
           <div class="fg">
             <label class="fl">Yeyunostomía / SNY</label>
@@ -798,8 +809,8 @@
         </div>
         <div class="tgl-g" style="margin-bottom:.9rem">
           <button class="tgl active" id="faseA-btn"  onclick="setFase('aguda')"    style="padding:.6rem">⚡ Fase Aguda</button>
-          <button class="tgl"        id="faseS-btn"  onclick="setFase('subaguda')" style="padding:.6rem">🔶 Fase Subaguda</button>
-          <button class="tgl"        id="faseC-btn"  onclick="setFase('cronica')"  style="padding:.6rem">🔄 Fase Crónica</button>
+          <button class="tgl"        id="faseS-btn"  onclick="setFase('subaguda')" style="padding:.6rem">🔶 Fase Estabilización</button>
+          <button class="tgl"        id="faseC-btn"  onclick="setFase('cronica')"  style="padding:.6rem">🔄 Fase de Recuperación</button>
         </div>
         <div id="fase-info"></div>
       </div>
@@ -833,7 +844,7 @@
         <div class="tgl-g" style="width:auto">
           <button class="tgl" id="flt-all"      onclick="setFltType('all')">Todas</button>
           <button class="tgl active" id="flt-aguda"    onclick="setFltType('aguda')">⚡ Agudas</button>
-          <button class="tgl" id="flt-subaguda" onclick="setFltType('subaguda')">🔶 Subagudas</button>
+          <button class="tgl" id="flt-subaguda" onclick="setFltType('subaguda')">🔶 Estabilización</button>
           <button class="tgl" id="flt-cronica"  onclick="setFltType('cronica')">🔄 Crónicas</button>
         </div>
       </div>
@@ -860,7 +871,7 @@
       </table>
     </div>
     <div style="margin-top:.6rem;font-size:.71rem;color:var(--dim)">
-      ⚠️ <strong>Desv. N₂:</strong> Diferencia entre N₂ objetivo y N₂ aportado. <span style="color:#fbbf24">Positivo</span> = déficit → suplementar con RENAPRO. <span style="color:#f87171">Negativo</span> = exceso proteico. | <strong>RENAPRO</strong> 1 unidad ≈ 19.4 g proteínas (3.1 g N₂).
+      ⚠️ <strong>Desv. N₂:</strong> Diferencia entre N₂ objetivo y N₂ aportado. <span style="color:#fbbf24">Positivo</span> = déficit → suplementar con RENAPRO. <span style="color:#f87171">Negativo</span> = exceso proteico. | <strong>RENAPRO</strong> 1 unidad ≈ 18 g proteínas (3.1 g N₂).
     </div>
   </div>
 
@@ -878,7 +889,7 @@
           <div class="c-icon blue">👤</div>
           <div><div class="c-title">Datos del Paciente — NPT</div><div class="c-sub">Nutrición Parenteral Total</div></div>
         </div>
-        <div class="g2" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="g2" style="grid-template-columns:1fr 1fr 1fr 1fr">
           <div class="fg">
             <label class="fl" for="p-peso">Peso actual (kg)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="p-peso" value="69" min="30" max="250" step="0.5" oninput="S.p.userSel = false; calcParenteral()"><span class="fi-unit">kg</span></div>
@@ -886,6 +897,10 @@
           <div class="fg">
             <label class="fl" for="p-talla">Talla (m)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="p-talla" value="1.53" min="1.3" max="2.2" step="0.01" oninput="S.p.userSel = false; calcParenteral()"><span class="fi-unit">m</span></div>
+          </div>
+          <div class="fg">
+            <button class="btn-nutric btn-renal" type="button" onclick="openRenalModal('p')" style="width:100%">🩺 INSUF.RENAL</button>
+            <div id="p-renal-chip" class="renal-chip"></div>
           </div>
           <div class="fg" style="display:flex;align-items:flex-end">
             <button class="btn-nutric" onclick="openNutricModal()">📊 NUTRIC SCORE</button>
@@ -919,18 +934,9 @@
             <div class="obj-gap" aria-hidden="true"></div>
           </div>
         </div>
-        <div class="g2">
-          <div class="fg">
-            <label class="fl" for="p-propofol">Propofol (ml / día)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="p-propofol" value="0" min="0" max="500" step="10" oninput="calcParenteral()"><span class="fi-unit">ml/d</span></div>
-          </div>
-          <div class="fg">
-            <label class="fl">Citrato</label>
-            <div class="tgl-g" style="margin-top:.1rem">
-              <button class="tgl active" id="p-cit-no"  onclick="setCit('p',false)">No</button>
-              <button class="tgl"        id="p-cit-yes" onclick="setCit('p',true)">Sí</button>
-            </div>
-          </div>
+        <div class="fg">
+          <label class="fl" for="p-propofol">Propofol (ml / día)</label>
+          <div class="fi-wrap"><input class="fi" type="number" id="p-propofol" value="0" min="0" max="500" step="10" oninput="calcParenteral()"><span class="fi-unit">ml/d</span></div>
         </div>
         <div class="fg">
           <label class="fl">Relación Lípidos : HC</label>
@@ -953,8 +959,8 @@
         </div>
         <div class="tgl-g" style="margin-bottom:.9rem">
           <button class="tgl active" id="p-faseA-btn"  onclick="setFaseP('aguda')"    style="padding:.6rem">⚡ Fase Aguda</button>
-          <button class="tgl"        id="p-faseS-btn"  onclick="setFaseP('subaguda')" style="padding:.6rem">🔶 Fase Subaguda</button>
-          <button class="tgl"        id="p-faseC-btn"  onclick="setFaseP('cronica')"  style="padding:.6rem">🔄 Fase Crónica</button>
+          <button class="tgl"        id="p-faseS-btn"  onclick="setFaseP('subaguda')" style="padding:.6rem">🔶 Fase Estabilización</button>
+          <button class="tgl"        id="p-faseC-btn"  onclick="setFaseP('cronica')"  style="padding:.6rem">🔄 Fase de Recuperación</button>
         </div>
         <div id="p-fase-info"></div>
       </div>
@@ -963,7 +969,7 @@
       <div class="card">
         <div class="card-head">
           <div class="c-icon cyan">⚗️</div>
-          <div><div class="c-title">Composición Individualizada NPT 24h</div></div>
+          <div><div class="c-title">Aporte Individualizado 24h</div></div>
         </div>
         <div id="p-comp"></div>
       </div>
@@ -1292,7 +1298,7 @@
         <div class="nutric-alert-precoz" id="nutric-alert-precoz" style="display:none">
           ⚠️ INICIAR SOPORTE NUTRICIONAL PRECOZ
           <div style="margin-top:.4rem;font-size:.92rem;color:#fbbf24;line-height:1.45;font-weight:600">
-            Valora el riesgo de Sd. de Realimentación. Inicia TIAMINA iv y control de Fósforo a las 48h.
+            Valora el riesgo de Sd. de Realimentación. Inicia Tiamina IV y control de Fósforo a las 48h.
           </div>
         </div>
       </div>
@@ -1334,6 +1340,39 @@
   </div>
 </div>
 
+<div class="nutric-overlay" id="renal-overlay" onclick="renalOverlayClick(event)">
+  <div class="nutric-modal" id="renal-modal" style="max-width:560px;text-align:left">
+    <div class="nutric-modal-head" style="justify-content:center">
+      <div class="nutric-modal-title" style="text-align:center">
+        <span class="icon">🩺</span>
+        INSUF.RENAL
+      </div>
+      <button class="nutric-close" onclick="closeRenalModal()" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="nutric-body">
+      <div class="nutric-param">
+        <div class="nutric-param-label" style="text-align:center">Tipo de depuración</div>
+        <div class="nutric-opts" style="justify-content:center;text-align:center">
+          <button class="tgl" type="button" data-rm-mode="none" onclick="toggleRenalChoice('none')">No Depuración</button>
+          <button class="tgl" type="button" data-rm-mode="crrt" onclick="toggleRenalChoice('crrt')">Técnica continua</button>
+          <button class="tgl" type="button" data-rm-mode="ihd" onclick="toggleRenalChoice('ihd')">Hemodiálisis intermitente</button>
+        </div>
+      </div>
+      <div class="nutric-param" id="rm-citrate-wrap" style="display:none">
+        <div class="nutric-param-label" style="text-align:center">Técnica continua</div>
+        <div style="display:flex;justify-content:center;text-align:center">
+          <label style="display:inline-flex;align-items:center;gap:.45rem;font-size:.8rem;color:var(--text);cursor:pointer">
+          <input type="checkbox" id="rm-citrate" style="width:16px;height:16px;accent-color:#3b82f6">
+          <span>CITRATO</span>
+          </label>
+        </div>
+      </div>
+      <div class="nutric-divider"></div>
+      <button class="btn-calc-nutric" onclick="applyRenalModal()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
 
 <script>
 /* ── Formula database (from Excel: FÓRMULA N. ENTERAL sheet) ──
@@ -1360,12 +1399,61 @@ const DEFAULT_FORMULAS = [
 let FORMULAS = DEFAULT_FORMULAS.map(f => ({ ...f }));
 const FORMULAS_STORAGE_KEY = 'nutri_enteral_formulas_v1';
 
-const N2_RENAPRO = 3.1; // g N2 per RENAPRO unit
+const N2_RENAPRO = 2.88; // g N2 per RENAPRO unit
+
+const BASE_RENAL_PROFILE = {
+  label: 'Sin selección (valores originales)',
+  defaults: { aguda: 0.8, subaguda: 1.0, cronica: 1.0 },
+  proteins: {
+    aguda: { ini: '0.8 g prot/Kg/día', obj: '1.0 g prot/Kg/día' },
+    subaguda: { ini: '1.0 g prot/Kg/día', obj: '1.0 g prot/Kg/día' },
+    cronica: { ini: '1.0 g prot/Kg/día', obj: '1.2–1.3 g prot/Kg/día' },
+  },
+  forceHc70: false,
+  monitorPhosphorus: false,
+};
+
+const RENAL_PROTOCOLS = {
+  none: {
+    label: 'No depuración extrarrenal',
+    defaults: { aguda: 0.8, subaguda: 1.0, cronica: 1.2 },
+    proteins: {
+      aguda: { ini: '0.8 g prot/Kg/día', obj: '0.8 g prot/Kg/día' },
+      subaguda: { ini: '0.8 g prot/Kg/día', obj: '1.0 g prot/Kg/día' },
+      cronica: { ini: '1.0 g prot/Kg/día', obj: 'No subir de 1.2 g/Kg/día' },
+    },
+    forceHc70: false,
+    monitorPhosphorus: false,
+  },
+  crrt: {
+    label: 'Técnica continua depuración extrarrenal (HFVVC, HDFVVC, HDVVC)',
+    defaults: { aguda: 0.8, subaguda: 1.2, cronica: 1.5 },
+    proteins: {
+      aguda: { ini: '0.8 g prot/Kg/día', obj: '0.8 g prot/Kg/día' },
+      subaguda: { ini: '0.8 g prot/Kg/día', obj: '1.2–1.5 g prot/Kg/día' },
+      cronica: { ini: '1.5 g prot/Kg/día', obj: '1.5–2.5 g prot/Kg/día' },
+    },
+    forceHc70: true,
+    monitorPhosphorus: true,
+  },
+  ihd: {
+    label: 'Hemodiálisis intermitente',
+    defaults: { aguda: 0.8, subaguda: 1.2, cronica: 1.5 },
+    proteins: {
+      aguda: { ini: '0.8 g prot/Kg/día', obj: '0.8 g prot/Kg/día' },
+      subaguda: { ini: '0.8 g prot/Kg/día', obj: '1.2 g prot/Kg/día' },
+      cronica: { ini: '1.2 g prot/Kg/día', obj: '1.5–2.0 g prot/Kg/día' },
+    },
+    forceHc70: false,
+    monitorPhosphorus: true,
+  },
+};
 
 /* ── State ── */
 const S = {
-  e: { wMode: null, citrate:false, yeyuno:false, userSel: false, selFormulaIdx: 0 },
-  p: { wMode: null, citrate:false, userSel: false, fase: 'aguda' },
+  e: { wMode: null, citrate:false, yeyuno:false, userSel: false, selFormulaIdx: 0, renal: null },
+  p: { wMode: null, citrate:false, userSel: false, fase: 'aguda', renal: null },
+  renalModal: { px: 'e', mode: null },
   rCtrl: '12',
   fase: 'aguda',
   fltType: 'aguda',
@@ -1639,16 +1727,65 @@ function calcNutr(px) {
   const kcalCit   = S[px].citrate ? 300 : 0;
   const citHCg    = S[px].citrate ? 75 : 0;
   const totKcal   = Math.max(0, baseKcal - kcalCit - kcalProp);
-  const npKcal    = totKcal - kcalProt - kcalProp;
-  const ratio     = gN2 > 0 ? npKcal / gN2 : 0;
-  const kcalHC    = npKcal * (hcPct / 100);
-  const kcalLip   = npKcal * (lipPct / 100);
+  const totalKcalDay = totKcal + kcalProp + kcalCit;
+  const npDietKcal = Math.max(0, totKcal - kcalProt);
+  const kcalHC    = npDietKcal * (hcPct / 100);
+  const kcalLip   = npDietKcal * (lipPct / 100);
   const gHC       = kcalHC / 4;
   const gLip      = kcalLip / 9;
+  const totalKcalHC = kcalHC + kcalCit;
+  const totalKcalLip = kcalLip + kcalProp;
+  const totalGHC = gHC + citHCg;
+  const totalGLip = gLip + propLipg;
+  const npKcal    = totalKcalHC + totalKcalLip;
+  const effHcPct  = npKcal > 0 ? (totalKcalHC / npKcal) * 100 : hcPct;
+  const effLipPct = npKcal > 0 ? (totalKcalLip / npKcal) * 100 : lipPct;
+  const ratio     = gN2 > 0 ? npKcal / gN2 : 0;
 
   return { ...p, kcalKg, protKg, prop, hcPct, lipPct,
            baseKcal, totKcal, totProt, gN2, kcalProt, kcalProp, propLipg, kcalCit, citHCg,
-           npKcal, ratio, kcalHC, kcalLip, gHC, gLip };
+           totalKcalDay, npDietKcal, npKcal, ratio, kcalHC, kcalLip, gHC, gLip,
+           totalKcalHC, totalKcalLip, totalGHC, totalGLip, effHcPct, effLipPct };
+}
+
+function getRenalMode(px) {
+  return RENAL_PROTOCOLS[S[px]?.renal] ? S[px].renal : null;
+}
+
+function getRenalProtocol(px) {
+  const mode = getRenalMode(px);
+  return mode ? RENAL_PROTOCOLS[mode] : null;
+}
+
+function updateRenalChip(px) {
+  const el = $(px + '-renal-chip');
+  if (!el) return;
+  const mode = getRenalMode(px);
+  const modeMap = {
+    null: { label: 'Sin selección', cls: 'badge-renal-none' },
+    none: { label: 'No depuración', cls: 'badge-renal-none' },
+    crrt: { label: 'Técnica continua', cls: 'badge-renal-crrt' },
+    ihd:  { label: 'Hemodiálisis intermitente', cls: 'badge-renal-ihd' },
+  };
+  const modeInfo = modeMap[mode === null ? 'null' : mode] || modeMap.null;
+
+  let html = `<span class="badge ${modeInfo.cls}">🩺 ${modeInfo.label}</span>`;
+  if (mode === 'crrt') {
+    const citCls = S[px].citrate ? 'badge-cit-on' : 'badge-cit-off';
+    const citLabel = S[px].citrate ? 'CITRATO activo' : 'CITRATO no activo';
+    html += `<span class="badge ${citCls}">🧪 ${citLabel}</span>`;
+  }
+  el.innerHTML = html;
+}
+
+function getPhaseDefaults(phase, px) {
+  const kcalByPhase = { aguda: 15, subaguda: 20, cronica: 25 };
+  const protocol = getRenalProtocol(px);
+  const protDefaults = protocol ? protocol.defaults || BASE_RENAL_PROFILE.defaults : BASE_RENAL_PROFILE.defaults;
+  return {
+    kcalkg: kcalByPhase[phase] ?? 15,
+    protkg: protDefaults[phase] ?? 1.0,
+  };
 }
 
 /* ── Enteral ── */
@@ -1735,6 +1872,8 @@ function syncEnteralFormulaSelect(r) {
 
 function updateFaseInfo(r) {
   const f = S.fase;
+  const protocol = getRenalProtocol('e');
+  const protocolLabel = protocol ? protocol.label : BASE_RENAL_PROFILE.label;
   let recs = [];
 
   if (f === 'aguda') {
@@ -1750,15 +1889,15 @@ function updateFaseInfo(r) {
   } else if (r.bmi < 18.5) {
     recs.push('Fórmulas Hipercalóricas (Kcal ≥1.3/ml)');
   }
-
   const recsHtml = recs.map(t => `<span class="badge badge-ok" style="margin-right:.4rem;margin-bottom:.4rem;padding:.25rem .6rem;font-size:.73rem">⭐ ${t}</span>`).join('');
 
   const icons  = { aguda:'⚡', subaguda:'🔶', cronica:'🔄' };
-  const titles = { aguda:'Fase Aguda · 0–72 h', subaguda:'Fase Subaguda · 4º–7º día', cronica:'Fase Crónica · > 1 semana' };
+  const titles = { aguda:'Fase Aguda · 0–72 h', subaguda:'Fase Estabilización · 4º–7º día', cronica:'Fase de Recuperación · > 1 semana' };
+  const protRows = protocol ? protocol.proteins : BASE_RENAL_PROFILE.proteins;
   const rows = {
-    aguda:    [['Inicio',    '15 Kcal/Kg/día', '0.8 g prot/Kg/día'], ['Objetivo', '20 Kcal/Kg/día', '1 g prot/Kg/día']],
-    subaguda: [['Inicio',    '20 Kcal/Kg/día', '1 g prot/Kg/día'],   ['Objetivo', '25 Kcal/Kg/día', '1 g prot/Kg/día']],
-    cronica:  [['Inicio',    '25 Kcal/Kg/día', '1 g prot/Kg/día'],   ['Objetivo', '30 Kcal/Kg/día', '1.2–1.3 g prot/Kg/día']],
+    aguda:    [['Inicio', '15 Kcal/Kg/día', protRows.aguda.ini], ['Objetivo', '20 Kcal/Kg/día', protRows.aguda.obj]],
+    subaguda: [['Inicio', '20 Kcal/Kg/día', protRows.subaguda.ini], ['Objetivo', '25 Kcal/Kg/día', protRows.subaguda.obj]],
+    cronica:  [['Inicio', '25 Kcal/Kg/día', protRows.cronica.ini], ['Objetivo', '30 Kcal/Kg/día', protRows.cronica.obj]],
   };
   const rowsHtml = (rows[f] || []).map(([label, kcal, prot]) => `
     <tr>
@@ -1784,7 +1923,9 @@ function updateFaseInfo(r) {
         </table>
         <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem">Dietas sugeridas</div>
         <div style="display:flex;flex-wrap:wrap;gap:.35rem">${recsHtml}</div>
+        <div style="margin-top:.55rem;font-size:.73rem;color:var(--muted)">Insuf. renal: <strong style="color:var(--text)">${protocolLabel}</strong></div>
         <div style="margin-top:.55rem;font-size:.73rem;color:#fbbf24">⚠️ Aumentar progresivamente según tolerancia.</div>
+        ${protocol && protocol.monitorPhosphorus ? `<div style="margin-top:.35rem;font-size:.73rem;color:#67e8f9;font-weight:700">⭐ Monitorizar niveles de Fósforo</div>` : ''}
       </div>
     </div>`;
 }
@@ -1792,13 +1933,15 @@ function updateFaseInfo(r) {
 function calcEnteral() {
   const r = calcNutr('e');
   updHC('e');
+  $('e-hcp').textContent = f1(r.effHcPct);
+  $('e-lipp').textContent = f1(r.effLipPct);
 
   /* Stats */
   $('e-stats').innerHTML = `
-    <div class="sb blue"><div class="sv">${fi(r.totKcal)}</div><div class="su">kcal/día</div><div class="sl">Energía Total</div></div>
+    <div class="sb blue"><div class="sv">${fi(r.totalKcalDay)}</div><div class="su">kcal/día</div><div class="sl">Energía Total</div></div>
     <div class="sb green"><div class="sv">${f1(r.totProt)}</div><div class="su">g/día</div><div class="sl">Proteínas</div></div>
     <div class="sb amber"><div class="sv">${f2(r.gN2)}</div><div class="su">g N₂/día</div><div class="sl">Nitrógeno</div></div>
-    <div class="sb violet"><div class="sv">${fi(r.npKcal)}</div><div class="su">kcal NP</div><div class="sl">Kcal No Proteicas</div><div class="sl" style="margin-top:.45rem;color:var(--text);font-size:.72rem">HC <strong>${f1(r.gHC)}</strong> g · Líp <strong>${f1(r.gLip)}</strong> g</div></div>`;
+    <div class="sb violet"><div class="sv">${fi(r.npKcal)}</div><div class="su">kcal NP</div><div class="sl">Kcal No Proteicas</div><div class="sl" style="margin-top:.45rem;color:var(--text);font-size:.72rem">HC <strong>${f1(r.totalGHC)}</strong> g · Líp <strong>${f1(r.totalGLip)}</strong> g</div></div>`;
 
   /* Ratio */
   const rc = r.ratio < 80 ? '#ef4444' : r.ratio > 150 ? '#f59e0b' : '#34d399';
@@ -1822,14 +1965,14 @@ function calcEnteral() {
   /* Composition */
   $('e-comp').innerHTML = `
     <div style="height:1px;background:var(--border-dim);margin-bottom:.75rem"></div>
-    <div class="ri"><span class="rl">🔵 Carbohidratos (${r.hcPct}%)</span><span class="rv">${f1(r.gHC)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalHC)} kcal)</span></span></div>
-    <div class="ri"><span class="rl">🟡 Lípidos (${r.lipPct}%)</span><span class="rv">${f1(r.gLip)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalLip)} kcal)</span></span></div>
+    <div class="ri"><span class="rl">🔵 Carbohidratos (${f1(r.effHcPct)}%)</span><span class="rv">${f1(r.totalGHC)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.totalKcalHC)} kcal)</span></span></div>
+    <div class="ri"><span class="rl">🟡 Lípidos (${f1(r.effLipPct)}%)</span><span class="rv">${f1(r.totalGLip)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.totalKcalLip)} kcal)</span></span></div>
     <div class="ri"><span class="rl">🟢 Proteínas</span><span class="rv">${f1(r.totProt)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalProt)} kcal)</span></span></div>
     ${r.prop>0?`<div class="ri"><span class="rl">⚗️ Propofol externo</span><span class="rv">${f1(r.propLipg)}<span class="ru">g lípidos</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalProp)} kcal)</span></span></div>`:''}
     ${S.e.citrate?`<div class="ri"><span class="rl">🧪 Citrato externo</span><span class="rv">${f1(r.citHCg)}<span class="ru">g HC</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalCit)} kcal)</span></span></div>`:''}
     <div class="ri" style="border-top:1px solid var(--border);padding-top:.65rem;margin-top:.15rem">
       <span class="rl" style="font-weight:700;color:var(--text)">Total Kcal/día</span>
-      <span class="rv" style="font-size:1.05rem;color:#60a5fa">${fi(r.totKcal)}<span class="ru">kcal</span></span>
+      <span class="rv" style="font-size:1.05rem;color:#60a5fa">${fi(r.totalKcalDay)}<span class="ru">kcal</span></span>
     </div>
     <div class="ri"><span class="rl">N₂ total/día</span><span class="rv">${f2(r.gN2)}<span class="ru">g N₂</span></span></div>`;
 
@@ -1849,13 +1992,13 @@ function calcEnteral() {
     let renaproHtml = '';
     if (dev > 0) {
       renaproHtml = `
-        <div class="alert alert-warn" style="margin-top:.7rem;margin-bottom:0">
+        <div class="alert alert-warn" style="margin-top:.7rem;margin-bottom:0;display:block;text-align:center">
           <div style="font-weight:800;margin-bottom:.35rem">⚠️ Suplementación necesaria</div>
-          <div style="display:flex;justify-content:space-between;gap:.8rem;flex-wrap:wrap;margin-top:.2rem">
+          <div style="display:flex;justify-content:center;align-items:baseline;gap:.45rem;flex-wrap:wrap;margin-top:.2rem">
             <span>Sobres de RENAPRO / día</span>
             <strong>${f2(renapro)}</strong>
           </div>
-          <div style="display:flex;justify-content:space-between;gap:.8rem;flex-wrap:wrap;margin-top:.15rem">
+          <div style="display:flex;justify-content:center;align-items:baseline;gap:.45rem;flex-wrap:wrap;margin-top:.15rem">
             <span>Déficit proteico estimado</span>
             <strong>${f1(dev * 6.25)} g</strong>
           </div>
@@ -1896,20 +2039,23 @@ function calcEnteral() {
 function calcParenteral() {
   const r = calcNutr('p');
   updHC('p');
+  $('p-hcp').textContent = f1(r.effHcPct);
+  $('p-lipp').textContent = f1(r.effLipPct);
 
   const pStats = $('p-stats');
   if (pStats) {
     pStats.innerHTML = `
-      <div class="sb blue"><div class="sv">${fi(r.totKcal)}</div><div class="su">kcal/día</div><div class="sl">Energía Total</div></div>
+      <div class="sb blue"><div class="sv">${fi(r.totalKcalDay)}</div><div class="su">kcal/día</div><div class="sl">Energía Total</div></div>
       <div class="sb green"><div class="sv">${f1(r.totProt)}</div><div class="su">g/día</div><div class="sl">Proteínas</div></div>
       <div class="sb amber"><div class="sv">${f2(r.gN2)}</div><div class="su">g N₂/día</div><div class="sl">Nitrógeno</div></div>
-      <div class="sb violet"><div class="sv">${fi(r.npKcal)}</div><div class="su">kcal NP</div><div class="sl">Kcal No Proteicas</div><div class="sl" style="margin-top:.45rem;color:var(--text);font-size:.72rem">HC <strong>${f1(r.gHC)}</strong> g · Líp <strong>${f1(r.gLip)}</strong> g</div></div>`;
+      <div class="sb violet"><div class="sv">${fi(r.npKcal)}</div><div class="su">kcal NP</div><div class="sl">Kcal No Proteicas</div><div class="sl" style="margin-top:.45rem;color:var(--text);font-size:.72rem">HC <strong>${f1(r.totalGHC)}</strong> g · Líp <strong>${f1(r.totalGLip)}</strong> g</div></div>`;
   }
 
   $('p-comp').innerHTML = `
     <div class="ri"><span class="rl">N₂ total</span><span class="rv">${f2(r.gN2)}<span class="ru">g N₂</span></span></div>
-    <div class="ri"><span class="rl">🔵 Glucosa / HC (${r.hcPct}%)</span><span class="rv">${f1(r.gHC)}<span class="ru">g</span></span></div>
-    <div class="ri"><span class="rl">🟡 Lípidos (${r.lipPct}%)</span><span class="rv">${f1(r.gLip)}<span class="ru">g</span></span></div>
+    <div class="ri"><span class="rl">🔵 Glucosa / HC (${f1(r.effHcPct)}%)</span><span class="rv">${f1(r.totalGHC)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.totalKcalHC)} kcal)</span></span></div>
+    <div class="ri"><span class="rl">🟡 Lípidos (${f1(r.effLipPct)}%)</span><span class="rv">${f1(r.totalGLip)}<span class="ru">g</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.totalKcalLip)} kcal)</span></span></div>
+    <div class="ri"><span class="rl">🔥 Kcal administradas (Nutrición + Propofol + Citrato)</span><span class="rv">${fi(r.totalKcalDay)}<span class="ru">kcal</span></span></div>
     ${r.prop>0?`<div class="ri"><span class="rl">⚗️ Propofol externo</span><span class="rv">${f1(r.propLipg)}<span class="ru">g lípidos</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalProp)} kcal)</span></span></div>`:''}
     ${S.p.citrate?`<div class="ri"><span class="rl">🧪 Citrato externo</span><span class="rv">${f1(r.citHCg)}<span class="ru">g HC</span> <span style="color:var(--dim);font-size:.73rem">(${fi(r.kcalCit)} kcal)</span></span></div>`:''}
     <div style="background:rgba(59,130,246,.04);border:1px solid var(--border);border-radius:10px;padding:.9rem;margin-top:.9rem">
@@ -1923,8 +2069,8 @@ function calcParenteral() {
       <div style="margin-top:.75rem;font-size:.78rem;color:var(--muted)">
         <div style="display:flex;justify-content:space-between;margin-top:.35rem"><span>Kcal HC:</span><strong style="color:var(--text)">${fi(r.kcalHC)} kcal</strong></div>
         <div style="display:flex;justify-content:space-between;margin-top:.25rem"><span>Kcal Lípidos:</span><strong style="color:var(--text)">${fi(r.kcalLip)} kcal</strong></div>
-        <div style="display:flex;justify-content:space-between;margin-top:.25rem"><span>Kcal no proteicas:</span><strong style="color:var(--text)">${fi(r.npKcal)} kcal</strong></div>
-        <div style="display:flex;justify-content:space-between;margin-top:.25rem"><span>Ratio kcal NP / g N₂:</span><strong style="color:var(--text)">${f1(r.ratio)}</strong></div>
+        <div style="display:flex;justify-content:space-between;margin-top:.25rem"><span>Kcal no proteicas:</span><strong style="color:var(--text)">${fi(r.npDietKcal)} kcal</strong></div>
+        <div style="display:flex;justify-content:space-between;margin-top:.25rem"><span>Ratio kcal NP / g N₂:</span><strong style="color:var(--text)">${f1(r.gN2 > 0 ? r.npDietKcal / r.gN2 : 0)}</strong></div>
       </div>
     </div>
     ${r.prop>0?`<div class="alert alert-warn" style="margin-top:.9rem">⚠️ Propofol ${fi(r.prop)} ml/día aporta ${f1(r.propLipg)} g de lípidos (${fi(r.kcalProp)} kcal), ya descontados del objetivo</div>`:''}
@@ -2064,11 +2210,6 @@ function calcRitmo() {
 }
 
 /* ── Fase clínica ── */
-const FASE_DEFAULTS = {
-  aguda:    { kcalkg: 15, protkg: 0.8 },
-  subaguda: { kcalkg: 20, protkg: 1.0 },
-  cronica:  { kcalkg: 25, protkg: 1.0 },
-};
 
 function setFase(f) {
   S.fase = f;
@@ -2076,8 +2217,14 @@ function setFase(f) {
   $('faseS-btn').classList.toggle('active', f==='subaguda');
   $('faseC-btn').classList.toggle('active', f==='cronica');
   // Auto-adjust nutritional objectives
-  const d = FASE_DEFAULTS[f];
-  if (d) { sv('e-kcalkg', d.kcalkg); sv('e-protkg', d.protkg); }
+  const d = getPhaseDefaults(f, 'e');
+  if (d) {
+    sv('e-kcalkg', d.kcalkg);
+    sv('e-protkg', d.protkg);
+    if (getRenalProtocol('e')?.forceHc70) {
+      sv('e-hcs', 70);
+    }
+  }
   setFltType(f);
   calcEnteral();
 }
@@ -2088,23 +2235,63 @@ function setFaseP(f) {
   $('p-faseS-btn').classList.toggle('active', f==='subaguda');
   $('p-faseC-btn').classList.toggle('active', f==='cronica');
   // Auto-adjust nutritional objectives
-  const d = FASE_DEFAULTS[f];
-  if (d) { sv('p-kcalkg', d.kcalkg); sv('p-protkg', d.protkg); }
+  const d = getPhaseDefaults(f, 'p');
+  if (d) {
+    sv('p-kcalkg', d.kcalkg);
+    sv('p-protkg', d.protkg);
+    if (getRenalProtocol('p')?.forceHc70) {
+      sv('p-hcs', 70);
+    }
+  }
   // Update fase-info for parenteral
   updateFaseInfoP(f);
   calcParenteral();
 }
 
+function setRenalMode(px, mode) {
+  const next = RENAL_PROTOCOLS[mode] ? mode : null;
+  S[px].renal = next;
+  if (next !== 'crrt') {
+    S[px].citrate = false;
+  }
+  updateRenalChip(px);
+
+  const phase = px === 'e' ? S.fase : S.p.fase;
+  const d = getPhaseDefaults(phase, px);
+  if (d) {
+    sv(px + '-kcalkg', d.kcalkg);
+    sv(px + '-protkg', d.protkg);
+  }
+
+  if (getRenalProtocol(px)?.forceHc70) {
+    sv(px + '-hcs', 70);
+  }
+
+  if (px === 'e') {
+    calcEnteral();
+  } else {
+    updateFaseInfoP(S.p.fase);
+    calcParenteral();
+  }
+}
+
 function updateFaseInfoP(f) {
   const el = $('p-fase-info');
   if (!el) return;
+  const protocol = getRenalProtocol('p');
+  const protocolLabel = protocol ? protocol.label : BASE_RENAL_PROFILE.label;
   const icons  = { aguda:'⚡', subaguda:'🔶', cronica:'🔄' };
-  const titles = { aguda:'Fase Aguda · 0–72 h', subaguda:'Fase Subaguda · 4º–7º día', cronica:'Fase Crónica · > 1 semana' };
+  const titles = { aguda:'Fase Aguda · 0–72 h', subaguda:'Fase Estabilización · 4º–7º día', cronica:'Fase de Recuperación · > 1 semana' };
+  const protRows = protocol ? protocol.proteins : BASE_RENAL_PROFILE.proteins;
   const rows = {
-    aguda:    [['Inicio', '15 Kcal/Kg/día', '0.8 g prot/Kg/día'], ['Objetivo', '20 Kcal/Kg/día', '1 g prot/Kg/día']],
-    subaguda: [['Inicio', '20 Kcal/Kg/día', '1 g prot/Kg/día'],   ['Objetivo', '25 Kcal/Kg/día', '1 g prot/Kg/día']],
-    cronica:  [['Inicio', '25 Kcal/Kg/día', '1 g prot/Kg/día'],   ['Objetivo', '30 Kcal/Kg/día', '1.2–1.3 g prot/Kg/día']],
+    aguda:    [['Inicio', '15 Kcal/Kg/día', protRows.aguda.ini], ['Objetivo', '20 Kcal/Kg/día', protRows.aguda.obj]],
+    subaguda: [['Inicio', '20 Kcal/Kg/día', protRows.subaguda.ini], ['Objetivo', '25 Kcal/Kg/día', protRows.subaguda.obj]],
+    cronica:  [['Inicio', '25 Kcal/Kg/día', protRows.cronica.ini], ['Objetivo', '30 Kcal/Kg/día', protRows.cronica.obj]],
   };
+  const recs = [];
+  const recsHtml = recs.length
+    ? recs.map(t => `<span class="badge badge-ok" style="margin-right:.4rem;margin-bottom:.4rem;padding:.25rem .6rem;font-size:.73rem">⭐ ${t}</span>`).join('')
+    : '<span style="font-size:.73rem;color:var(--muted)">Sin alertas adicionales.</span>';
   const rowsHtml = (rows[f] || []).map(([label, kcal, prot]) => `
     <tr>
       <td style="padding:.28rem .55rem;font-size:.72rem;color:var(--muted);white-space:nowrap">${label}</td>
@@ -2126,9 +2313,54 @@ function updateFaseInfoP(f) {
           </tr></thead>
           <tbody>${rowsHtml}</tbody>
         </table>
+        <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem">Dietas sugeridas</div>
+        <div style="display:flex;flex-wrap:wrap;gap:.35rem">${recsHtml}</div>
+        <div style="margin-top:.55rem;font-size:.73rem;color:var(--muted)">Insuf. renal: <strong style="color:var(--text)">${protocolLabel}</strong></div>
         <div style="margin-top:.35rem;font-size:.73rem;color:#fbbf24">⚠️ Aumentar progresivamente</div>
+        ${protocol && protocol.monitorPhosphorus ? `<div style="margin-top:.35rem;font-size:.73rem;color:#67e8f9;font-weight:700">⭐ Monitorizar niveles de Fósforo</div>` : ''}
       </div>
     </div>`;
+}
+
+function openRenalModal(px) {
+  S.renalModal.px = px;
+  S.renalModal.mode = getRenalMode(px);
+  $('rm-citrate').checked = !!S[px].citrate;
+  updateRenalModalUI();
+  $('renal-overlay').classList.add('open');
+}
+
+function toggleRenalChoice(mode) {
+  const current = S.renalModal.mode;
+  S.renalModal.mode = current === mode ? null : mode;
+  updateRenalModalUI();
+}
+
+function closeRenalModal() {
+  $('renal-overlay').classList.remove('open');
+}
+
+function renalOverlayClick(e) {
+  if (e.target === $('renal-overlay')) closeRenalModal();
+}
+
+function updateRenalModalUI() {
+  const mode = S.renalModal.mode;
+  document.querySelectorAll('[data-rm-mode]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.rmMode === mode);
+  });
+  const isCrrt = mode === 'crrt';
+  $('rm-citrate-wrap').style.display = isCrrt ? 'block' : 'none';
+}
+
+function applyRenalModal() {
+  const px = S.renalModal.px || 'e';
+  const mode = S.renalModal.mode;
+  setRenalMode(px, mode);
+  if (mode === 'crrt') {
+    setCit(px, $('rm-citrate').checked);
+  }
+  closeRenalModal();
 }
 
 /* ── Weight selection ── */
@@ -2145,8 +2377,7 @@ function selW(px, mode) {
 /* ── Citrate toggle ── */
 function setCit(px, val) {
   S[px].citrate = val;
-  $(px+'-cit-no') .classList.toggle('active', !val);
-  $(px+'-cit-yes').classList.toggle('active',  val);
+  updateRenalChip(px);
   px==='e' ? calcEnteral() : calcParenteral();
 }
 
@@ -2304,6 +2535,8 @@ window.addEventListener('DOMContentLoaded', () => {
   calcRitmo();
   setFase('aguda');
   setFaseP('aguda');
+  updateRenalChip('e');
+  updateRenalChip('p');
   lockFormulaManager();
 });
 </script>
