@@ -1436,6 +1436,7 @@ let FORMULAS = DEFAULT_FORMULAS.map(f => ({ ...f }));
 const FORMULAS_STORAGE_KEY = 'nutri_enteral_formulas_v1';
 
 const N2_RENAPRO = 2.88; // g N2 per RENAPRO unit
+const KCAL_RENAPRO_UNIT = 72; // kcal per RENAPRO unit (18 g prot x 4 kcal/g)
 
 const BASE_RENAL_PROFILE = {
   label: 'No',
@@ -1825,6 +1826,45 @@ function getPhaseDefaults(phase, px) {
   };
 }
 
+function calcEnteralFormulaPlan(f, r) {
+  const baseDietKcal = Math.max(0, r.totKcal);
+  const kcalPerMl = Math.max(0.0001, Number(f.kcal) || 0.0001);
+  const n2PerMl = Math.max(0, (Number(f.n2) || 0) / 100);
+
+  // Fixed-point refinement: formula kcal target is reduced by RENAPRO kcal when N2 deficit exists.
+  let vol24 = baseDietKcal / kcalPerMl;
+  let renaproUnits = 0;
+  let renaproKcal = 0;
+  let gN2_24 = n2PerMl * vol24;
+
+  for (let i = 0; i < 8; i++) {
+    gN2_24 = n2PerMl * vol24;
+    const n2Def = Math.max(0, r.gN2 - gN2_24);
+    renaproUnits = n2Def / N2_RENAPRO;
+    renaproKcal = renaproUnits * KCAL_RENAPRO_UNIT;
+
+    const nextVol = Math.max(0, (baseDietKcal - renaproKcal) / kcalPerMl);
+    if (Math.abs(nextVol - vol24) < 0.1) {
+      vol24 = nextVol;
+      break;
+    }
+    vol24 = nextVol;
+  }
+
+  gN2_24 = n2PerMl * vol24;
+  const n2Dev = r.gN2 - gN2_24;
+  const n2Coverage = r.gN2 > 0 ? gN2_24 / r.gN2 : 1;
+
+  return {
+    vol24,
+    gN2_24,
+    n2Dev,
+    n2Coverage,
+    renaproUnits,
+    renaproKcal,
+  };
+}
+
 /* ── Enteral ── */
 function assessFormulaRecommendation(f, r) {
   const yeyunoActive = !!S.e.yeyuno;
@@ -1843,10 +1883,11 @@ function assessFormulaRecommendation(f, r) {
     bmiMatch = f.kcal >= 1.3;
   }
 
-  const vol24 = r.totKcal / f.kcal;
-  const gN2_24 = (f.n2 / 100) * vol24;
-  const n2Dev = r.gN2 - gN2_24;
-  const n2Coverage = r.gN2 > 0 ? gN2_24 / r.gN2 : 1;
+  const plan = calcEnteralFormulaPlan(f, r);
+  const vol24 = plan.vol24;
+  const gN2_24 = plan.gN2_24;
+  const n2Dev = plan.n2Dev;
+  const n2Coverage = plan.n2Coverage;
   const n2Match = n2Coverage <= 1.10;
   const yeyunoMatch = !yeyunoActive || isPeptamenAF;
   const baseRecommended = phaseMatch && bmiMatch && n2Match;
@@ -1857,6 +1898,8 @@ function assessFormulaRecommendation(f, r) {
     gN2_24,
     n2Dev,
     n2Coverage,
+    renaproUnits: plan.renaproUnits,
+    renaproKcal: plan.renaproKcal,
     phaseMatch,
     bmiMatch,
     n2Match,
@@ -2026,8 +2069,13 @@ function calcEnteral() {
     const a = assessFormulaRecommendation(f, r);
     const vol24  = a.vol24;
     const dev    = a.n2Dev;
-    const renapro= dev / N2_RENAPRO;
+    const renapro= a.renaproUnits;
+    const kcalRenapro = a.renaproKcal;
     const rate   = vol24 / 24;
+    const kcalDiet = f.kcal * vol24;
+    const kcalProp = r.kcalProp;
+    const kcalCit = r.kcalCit;
+    const kcalTotal = kcalDiet + kcalProp + kcalCit + kcalRenapro;
 
     let renaproHtml = '';
     if (dev > 0) {
@@ -2067,7 +2115,7 @@ function calcEnteral() {
         </div>
         <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
           <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔥 Aporte energético (dieta)</span>
-          <span class="rv" style="font-size:.95rem">${fi(f.kcal * vol24)}<span class="ru">kcal</span></span>
+          <span class="rv" style="font-size:.95rem">${fi(kcalDiet)}<span class="ru">kcal</span></span>
         </div>
         <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
           <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🟤 Aporte Nitrógeno (dieta)</span>
@@ -2084,6 +2132,16 @@ function calcEnteral() {
         </div>
         <div class="ri" style="padding:.7rem .6rem"><span class="rl" style="font-size:.75rem;color:var(--muted)">Dieta: ${f1(gLip_diet)} g ${r.prop > 0 ? `+ Propofol: ${f1(r.propLipg)} g` : ''}</span></div>
         ${renaproHtml}
+        <div style="margin-top:.85rem;padding:.85rem .9rem;background:linear-gradient(135deg, rgba(59,130,246,.22), rgba(6,182,212,.14));border:1px solid rgba(96,165,250,.48);border-radius:11px;box-shadow:0 0 0 1px rgba(59,130,246,.18), 0 10px 22px rgba(2,6,23,.26)">
+          <div style="font-size:.74rem;font-weight:800;color:#bfdbfe;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.45rem">Balance energético final</div>
+          <div style="font-size:.84rem;color:var(--text);line-height:1.5">
+            Objetivo = Dieta <strong>${fi(kcalDiet)} kcal</strong>
+            ${kcalProp > 0 ? ` + Propofol <strong>${fi(kcalProp)} kcal</strong>` : ''}
+            ${kcalCit > 0 ? ` + Citrato <strong>${fi(kcalCit)} kcal</strong>` : ''}
+            ${kcalRenapro > 0 ? ` + RENAPRO <strong>${fi(kcalRenapro)} kcal</strong>` : ''}
+            = <strong style="color:#60a5fa">${fi(kcalTotal)} kcal/día</strong>
+          </div>
+        </div>
         <button class="qb" style="width:100%;margin-top:.9rem;justify-content:center;padding:.5rem;font-size:.76rem" onclick="applyPrescription(${fi(vol24)})">
           🔗 Aplicar volumen a Tolerancia y Ritmo
         </button>
@@ -2170,7 +2228,7 @@ function renderTable(r) {
     const vol24  = a.vol24;
     const gN2_24 = a.gN2_24;
     const dev    = a.n2Dev;      // positive = deficit, negative = excess
-    const renapro= dev / N2_RENAPRO;
+    const renapro= a.renaproUnits;
 
     let devHtml, supHtml;
     if (Math.abs(dev) < 0.05) {
