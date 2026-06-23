@@ -15,6 +15,7 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 - **Ritmo de Mantenimiento** — ajuste post-tolerancia
 - **Catálogo de Fórmulas** — base editable de dietas enterales disponibles
 - **NUTRIC Score** — evaluación del riesgo nutricional
+- **Selector de Perfil** — interfaz adaptativa según rol (Médico o Auxiliar)
 
 ---
 
@@ -40,7 +41,8 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 - Bloque visual de composición 24 h
 
 ### 3. **Pauta de Tolerancia (24 h)**
-- Dos fases de 12 h con ritmos independientes (ml/h)
+- Protocolo estándar: Dos fases de 12 h con ritmos escalonados y pausas de débito
+- **Protocolo SNY / Yeyunostomía**: Ritmo único y continuo a 24 horas sin pausas de débito, y con recomendaciones clínicas integradas
 - Cálculo de volumen total administrado en 24 h
 - Barra de progreso del objetivo
 - Alertas clínicas:
@@ -51,8 +53,9 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 
 ### 4. **Ritmo de Mantenimiento**
 - Cálculo del ritmo de continuación post-tolerancia
-- Contador de volumen restante
-- Modalidad de control: c/12 h o c/24 h (para débito gástrico)
+- Protocolo estándar: Ajustes separados por 2º y ≥3er día con controles de débito
+- **Protocolo SNY / Yeyunostomía**: Ritmo único continuo a 24 horas sin controles de débito
+- Modalidad de control: c/12 h o c/24 h (para débito gástrico, omitidas en SNY)
 - Recomendaciones según frecuencia
 
 ### 5. **Catálogo de Fórmulas**
@@ -75,7 +78,11 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 
 ### Flujo Básico Enteral
 
-1. **Ingresar datos del paciente**
+1. **Seleccionar Perfil (Inicio)**
+   - **Médico**: Acceso a formulación, catálogos y nutrición enteral/parenteral.
+   - **Auxiliar de Enfermería**: Acceso directo a Pauta de Tolerancia y Ritmo de mantenimiento.
+
+2. **Ingresar datos del paciente**
    - Peso, talla (se calcula BMI, IBW, peso ajustado)
    - Elegir peso a usar (actual, IBW, ajustado)
 

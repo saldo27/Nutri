@@ -1110,6 +1110,10 @@
           <div><div class="c-title tab-title">📋 Inicio y Progresión N. Enteral</div><div class="c-sub">Pauta de tolerancia · primeras 24 horas</div></div>
         </div>
         <div class="alert alert-info">ℹ️ Protocolo de inicio de N. Enteral. Se controla el débito gástrico cada 12 horas para ajustar el ritmo.</div>
+        <label style="display:inline-flex;align-items:center;gap:.45rem;font-size:.85rem;color:var(--text);cursor:pointer;margin-bottom:1rem;background:rgba(139,92,246,.08);padding:.65rem;border-radius:8px;width:100%;border:1px solid rgba(139,92,246,.2)">
+          <input type="checkbox" id="t-yeyuno" style="width:18px;height:18px;accent-color:#8b5cf6" onchange="toggleYeyunoSNY(this.checked)">
+          <strong>El paciente es portador de Yeyunostomía o Sonda NasoYeyunal (SNY)</strong>
+        </label>
         <div class="fg">
           <label class="fl" for="t-vol">Volumen objetivo total (ml/24h)</label>
           <div class="fi-wrap"><input class="fi" type="number" id="t-vol" value="500" min="100" max="3000" step="50" oninput="calcTol()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#60a5fa">ml</span></div>
@@ -1182,6 +1186,10 @@
           <div><div class="c-title tab-title">⏱ Ritmo de Nutrición Enteral</div><div class="c-sub">Tras completar la Pauta de Tolerancia</div></div>
         </div>
         <div class="alert alert-ok">✅ Pauta de tolerancia completada. Calcule el ritmo de mantenimiento.</div>
+        <label style="display:inline-flex;align-items:center;gap:.45rem;font-size:.85rem;color:var(--text);cursor:pointer;margin-bottom:1rem;background:rgba(139,92,246,.08);padding:.65rem;border-radius:8px;width:100%;border:1px solid rgba(139,92,246,.2)">
+          <input type="checkbox" id="r-yeyuno" style="width:18px;height:18px;accent-color:#8b5cf6" onchange="toggleYeyunoSNY(this.checked)">
+          <strong>El paciente es portador de Yeyunostomía o Sonda NasoYeyunal (SNY)</strong>
+        </label>
         <div style="background:rgba(96,165,250,.08);border-left:3px solid #60a5fa;padding:.9rem;margin-bottom:.9rem;border-radius:8px">
           <div class="fg" style="margin-bottom:0">
             <label class="fl" for="r-vol" style="font-weight:700;font-size:.95rem">Volumen objetivo (ml/24h)</label>
@@ -1364,6 +1372,27 @@
 </div><!-- end panel-catalogo -->
 
 </main>
+
+<!-- ══════════════════════════════════════════════════
+     ROLE SELECTION MODAL
+══════════════════════════════════════════════════ -->
+<div class="nutric-overlay open" id="role-overlay" style="z-index:9999">
+  <div class="nutric-modal" id="role-modal" style="max-width:440px">
+    <div class="nutric-modal-head" style="justify-content:center">
+      <div class="nutric-modal-title" style="text-align:center">
+        <span class="icon">👤</span>
+        Seleccione su Perfil
+      </div>
+    </div>
+    <div class="nutric-body" style="text-align:center">
+      <div style="font-size:1.05rem; font-weight:700; margin-bottom:1.5rem; color:var(--text)">
+        ¿Es usted Auxiliar de Enfermería o Médico?
+      </div>
+      <button class="btn-calc-nutric" style="margin-bottom:1rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding:.8rem" onclick="selectRole('auxiliar')">Auxiliar de Enfermería</button>
+      <button class="btn-calc-nutric" style="padding:.8rem" onclick="selectRole('medico')">Médico</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════
      NUTRIC SCORE MODAL
@@ -1608,7 +1637,9 @@ const S = {
   renalModal: { px: 'e', mode: null },
   fase: 'aguda',
   fltType: 'aguda',
+  yeyunoSNY: false,
 };
+
 
 /* ── Helpers ── */
 const $  = id => document.getElementById(id);
@@ -2395,39 +2426,103 @@ function setFltType(t) {
 
 /* ── Tolerancia ── */
 function calcTol() {
+  const isYeyuno = !!S.yeyunoSNY;
   const vol             = gv('t-vol');
   const periodHours     = 12;
-  const basePause1      = gv('t-pause-base1');
+  
+  const elBase1 = $('t-pause-base1');
+  if (elBase1) elBase1.parentElement.parentElement.style.display = isYeyuno ? 'none' : 'block';
+  const elBase2 = $('t-pause-base2');
+  if (elBase2) elBase2.parentElement.parentElement.style.display = isYeyuno ? 'none' : 'block';
+
+  let basePause1 = 0, basePause2 = 0;
+  if (!isYeyuno) {
+    basePause1 = gv('t-pause-base1');
+    basePause2 = gv('t-pause-base2');
+  }
+
   const extraPause1     = gv('t-extra1');
-  const basePause2      = gv('t-pause-base2');
   const extraPause2     = gv('t-extra2');
   const totalPause1     = basePause1 + extraPause1;
   const totalPause2     = basePause2 + extraPause2;
   const infusedHours1   = Math.max(0, periodHours - (totalPause1 / 60));
   const infusedHours2   = Math.max(0, periodHours - (basePause2 / 60));
   const infusedHours2Real = Math.max(0, periodHours - (totalPause2 / 60));
-  const denom           = infusedHours1 + (2 * infusedHours2);
-  const reqR1           = vol > 0 && denom > 0 ? vol / denom : 0;
-  const r1              = reqR1;
-  const r2              = reqR1 * 2;
-  const v1              = r1 * infusedHours1;
-  const v2              = r2 * infusedHours2;
-  const r2Real          = infusedHours2Real > 0 ? v2 / infusedHours2Real : r2;
-  const tot  = v1 + v2;
-  const pct  = vol > 0 ? (tot / vol) * 100 : 0;
-  const over = pct > 100;
-  const reqR2 = reqR1 * 2;
+  
+  let reqR1, r1, r2, v1, v2, r2Real, tot, pct, over, reqR2;
+  
+  if (isYeyuno) {
+    // Para yeyunostomía: ritmo constante (Volumen / 24h) ajustado a los traslados
+    const totalInfused = infusedHours1 + infusedHours2Real;
+    r1 = vol > 0 && totalInfused > 0 ? vol / totalInfused : 0;
+    reqR1 = r1;
+    r2Real = r1;
+    r2 = r1;
+    v1 = r1 * infusedHours1;
+    v2 = r1 * infusedHours2Real;
+  } else {
+    // Comportamiento original
+    const denom = infusedHours1 + (2 * infusedHours2);
+    reqR1 = vol > 0 && denom > 0 ? vol / denom : 0;
+    r1 = reqR1;
+    r2 = reqR1 * 2;
+    v1 = r1 * infusedHours1;
+    v2 = r2 * infusedHours2;
+    r2Real = infusedHours2Real > 0 ? v2 / infusedHours2Real : r2;
+  }
+  
+  tot  = v1 + v2;
+  pct  = vol > 0 ? (tot / vol) * 100 : 0;
+  over = pct > 100;
 
   sv('t-r1', f1(reqR1));
   sv('t-r2', f1(r2Real));
 
-  $('t-p1r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours1)} h de infusion)</div>
-    <div style="font-size:1.35rem;font-weight:800;color:#60a5fa">${fi(v1)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
-  $('t-p2r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours2)} h de infusion)</div>
-    <div style="font-size:1.35rem;font-weight:800;color:#22d3ee">${fi(v2)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
+  if (isYeyuno) {
+    $('t-p1r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours1 + infusedHours2Real)} h de infusion)</div>
+      <div style="font-size:1.35rem;font-weight:800;color:#60a5fa">${fi(tot)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
+    $('t-p2r').innerHTML = '';
+  } else {
+    $('t-p1r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours1)} h de infusion)</div>
+      <div style="font-size:1.35rem;font-weight:800;color:#60a5fa">${fi(v1)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
+    $('t-p2r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours2)} h de infusion)</div>
+      <div style="font-size:1.35rem;font-weight:800;color:#22d3ee">${fi(v2)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
+  }
 
   const pc = Math.min(pct, 100);
-  $('t-res').innerHTML = `
+  if (isYeyuno) {
+    $('t-res').innerHTML = `
+      <div class="sg" style="margin-bottom:.9rem">
+        <div class="sb green"><div class="sv">${fi(tot)}</div><div class="su">ml</div><div class="sl">Total 24 h</div></div>
+        <div class="sb blue"><div class="sv">${f1(r1)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Único</div></div>
+      </div>
+      <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem;margin-bottom:.9rem">
+        <div class="ri"><span class="rl">Pausas totales 24 h</span><span class="rv">${fi(extraPause1 + extraPause2)} min</span></div>
+        <div class="ri"><span class="rl">Ritmo calculado</span><span class="rv">${f1(reqR1)}<span class="ru">ml/h</span></span></div>
+      </div>
+      <div style="padding:.9rem;background:rgba(255,255,255,.02);border-radius:11px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.45rem">
+          <span style="font-size:.78rem;color:var(--muted)">% Objetivo alcanzado en 24 h</span>
+          <span style="font-size:1.55rem;font-weight:800;color:${over?'#f59e0b':'#34d399'}">${f1(pct)}%</span>
+        </div>
+        <div class="pbar"><div class="pfill ${over?'over':''}" style="width:${pc}%"></div></div>
+        <div style="font-size:.72rem;color:var(--dim);margin-top:.45rem">Objetivo: ${fi(vol)} ml &nbsp;|&nbsp; Administrado: ${fi(tot)} ml &nbsp;|&nbsp; Diferencia: ${fi(tot-vol)} ml</div>
+      </div>
+      <div style="margin-top:1.2rem; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); font-size: .95rem; font-weight: 500; line-height: 1.6;">
+        <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: 1.05rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;">
+          <span>⚠️</span> <span>Protocolo Yeyunal</span>
+        </div>
+        <ul style="margin: 0; padding-left: 1.5rem; color: #f3f4f6;">
+          <li style="margin-bottom:.3rem">Administrar nutrición por <strong>luz Yeyunal</strong>.</li>
+          <li style="margin-bottom:.3rem"><strong>No hacer pausas</strong> para débito.</li>
+          <li>Administrar <strong>50 ml de Agua</strong> c/6H.</li>
+        </ul>
+      </div>
+      ${pct < 50 ? `<div class="alert alert-warn" style="margin-top:.9rem">⚠️ &lt;50% del objetivo. Si buena tolerancia, aumente el ritmo.</div>` : ''}
+      ${pct >= 100 ? `<div class="alert alert-ok" style="margin-top:.9rem">✅ Se cubre el 100% del objetivo nutricional en las primeras 24 h.</div>` : ''}
+      ${pct >= 50 && pct < 100 ? `<div class="alert alert-info" style="margin-top:.9rem">ℹ️ Déficit de ${fi(vol-tot)} ml. Se completará con el ritmo de mantenimiento.</div>` : ''}`;
+  } else {
+    $('t-res').innerHTML = `
     <div class="sg" style="margin-bottom:.9rem">
       <div class="sb blue"><div class="sv">${fi(v1)}</div><div class="su">ml</div><div class="sl">Fase 1 (${f1(infusedHours1)} h infusion)</div></div>
       <div class="sb cyan"><div class="sv">${fi(v2)}</div><div class="su">ml</div><div class="sl">Fase 2 (${f1(infusedHours2)} h infusion)</div></div>
@@ -2457,13 +2552,52 @@ function calcTol() {
     ${pct < 50 ? `<div class="alert alert-warn" style="margin-top:.9rem">⚠️ &lt;50% del objetivo. Si buena tolerancia, aumente el ritmo.</div>` : ''}
     ${pct >= 100 ? `<div class="alert alert-ok" style="margin-top:.9rem">✅ Se cubre el 100% del objetivo nutricional en las primeras 24 h.</div>` : ''}
     ${pct >= 50 && pct < 100 ? `<div class="alert alert-info" style="margin-top:.9rem">ℹ️ Déficit de ${fi(vol-tot)} ml. Se completará con el ritmo de mantenimiento.</div>` : ''}`;
+  }
+}
+
+function toggleYeyunoSNY(val) {
+  S.yeyunoSNY = val;
+  if ($('t-yeyuno')) $('t-yeyuno').checked = val;
+  if ($('r-yeyuno')) $('r-yeyuno').checked = val;
+  
+  const tPh2 = document.querySelector('#panel-tolerancia .phase.ph2');
+  if (tPh2) tPh2.style.display = val ? 'none' : 'block';
+  const tPh1Title = document.querySelector('#panel-tolerancia .phase.ph1 strong');
+  if (tPh1Title) tPh1Title.textContent = val ? 'Pauta Continua de 24 horas' : 'Primeras 12 h — hasta 1.er control de débito';
+  const tPh1Num = document.querySelector('#panel-tolerancia .phase.ph1 .ph-num');
+  if (tPh1Num) tPh1Num.style.display = val ? 'none' : 'inline-flex';
+  const tR1Label = document.querySelector('label[for="t-r1"]');
+  if (tR1Label) tR1Label.textContent = val ? 'Ritmo Único (ml/h)' : 'Ritmo (ml/h)';
+  const tR1Info = document.querySelector('#panel-tolerancia .phase.ph1 .fg:last-of-type div:last-child');
+  if (tR1Info) tR1Info.textContent = val ? 'Automático según volumen objetivo y tiempo efectivo' : 'Automático según volumen objetivo y pausas';
+  
+  const rPh2 = document.querySelector('#panel-ritmo .phase.ph2');
+  if (rPh2) rPh2.style.display = val ? 'none' : 'block';
+  const rPh1Title = document.querySelector('#panel-ritmo .phase.ph1 strong');
+  if (rPh1Title) rPh1Title.textContent = val ? 'Mantenimiento a 24 horas' : '2º día';
+  const rPh1Num = document.querySelector('#panel-ritmo .phase.ph1 .ph-num');
+  if (rPh1Num) rPh1Num.style.display = val ? 'none' : 'inline-flex';
+
+  calcTol();
+  calcRitmo();
 }
 
 /* ── Ritmo ── */
 function calcRitmo() {
+  const isYeyuno    = !!S.yeyunoSNY;
   const vol         = gv('r-vol');
-  const basePause2  = 40;
-  const basePause3  = 20;
+  
+  const elBase2 = $('r-pause2');
+  if (elBase2) elBase2.parentElement.parentElement.style.display = isYeyuno ? 'none' : 'block';
+  const elBase3 = $('r-pause3');
+  if (elBase3) elBase3.parentElement.parentElement.style.display = isYeyuno ? 'none' : 'block';
+
+  let basePause2 = 0, basePause3 = 0;
+  if (!isYeyuno) {
+    basePause2 = 40;
+    basePause3 = 20;
+  }
+
   const extraPause2 = gv('r-extra2');
   const extraPause3 = gv('r-extra3');
   const totalPause2 = basePause2 + extraPause2;
@@ -2476,27 +2610,52 @@ function calcRitmo() {
   const rateDay2    = infHours2 > 0 ? volDay2 / infHours2 : 0;
   const rateDay3    = infHours3 > 0 ? volDay3 / infHours3 : 0;
 
-  $('r-res').innerHTML = `
-    <div class="sg" style="margin-bottom:.9rem">
-      <div class="sb blue"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${f1(rateDay2)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo 2º día</div></div>
-      <div class="sb cyan"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${f1(rateDay3)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo ≥3er día</div></div>
-      <div class="sb green"><div class="sv">${fi(volDay2)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
-    </div>
-    <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
-      <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
-      <div class="ri"><span class="rl">Volumen total 2º día</span><span class="rv">${fi(volDay2)}<span class="ru">ml</span></span></div>
-      <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
-        <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔵 Ritmo N. Enteral 2º día</span>
-        <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${f1(rateDay2)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</span></span>
+  if (isYeyuno) {
+    $('r-res').innerHTML = `
+      <div class="sg" style="margin-bottom:.9rem">
+        <div class="sb blue"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${f1(rateDay2)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Único a 24h</div></div>
+        <div class="sb green"><div class="sv">${fi(volDay2)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
       </div>
-      <div class="ri" style="padding:.7rem .6rem"><span class="rl">Control débito c/12H</span><span class="rv">${fi(basePause2)} + ${fi(extraPause2)} = ${fi(totalPause2)} min pausas</span></div>
-      <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
-        <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo N. Enteral ≥3º día</span>
-        <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${f1(rateDay3)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</span></span>
+      <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
+        <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
+        <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔵 Ritmo Mantenimiento N. Enteral</span>
+          <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${f1(rateDay2)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</span></span>
+        </div>
+        <div class="ri" style="padding:.7rem .6rem"><span class="rl">Pausas ajustadas (traslados, medicación)</span><span class="rv">${fi(extraPause2 + extraPause3)} min</span></div>
       </div>
-      <div class="ri" style="padding:.7rem .6rem"><span class="rl">Control débito c/24H</span><span class="rv">${fi(basePause3)} + ${fi(extraPause3)} = ${fi(totalPause3)} min pausas</span></div>
-    </div>`;
-
+      <div style="margin-top:1.2rem; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); font-size: .95rem; font-weight: 500; line-height: 1.6;">
+        <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: 1.05rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;">
+          <span>⚠️</span> <span>Protocolo Yeyunal</span>
+        </div>
+        <ul style="margin: 0; padding-left: 1.5rem; color: #f3f4f6;">
+          <li style="margin-bottom:.3rem">Administrar nutrición por <strong>luz Yeyunal</strong>.</li>
+          <li style="margin-bottom:.3rem"><strong>No hacer pausas</strong> para débito.</li>
+          <li>Administrar <strong>50 ml de Agua</strong> c/4H.</li>
+        </ul>
+      </div>`;
+  } else {
+    $('r-res').innerHTML = `
+      <div class="sg" style="margin-bottom:.9rem">
+        <div class="sb blue"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${f1(rateDay2)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo 2º día</div></div>
+        <div class="sb cyan"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${f1(rateDay3)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo ≥3er día</div></div>
+        <div class="sb green"><div class="sv">${fi(volDay2)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
+      </div>
+      <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
+        <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
+        <div class="ri"><span class="rl">Volumen total 2º día</span><span class="rv">${fi(volDay2)}<span class="ru">ml</span></span></div>
+        <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔵 Ritmo N. Enteral 2º día</span>
+          <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${f1(rateDay2)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</span></span>
+        </div>
+        <div class="ri" style="padding:.7rem .6rem"><span class="rl">Control débito c/12H</span><span class="rv">${fi(basePause2)} + ${fi(extraPause2)} = ${fi(totalPause2)} min pausas</span></div>
+        <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo N. Enteral ≥3º día</span>
+          <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${f1(rateDay3)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</span></span>
+        </div>
+        <div class="ri" style="padding:.7rem .6rem"><span class="rl">Control débito c/24H</span><span class="rv">${fi(basePause3)} + ${fi(extraPause3)} = ${fi(totalPause3)} min pausas</span></div>
+      </div>`;
+  }
 }
 
 /* ── Fase clínica ── */
@@ -2699,6 +2858,21 @@ function showTab(name) {
 }
 
 /* ── Formula Selection Helpers ── */
+function selectRole(role) {
+  $('role-overlay').classList.remove('open');
+  if (role === 'medico') {
+    $('tab-tolerancia').style.display = 'none';
+    $('tab-ritmo').style.display = 'none';
+    showTab('enteral');
+  } else if (role === 'auxiliar') {
+    $('tab-enteral').style.display = 'none';
+    $('tab-parenteral').style.display = 'none';
+    $('tab-catalogo').style.display = 'none';
+    showTab('tolerancia');
+  }
+}
+
+
 function selectFormula(idx) {
   const r = calcNutr('e');
   if (!isFormulaRecommended(FORMULAS[idx], r)) return;
