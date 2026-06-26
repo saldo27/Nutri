@@ -1,7 +1,7 @@
 # CalcNutrición UCI
 
 **Calculadora de Nutrición Artificial en Paciente Crítico**  
-Versión 13 | Basada en protocolo clínico para UCI
+Basada en protocolo clínico para UCI
 
 ---
 
@@ -15,7 +15,6 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 - **Ritmo de Mantenimiento** — ajuste post-tolerancia
 - **Catálogo de Fórmulas** — base editable de dietas enterales disponibles
 - **NUTRIC Score** — evaluación del riesgo nutricional
-- **Selector de Perfil** — interfaz adaptativa según rol (Médico o Auxiliar)
 
 ---
 
@@ -25,24 +24,28 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 - Cálculo automático de requerimientos por peso y protocolo (IBW, peso actual, peso ajustado)
 - Selector de fase clínica en 3 etapas: aguda, subaguda y crónica
 - Ajuste automático de objetivos nutricionales según fase clínica
+- **Protocolos renales diferenciados:**
+  - Sin depuración extrarrenal
+  - Técnica continua (CRRT: HFVVC, HDFVVC, HDVVC) — objetivos proteicos aumentados, restricción HC 70%, monitorización fósforo
+  - Hemodiálisis intermitente (IHD) — objetivos intermedios, monitorización fósforo
 - Selección inteligente de fórmula basada en fase clínica, IMC y cobertura de nitrógeno
 - Detección automática de necesidad de suplementación proteica con RENAPRO
-- Ajuste por Citrato externo (300 kcal/75 g HC)
+- **Ajuste por Citrato externo (300 kcal / 75 g HC)** — disponible únicamente cuando la técnica renal activa es CRRT
 - Soporte para yeyunostomía (restringe a fórmulas oligoméricas)
 - Tabla comparativa de fórmulas con desviación de N₂ calculada
 
 ### 2. **Nutrición Parenteral (N. Parenteral)**
 - Selector de fase clínica en 3 etapas: aguda, subaguda y crónica
 - Ajuste automático de objetivos nutricionales según fase clínica
+- Protocolos renales diferenciados (igual que enteral)
 - NPT individualizada con composición macronutrientes (N₂, glucosa, lípidos)
 - Relación ajustable lípidos:HC
 - Propofol externo integrado (descuento automático de kcal/lípidos)
-- Citrato activo (igual que enteral)
+- Citrato activo (300 kcal / 75 g HC) — vinculado a modo CRRT
 - Bloque visual de composición 24 h
 
 ### 3. **Pauta de Tolerancia (24 h)**
-- Protocolo estándar: Dos fases de 12 h con ritmos escalonados y pausas de débito
-- **Protocolo SNY / Yeyunostomía**: Ritmo único y continuo a 24 horas sin pausas de débito, y con recomendaciones clínicas integradas
+- Dos fases de 12 h con ritmos independientes (ml/h)
 - Cálculo de volumen total administrado en 24 h
 - Barra de progreso del objetivo
 - Alertas clínicas:
@@ -53,15 +56,14 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 
 ### 4. **Ritmo de Mantenimiento**
 - Cálculo del ritmo de continuación post-tolerancia
-- Protocolo estándar: Ajustes separados por 2º y ≥3er día con controles de débito
-- **Protocolo SNY / Yeyunostomía**: Ritmo único continuo a 24 horas sin controles de débito
-- Modalidad de control: c/12 h o c/24 h (para débito gástrico, omitidas en SNY)
+- Contador de volumen restante
+- Modalidad de control: c/12 h o c/24 h (para débito gástrico)
 - Recomendaciones según frecuencia
 
 ### 5. **Catálogo de Fórmulas**
-- Base de datos protegida por contraseña (Nutr1)
+- Base de datos protegida por contraseña (`Nutr1`)
 - Import/export JSON
-- 16 fórmulas preconfiguradas (poliméricas, oligoméricas, específicas)
+- 16 fórmulas preconfiguradas (poliméricas, oligoméricas, específicas, esp. críticos)
 - Edición en línea con validación
 - Restauración a valores por defecto
 
@@ -78,11 +80,7 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 
 ### Flujo Básico Enteral
 
-1. **Seleccionar Perfil (Inicio)**
-   - **Médico**: Acceso a formulación, catálogos y nutrición enteral/parenteral.
-   - **Auxiliar de Enfermería**: Acceso directo a Pauta de Tolerancia y Ritmo de mantenimiento.
-
-2. **Ingresar datos del paciente**
+1. **Ingresar datos del paciente**
    - Peso, talla (se calcula BMI, IBW, peso ajustado)
    - Elegir peso a usar (actual, IBW, ajustado)
 
@@ -91,18 +89,23 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
    - Propofol externo (si aplica)
    - ¿Citrato activo? Sí/No
 
-3. **Elegir fase clínica**
-   - Aguda (0–72 h): 15 → 20 kcal/kg/día y 0.8 → 1 g prot/kg/día
-   - Subaguda (4º–7º día): 20 → 25 kcal/kg/día y 1 → 1 g prot/kg/día
-   - Crónica (>1 semana): 25 → 30 kcal/kg/día y 1 → 1.2–1.3 g prot/kg/día
+3. **Seleccionar protocolo renal** (opcional)
+   - Sin depuración extrarrenal (por defecto)
+   - CRRT — aumenta objetivos proteicos; activa la opción de Citrato; fuerza HC ≤70%
+   - IHD — objetivos proteicos intermedios; monitorización fósforo
 
-4. **Relación HC:Lípidos** — slider ajustable (40–70% HC)
+4. **Elegir fase clínica**
+   - Aguda (0–72 h): 15 → 20 kcal/kg/día; proteína según protocolo renal
+   - Subaguda (4º–7º día): 20 → 25 kcal/kg/día
+   - Crónica (>1 semana): 25 → 30 kcal/kg/día
+
+5. **Relación HC:Lípidos** — slider ajustable (40–70% HC; forzado a 70% en CRRT)
 
 5. **Sistema recomienda fórmula**
    - Se filtra según fase, IMC y cobertura N₂ (70–110%)
    - Muestra volumen 24h, ritmo, déficit proteico
 
-6. **Aplicar a Pauta de Tolerancia**
+7. **Aplicar a Pauta de Tolerancia**
    - Botón automático copia volumen → Pauta → Ritmo
 
 ### Pauta de Tolerancia (primeras 24 h)
@@ -138,7 +141,7 @@ index.html
 │   │   └── panel-catalogo (gestión + catálogo)
 │   ├── Modal NUTRIC Score
 │   └── Script <script>
-│       ├── Datos (DEFAULT_FORMULAS)
+│       ├── Datos (DEFAULT_FORMULAS, RENAL_PROTOCOLS)
 │       ├── Estado global (S = state)
 │       ├── Helpers (formatters, $, gv, sv)
 │       ├── Gestión fórmulas (CRUD, import/export)
@@ -150,6 +153,7 @@ index.html
 │       │   ├── calcTol() — pauta 24h
 │       │   ├── calcRitmo() — mantenimiento
 │       │   └── calcNutricScore() — riesgo nutricional
+│       ├── Protocolos renales (toggleRenalChoice, setCit)
 │       ├── UI (renderTable, updates)
 │       └── Init
 ```
@@ -161,10 +165,10 @@ index.html
 | Parámetro | Descripción | Valores Típicos |
 |-----------|-------------|-----------------|
 | **kcal/kg** | Necesidad calórica diaria | 25–35 kcal/kg |
-| **g prot/kg** | Aporte proteico | 1.0–2.0 g/kg |
+| **g prot/kg** | Aporte proteico | 0.8–2.5 g/kg (según protocolo renal) |
 | **Propofol** | Infusión sedativa | 0–500 ml/día |
-| **Citrato** | Anticoagulante externo | 300 kcal / 75 g HC |
-| **HC/Lípidos** | Ratio energético | 40–70% HC; 30–60% Lip |
+| **Citrato** | Anticoagulante CRRT (solo modo CRRT) | 300 kcal / 75 g HC |
+| **HC/Lípidos** | Ratio energético | 40–70% HC; 30–60% Lip (CRRT: forzado HC 70%) |
 | **N₂ óptimo** | Relación kcal NP / g N₂ | 100–130 kcal/g N₂ |
 | **RENAPRO** | Suplemento proteico | 1 sobre ≈ 19.4 g proteínas |
 
@@ -221,16 +225,25 @@ Al cargar la página:
 
 ---
 
-## 📝 Fórmulas Base Incluidas
+## 📝 Fórmulas Base Incluidas (16)
 
 **Poliméricas:**
-- Isosource Protein, Fresubin 2 HP Fibra, Novasource GI Protein, Nutrison Multifibre
+- Isosource Protein, Isosource Protein Fibre, Isosource 2.0 Protein Fibre
+- Fresubin 2 HP Fibra, Novasource GI Protein, Novasource Protein Plus Energy
+- Tdiet HP, SondAvant Estándar, Nutrison Multifibre
 
 **Oligoméricas:**
-- Peptamen AF Enteral (recomendada para yeyuno)
+- Peptamen AF Enteral (recomendada para yeyuno/SNY)
 
 **Específicas:**
-- Diaba HP, Novasource Diabet, Atempero (críticos), Impact Enteral (inmunomol.)
+- Diaba HP, Nutrison Adv. DIASON ENERGY HP, Novasource Diabet (diabetes)
+- Ensure Plus Advance RTH (hipercalórica hiperproteica)
+
+**Esp. Críticos:**
+- Atempero (fase aguda — especial críticos)
+
+**Inmunomoduladora:**
+- Impact Enteral
 
 ---
 
