@@ -810,7 +810,8 @@
   <button class="tab-btn active" onclick="showTab('enteral')"    id="tab-enteral">🧪 N. Enteral</button>
   <button class="tab-btn"        onclick="showTab('parenteral')" id="tab-parenteral">💉 N. Parenteral</button>
   <button class="tab-btn"        onclick="showTab('tolerancia')" id="tab-tolerancia">📋 Pauta Tolerancia</button>
-  <button class="tab-btn"        onclick="showTab('ritmo')"      id="tab-ritmo">⏱ Ritmo N. Enteral</button>
+  <button class="tab-btn"        onclick="showTab('ritmo2')"     id="tab-ritmo2">⏱ Ritmo N. Enteral 2º día</button>
+  <button class="tab-btn"        onclick="showTab('ritmo3')"     id="tab-ritmo3">⏱ Ritmo N. Enteral a partir del 3er día</button>
   <button class="tab-btn"        onclick="showTab('catalogo')"   id="tab-catalogo">📚 Catálogo Fórmulas</button>
 </nav>
 
@@ -1175,53 +1176,38 @@
 
 
 <!-- ══════════════════════════════════════════════════
-     TAB 4: RITMO N. ENTERAL
+     TAB 4: RITMO N. ENTERAL 2º DÍA
 ══════════════════════════════════════════════════ -->
-<div class="tab-panel" id="panel-ritmo">
+<div class="tab-panel" id="panel-ritmo2">
   <div class="g2">
     <div>
       <div class="card">
         <div class="card-head">
           <div class="c-icon cyan">⏱</div>
-          <div><div class="c-title tab-title">⏱ Ritmo de Nutrición Enteral</div><div class="c-sub">Tras completar la Pauta de Tolerancia</div></div>
+          <div><div class="c-title tab-title">⏱ Ritmo N. Enteral 2º día</div><div class="c-sub">Tras completar la Pauta de Tolerancia</div></div>
         </div>
-        <div class="alert alert-ok">✅ Pauta de tolerancia completada. Calcule el ritmo de mantenimiento.</div>
+        <div class="alert alert-ok">✅ Pauta de tolerancia completada. Calcule el ritmo del 2º día. Débito c/12 horas.</div>
         <label style="display:inline-flex;align-items:center;gap:.45rem;font-size:.85rem;color:var(--text);cursor:pointer;margin-bottom:1rem;background:rgba(139,92,246,.08);padding:.65rem;border-radius:8px;width:100%;border:1px solid rgba(139,92,246,.2)">
-          <input type="checkbox" id="r-yeyuno" style="width:18px;height:18px;accent-color:#8b5cf6" onchange="toggleYeyunoSNY(this.checked)">
+          <input type="checkbox" id="r2-yeyuno" style="width:18px;height:18px;accent-color:#8b5cf6" onchange="toggleYeyunoSNY(this.checked)">
           <strong>El paciente es portador de Yeyunostomía o Sonda NasoYeyunal (SNY)</strong>
         </label>
         <div style="background:rgba(96,165,250,.08);border-left:3px solid #60a5fa;padding:.9rem;margin-bottom:.9rem;border-radius:8px">
           <div class="fg" style="margin-bottom:0">
-            <label class="fl" for="r-vol" style="font-weight:700;font-size:.95rem">Volumen objetivo (ml/24h)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r-vol" value="1200" min="100" max="3000" step="50" oninput="calcRitmo()" style="font-weight:600;font-size:1.1rem"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#60a5fa">ml</span></div>
+            <label class="fl" for="r2-vol" style="font-weight:700;font-size:.95rem">Volumen objetivo (ml/24h)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="r2-vol" value="1200" min="100" max="3000" step="50" oninput="syncRitmoVolume('r2')" style="font-weight:600;font-size:1.1rem"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#60a5fa">ml</span></div>
           </div>
         </div>
         <div class="phase ph1">
           <div style="display:flex;align-items:center;margin-bottom:.7rem">
-            <span class="ph-num">1</span>
             <strong style="font-size:.83rem">2º día</strong>
           </div>
           <div class="fg">
             <label class="fl">Pausas para débito (C/12 horas)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r-pause2" value="40" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="r2-pause2" value="40" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
           </div>
           <div class="fg">
-            <label class="fl" for="r-extra2">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r-extra2" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
-          </div>
-        </div>
-        <div class="phase ph2">
-          <div style="display:flex;align-items:center;margin-bottom:.7rem">
-            <span class="ph-num">2</span>
-            <strong style="font-size:.83rem">A partir de 3er día</strong>
-          </div>
-          <div class="fg">
-            <label class="fl">Pausas para débito (C/24 horas)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r-pause3" value="20" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
-          </div>
-          <div class="fg">
-            <label class="fl" for="r-extra3">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r-extra3" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
+            <label class="fl" for="r2-extra2">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="r2-extra2" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
           </div>
         </div>
       </div>
@@ -1230,17 +1216,67 @@
       <div class="card">
         <div class="card-head">
           <div class="c-icon green">📊</div>
-          <div><div class="c-title">Ritmos Calculados</div></div>
+          <div><div class="c-title">Ritmo Calculado</div></div>
         </div>
-        <div id="r-res"></div>
+        <div id="r2-res"></div>
       </div>
     </div>
   </div>
-</div><!-- end panel-ritmo -->
+</div><!-- end panel-ritmo2 -->
 
 
 <!-- ══════════════════════════════════════════════════
-     TAB 5: CATÁLOGO FÓRMULAS
+  TAB 5: RITMO N. ENTERAL A PARTIR DEL 3ER DÍA
+══════════════════════════════════════════════════ -->
+<div class="tab-panel" id="panel-ritmo3">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <div class="c-icon cyan">⏱</div>
+          <div><div class="c-title tab-title">⏱ Ritmo N. Enteral a partir del 3er día</div><div class="c-sub">Mantenimiento diario tras 2º día</div></div>
+        </div>
+        <div class="alert alert-ok">✅ Protocolo en mantenimiento. Ajuste el ritmo a partir del 3er día.</div>
+        <label style="display:inline-flex;align-items:center;gap:.45rem;font-size:.85rem;color:var(--text);cursor:pointer;margin-bottom:1rem;background:rgba(139,92,246,.08);padding:.65rem;border-radius:8px;width:100%;border:1px solid rgba(139,92,246,.2)">
+          <input type="checkbox" id="r3-yeyuno" style="width:18px;height:18px;accent-color:#8b5cf6" onchange="toggleYeyunoSNY(this.checked)">
+          <strong>El paciente es portador de Yeyunostomía o Sonda NasoYeyunal (SNY)</strong>
+        </label>
+        <div style="background:rgba(34,211,238,.08);border-left:3px solid #22d3ee;padding:.9rem;margin-bottom:.9rem;border-radius:8px">
+          <div class="fg" style="margin-bottom:0">
+            <label class="fl" for="r3-vol" style="font-weight:700;font-size:.95rem">Volumen objetivo (ml/24h)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="r3-vol" value="1200" min="100" max="3000" step="50" oninput="syncRitmoVolume('r3')" style="font-weight:600;font-size:1.1rem"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#22d3ee">ml</span></div>
+          </div>
+        </div>
+        <div class="phase ph1">
+          <div style="display:flex;align-items:center;margin-bottom:.7rem">
+            <strong style="font-size:.83rem">A partir de 3er día</strong>
+          </div>
+          <div class="fg" id="r3-base-wrap">
+            <label class="fl">Pausas para débito (C/24 horas)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="r3-pause3" value="20" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
+          </div>
+          <div class="fg">
+            <label class="fl" for="r3-extra3">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="r3-extra3" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <div class="c-icon green">📊</div>
+          <div><div class="c-title">Ritmo Calculado</div></div>
+        </div>
+        <div id="r3-res"></div>
+      </div>
+    </div>
+  </div>
+</div><!-- end panel-ritmo3 -->
+
+
+<!-- ══════════════════════════════════════════════════
+  TAB 6: CATÁLOGO FÓRMULAS
 ══════════════════════════════════════════════════ -->
 <div class="tab-panel" id="panel-catalogo">
   <div class="card" style="margin-bottom:1rem">
@@ -2572,7 +2608,8 @@ function calcTol() {
 function toggleYeyunoSNY(val) {
   S.yeyunoSNY = val;
   if ($('t-yeyuno')) $('t-yeyuno').checked = val;
-  if ($('r-yeyuno')) $('r-yeyuno').checked = val;
+  if ($('r2-yeyuno')) $('r2-yeyuno').checked = val;
+  if ($('r3-yeyuno')) $('r3-yeyuno').checked = val;
   
   const tPh2 = document.querySelector('#panel-tolerancia .phase.ph2');
   if (tPh2) tPh2.style.display = val ? 'none' : 'block';
@@ -2585,35 +2622,40 @@ function toggleYeyunoSNY(val) {
   const tR1Info = document.querySelector('#panel-tolerancia .phase.ph1 .fg:last-of-type div:last-child');
   if (tR1Info) tR1Info.textContent = val ? 'Automático según volumen objetivo y tiempo efectivo' : 'Automático según volumen objetivo y pausas';
   
-  const rPh2 = document.querySelector('#panel-ritmo .phase.ph2');
-  if (rPh2) rPh2.style.display = val ? 'none' : 'block';
-  const rPh1Title = document.querySelector('#panel-ritmo .phase.ph1 strong');
-  if (rPh1Title) rPh1Title.textContent = val ? 'Mantenimiento a 24 horas' : '2º día';
-  const rPh1Num = document.querySelector('#panel-ritmo .phase.ph1 .ph-num');
-  if (rPh1Num) rPh1Num.style.display = val ? 'none' : 'inline-flex';
+  const r3Base = $('r3-base-wrap');
+  if (r3Base) r3Base.style.display = val ? 'none' : 'block';
 
   calcTol();
+  calcRitmo();
+}
+
+function syncRitmoVolume(source) {
+  const val = source === 'r3' ? gv('r3-vol') : gv('r2-vol');
+  sv('r2-vol', val);
+  sv('r3-vol', val);
   calcRitmo();
 }
 
 /* ── Ritmo ── */
 function calcRitmo() {
   const isYeyuno    = !!S.yeyunoSNY;
-  const vol         = gv('r-vol');
-  
-  const elBase2 = $('r-pause2');
+  const vol2        = gv('r2-vol');
+  const vol3        = gv('r3-vol');
+  const vol         = vol2 || vol3;
+
+  sv('r2-vol', vol);
+  sv('r3-vol', vol);
+
+  const elBase2 = $('r2-pause2');
   if (elBase2) elBase2.parentElement.parentElement.style.display = isYeyuno ? 'none' : 'block';
-  const elBase3 = $('r-pause3');
+  const elBase3 = $('r3-pause3');
   if (elBase3) elBase3.parentElement.parentElement.style.display = isYeyuno ? 'none' : 'block';
 
-  let basePause2 = 0, basePause3 = 0;
-  if (!isYeyuno) {
-    basePause2 = 40;
-    basePause3 = 20;
-  }
+  const basePause2 = isYeyuno ? 0 : 40;
+  const basePause3 = isYeyuno ? 0 : 20;
 
-  const extraPause2 = gv('r-extra2');
-  const extraPause3 = gv('r-extra3');
+  const extraPause2 = gv('r2-extra2');
+  const extraPause3 = gv('r3-extra3');
   const totalPause2 = basePause2 + extraPause2;
   const totalPause3 = basePause3 + extraPause3;
   const infHours2   = Math.max(0, 24 - (totalPause2 / 60));
@@ -2625,7 +2667,7 @@ function calcRitmo() {
   const rateDay3    = infHours3 > 0 ? Math.round(volDay3 / infHours3) : 0;
 
   if (isYeyuno) {
-    $('r-res').innerHTML = `
+    $('r2-res').innerHTML = `
       <div class="sg" style="margin-bottom:.9rem">
         <div class="sb blue"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay2)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Único a 24h</div></div>
         <div class="sb green"><div class="sv">${fi(volDay2)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
@@ -2633,10 +2675,10 @@ function calcRitmo() {
       <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
         <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
         <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
-          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔵 Ritmo Mantenimiento N. Enteral</span>
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔵 Ritmo N. Enteral 2º día</span>
           <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${fi(rateDay2)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</span></span>
         </div>
-        <div class="ri" style="padding:.7rem .6rem"><span class="rl">Pausas ajustadas (traslados, medicación)</span><span class="rv">${fi(extraPause2 + extraPause3)} min</span></div>
+        <div class="ri" style="padding:.7rem .6rem"><span class="rl">Pausas ajustadas (traslados, medicación)</span><span class="rv">${fi(extraPause2)} min</span></div>
       </div>
       <div style="margin-top:1.2rem; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); font-size: .95rem; font-weight: 500; line-height: 1.6;">
         <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: 1.05rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;">
@@ -2650,11 +2692,35 @@ function calcRitmo() {
           <li>Administrar <strong>medicación</strong> por luz Yeyunal.</li>
         </ul>
       </div>`;
+
+    $('r3-res').innerHTML = `
+      <div class="sg" style="margin-bottom:.9rem">
+        <div class="sb cyan"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay3)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo Único a 24h</div></div>
+        <div class="sb green"><div class="sv">${fi(volDay3)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
+      </div>
+      <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
+        <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
+        <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo N. Enteral a partir del 3er día</span>
+          <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${fi(rateDay3)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</span></span>
+        </div>
+        <div class="ri" style="padding:.7rem .6rem"><span class="rl">Pausas ajustadas (traslados, medicación)</span><span class="rv">${fi(extraPause3)} min</span></div>
+      </div>
+      <div style="margin-top:1.2rem; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); font-size: .95rem; font-weight: 500; line-height: 1.6;">
+        <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: 1.05rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;">
+          <span>⚠️</span> <span>Protocolo Yeyunal</span>
+        </div>
+        <ul style="margin: 0; padding-left: 1.5rem; color: #f3f4f6;">
+          <li style="margin-bottom:.3rem">Administrar nutrición por <strong>luz Yeyunal</strong>.</li>
+          <li style="margin-bottom:.3rem">Conectar luz Gástrica <strong>a bolsa de forma continua</strong>.</li>
+          <li style="margin-bottom:.3rem"><strong>No hacer pausas</strong> para débito.</li>
+          <li>Administrar <strong>50 ml de Agua</strong> c/6H por luz Yeyunal.</li>
+        </ul>
+      </div>`;
   } else {
-    $('r-res').innerHTML = `
+    $('r2-res').innerHTML = `
       <div class="sg" style="margin-bottom:.9rem">
         <div class="sb blue"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay2)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo 2º día</div></div>
-        <div class="sb cyan"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay3)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo ≥3er día</div></div>
         <div class="sb green"><div class="sv">${fi(volDay2)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
       </div>
       <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
@@ -2665,8 +2731,29 @@ function calcRitmo() {
           <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${fi(rateDay2)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</span></span>
         </div>
         <div class="ri" style="padding:.7rem .6rem"><span class="rl">Control débito c/12H</span><span class="rv">${fi(basePause2)} + ${fi(extraPause2)} = ${fi(totalPause2)} min pausas</span></div>
+      </div>
+      <div style="margin-top:1.2rem; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); font-size: .9rem; font-weight: 500; line-height: 1.5;">
+        <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;">
+          <span>🛑</span> <span>Protocolo Alto Débito (> 250 ml)</span>
+        </div>
+        <ul style="margin: 0; padding-left: 1.5rem; color: #fef2f2;">
+          <li style="margin-bottom:.3rem"><strong>Parar nutrición</strong> y conectar a bolsa. Informar al Enfermero responsable.</li>
+          <li style="margin-bottom:.3rem">Dejar suspendida <strong>8 horas</strong>.</li>
+          <li style="margin-bottom:.3rem">Reiniciar al <strong>mismo ritmo</strong> (no añadir tiempo sin nutrición).</li>
+          <li>Si siguiente débito > 250 ml:<br>Reducir ritmo <strong>a la mitad</strong> e informar al Enfermero responsable.</li>
+        </ul>
+      </div>`;
+
+    $('r3-res').innerHTML = `
+      <div class="sg" style="margin-bottom:.9rem">
+        <div class="sb cyan"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay3)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo a partir del 3er día</div></div>
+        <div class="sb green"><div class="sv">${fi(volDay3)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
+      </div>
+      <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
+        <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
+        <div class="ri"><span class="rl">Volumen total a partir del 3er día</span><span class="rv">${fi(volDay3)}<span class="ru">ml</span></span></div>
         <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
-          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo N. Enteral ≥3º día</span>
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo N. Enteral a partir del 3er día</span>
           <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${fi(rateDay3)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</span></span>
         </div>
         <div class="ri" style="padding:.7rem .6rem"><span class="rl">Control débito c/24H</span><span class="rv">${fi(basePause3)} + ${fi(extraPause3)} = ${fi(totalPause3)} min pausas</span></div>
@@ -2889,7 +2976,8 @@ function selectRole(role) {
   $('role-overlay').classList.remove('open');
   if (role === 'medico') {
     $('tab-tolerancia').style.display = 'none';
-    $('tab-ritmo').style.display = 'none';
+    $('tab-ritmo2').style.display = 'none';
+    $('tab-ritmo3').style.display = 'none';
     showTab('enteral');
   } else if (role === 'auxiliar') {
     $('tab-enteral').style.display = 'none';
@@ -2914,7 +3002,8 @@ function selectFormula(idx) {
 
 function applyPrescription(vol) {
   sv('t-vol', vol);
-  sv('r-vol', vol);
+  sv('r2-vol', vol);
+  sv('r3-vol', vol);
   calcTol();
   calcRitmo();
   
@@ -2935,7 +3024,7 @@ function applyPrescription(vol) {
   feedback.style.alignItems = 'center';
   feedback.style.gap = '.5rem';
   feedback.style.border = '1px solid rgba(255,255,255,.15)';
-  feedback.innerHTML = `<span>✓</span> <span>Volumen de ${vol} ml copiado a Tolerancia y Ritmo</span>`;
+  feedback.innerHTML = `<span>✓</span> <span>Volumen de ${vol} ml copiado a Tolerancia y ambas pestañas de Ritmo</span>`;
   document.body.appendChild(feedback);
   
   setTimeout(() => {
