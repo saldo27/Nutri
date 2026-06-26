@@ -882,7 +882,7 @@
             </div>
           </div>
         </div>
-        <div class="g2">
+        <div class="g3">
           <div class="fg">
             <label class="fl" for="e-propofol">Propofol (ml / día)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="e-propofol" value="0" min="0" max="500" step="10" oninput="calcEnteral()"><span class="fi-unit">ml/d</span></div>
@@ -890,6 +890,11 @@
           <div class="fg">
             <label class="fl" for="e-clevidipino">Clevidipino (ml / día)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="e-clevidipino" value="0" min="0" max="500" step="10" oninput="calcEnteral()"><span class="fi-unit">ml/d</span></div>
+          </div>
+          <div class="fg">
+            <label class="fl" for="e-sg5">S.Gluc. 5% (ml / día)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="e-sg5" value="0" min="0" max="3000" step="50" oninput="calcEnteral()"><span class="fi-unit">ml/d</span></div>
+            <div style="font-size:.68rem;color:var(--dim);margin-top:.35rem">Cada 100 ml aporta 5 g HC (20 kcal).</div>
           </div>
         </div>
         <div class="fg">
@@ -1049,7 +1054,7 @@
             <div class="obj-gap" aria-hidden="true"></div>
           </div>
         </div>
-        <div class="g2">
+        <div class="g3">
           <div class="fg">
             <label class="fl" for="p-propofol">Propofol (ml / día)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="p-propofol" value="0" min="0" max="500" step="10" oninput="calcParenteral()"><span class="fi-unit">ml/d</span></div>
@@ -1057,6 +1062,11 @@
           <div class="fg">
             <label class="fl" for="p-clevidipino">Clevidipino (ml / día)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="p-clevidipino" value="0" min="0" max="500" step="10" oninput="calcParenteral()"><span class="fi-unit">ml/d</span></div>
+          </div>
+          <div class="fg">
+            <label class="fl" for="p-sg5">S.Gluc. 5% (ml / día)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="p-sg5" value="0" min="0" max="3000" step="50" oninput="calcParenteral()"><span class="fi-unit">ml/d</span></div>
+            <div style="font-size:.68rem;color:var(--dim);margin-top:.35rem">Cada 100 ml aporta 5 g HC (20 kcal).</div>
           </div>
         </div>
         <div class="fg" style="margin-top:.4rem">
@@ -1935,6 +1945,7 @@ function calcNutr(px) {
   const protKg = gv(px+'-protkg');
   const prop   = gv(px+'-propofol');
   const clev   = $(px+'-clevidipino') ? gv(px+'-clevidipino') : 0;
+  const sg5    = $(px+'-sg5') ? gv(px+'-sg5') : 0;
   const hcPct  = gv(px+'-hcs');
   const lipPct = 100 - hcPct;
 
@@ -1946,26 +1957,28 @@ function calcNutr(px) {
   const kcalProp  = propLipg * 9;
   const clevLipg  = clev * 0.2;
   const kcalClev  = clevLipg * 9;
+  const sg5HCg    = sg5 * 0.05;
+  const kcalSg5   = sg5HCg * 4;
   const kcalCit   = S[px].citrate ? 300 : 0;
   const citHCg    = S[px].citrate ? 75 : 0;
-  const totKcal   = Math.max(0, baseKcal - kcalCit - kcalProp - kcalClev);
-  const totalKcalDay = totKcal + kcalProp + kcalCit + kcalClev;
+  const totKcal   = Math.max(0, baseKcal - kcalCit - kcalProp - kcalClev - kcalSg5);
+  const totalKcalDay = totKcal + kcalProp + kcalCit + kcalClev + kcalSg5;
   const npDietKcal = Math.max(0, totKcal - kcalProt);
   const kcalHC    = npDietKcal * (hcPct / 100);
   const kcalLip   = npDietKcal * (lipPct / 100);
   const gHC       = kcalHC / 4;
   const gLip      = kcalLip / 9;
-  const totalKcalHC = kcalHC + kcalCit;
+  const totalKcalHC = kcalHC + kcalCit + kcalSg5;
   const totalKcalLip = kcalLip + kcalProp + kcalClev;
-  const totalGHC = gHC + citHCg;
+  const totalGHC = gHC + citHCg + sg5HCg;
   const totalGLip = gLip + propLipg + clevLipg;
   const npKcal    = totalKcalHC + totalKcalLip;
   const effHcPct  = npKcal > 0 ? (totalKcalHC / npKcal) * 100 : hcPct;
   const effLipPct = npKcal > 0 ? (totalKcalLip / npKcal) * 100 : lipPct;
   const ratio     = gN2 > 0 ? npKcal / gN2 : 0;
 
-  return { ...p, kcalKg, protKg, prop, clev, hcPct, lipPct,
-           baseKcal, totKcal, totProt, gN2, kcalProt, kcalProp, kcalClev, propLipg, clevLipg, kcalCit, citHCg,
+  return { ...p, kcalKg, protKg, prop, clev, sg5, hcPct, lipPct,
+           baseKcal, totKcal, totProt, gN2, kcalProt, kcalProp, kcalClev, kcalSg5, propLipg, clevLipg, kcalCit, citHCg, sg5HCg,
            totalKcalDay, npDietKcal, npKcal, ratio, kcalHC, kcalLip, gHC, gLip,
            totalKcalHC, totalKcalLip, totalGHC, totalGLip, effHcPct, effLipPct };
 }
@@ -2233,7 +2246,7 @@ function calcEnteral() {
     <div style="height:1px;background:var(--border-dim);margin-bottom:.75rem"></div>
     <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(59,130,246,.08);border-radius:7px">📋 Aportes Completos Teóricos</div>
     <div class="ri" style="padding:.7rem .6rem"><span class="rl">🔵 Carbohidratos (${f1(r.effHcPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.totalGHC)}<span class="ru">g</span> <span style="color:#60a5fa;font-size:.8rem;font-weight:600">(${fi(r.totalKcalHC)} kcal)</span></span></div>
-    ${S.e.citrate?`<div class="ri" style="padding:.4rem .6rem;font-size:.73rem;color:var(--dim)"><span class="rl" style="margin-left:1.2rem">Dieta: ${f1(r.gHC)} g + Citrato: ${f1(r.citHCg)} g</span></div>`:``}
+    ${(S.e.citrate || r.sg5>0)?`<div class="ri" style="padding:.4rem .6rem;font-size:.73rem;color:var(--dim)"><span class="rl" style="margin-left:1.2rem">Dieta: ${f1(r.gHC)} g ${S.e.citrate?`+ Citrato: ${f1(r.citHCg)} g`:''} ${r.sg5>0?`+ S.Gluc. 5%: ${f1(r.sg5HCg)} g`:''}</span></div>`:``}
     <div class="ri" style="padding:.7rem .6rem"><span class="rl">🟡 Lípidos (${f1(r.effLipPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.totalGLip)}<span class="ru">g</span> <span style="color:#22d3ee;font-size:.8rem;font-weight:600">(${fi(r.totalKcalLip)} kcal)</span></span></div>
     ${(r.prop>0 || r.clev>0)?`<div class="ri" style="padding:.4rem .6rem;font-size:.73rem;color:var(--dim)"><span class="rl" style="margin-left:1.2rem">Dieta: ${f1(r.gLip)} g ${r.prop>0?`+ Propofol: ${f1(r.propLipg)} g`:''} ${r.clev>0?`+ Clevidipino: ${f1(r.clevLipg)} g`:''}</span></div>`:``}
     <div class="ri" style="padding:.7rem .6rem"><span class="rl">🟢 Proteínas</span><span class="rv" style="font-size:.95rem">${f1(r.totProt)}<span class="ru">g</span> <span style="color:#34d399;font-size:.8rem;font-weight:600">(${fi(r.kcalProt)} kcal)</span></span></div>
@@ -2260,7 +2273,8 @@ function calcEnteral() {
     const kcalProp = r.kcalProp;
     const kcalCit = r.kcalCit;
     const kcalClev = r.kcalClev;
-    const kcalTotal = kcalDiet + kcalProp + kcalCit + kcalClev + kcalRenapro;
+    const kcalSg5 = r.kcalSg5;
+    const kcalTotal = kcalDiet + kcalProp + kcalCit + kcalClev + kcalSg5 + kcalRenapro;
 
     let renaproHtml = '';
     if (dev > 0) {
@@ -2287,8 +2301,8 @@ function calcEnteral() {
     const gHC_diet = (f.hc * vol24) / 100;
     const gLip_diet = (f.lip * vol24) / 100;
     
-    // Add citrate, propofol and clevidipino contributions
-    const gHC_total = gHC_diet + (S.e.citrate ? r.citHCg : 0);
+    // Add external carbohydrate and lipid contributions.
+    const gHC_total = gHC_diet + (S.e.citrate ? r.citHCg : 0) + r.sg5HCg;
     const gLip_total = gLip_diet + r.propLipg + r.clevLipg;
 
     const pInfo = $('e-prescription-info');
@@ -2310,7 +2324,7 @@ function calcEnteral() {
           <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔵 Aporte de HC</span>
           <span class="rv" style="font-size:.95rem">${f1(gHC_total)}<span class="ru">g</span></span>
         </div>
-        <div class="ri" style="padding:.7rem .6rem"><span class="rl" style="font-size:.75rem;color:var(--muted)">Dieta: ${f1(gHC_diet)} g ${S.e.citrate ? `+ Citrato: ${f1(r.citHCg)} g` : ''}</span></div>
+        <div class="ri" style="padding:.7rem .6rem"><span class="rl" style="font-size:.75rem;color:var(--muted)">Dieta: ${f1(gHC_diet)} g ${S.e.citrate ? `+ Citrato: ${f1(r.citHCg)} g` : ''} ${r.sg5 > 0 ? `+ S.Gluc. 5%: ${f1(r.sg5HCg)} g` : ''}</span></div>
         <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
           <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🟡 Aporte de Lípidos</span>
           <span class="rv" style="font-size:.95rem">${f1(gLip_total)}<span class="ru">g</span></span>
@@ -2324,6 +2338,7 @@ function calcEnteral() {
             ${kcalProp > 0 ? ` + Propofol <strong>${fi(kcalProp)} kcal</strong>` : ''}
             ${kcalClev > 0 ? ` + Clevidipino <strong>${fi(kcalClev)} kcal</strong>` : ''}
             ${kcalCit > 0 ? ` + Citrato <strong>${fi(kcalCit)} kcal</strong>` : ''}
+            ${kcalSg5 > 0 ? ` + S.Gluc. 5% <strong>${fi(kcalSg5)} kcal</strong>` : ''}
             ${kcalRenapro > 0 ? ` + RENAPRO <strong>${fi(kcalRenapro)} kcal</strong>` : ''}
             = <strong class="balance-box-total">${fi(kcalTotal)} kcal/día</strong>
           </div>
@@ -2368,7 +2383,7 @@ function calcParenteral() {
     <div style="height:1px;background:var(--border-dim);margin-bottom:.75rem"></div>
     <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(6,182,212,.08);border-radius:7px">🏥 Nutrición Parenteral</div>
     <div class="ri" style="padding:.7rem .6rem"><span class="rl">🔵 Glucosa / HC (${f1(r.effHcPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.totalGHC)}<span class="ru">g</span> <span style="color:#06b6d4;font-size:.8rem;font-weight:600">(${fi(r.totalKcalHC)} kcal)</span></span></div>
-    ${S.p.citrate?`<div class="ri" style="padding:.4rem .6rem;font-size:.73rem;color:var(--dim)"><span class="rl" style="margin-left:1.2rem">Glucosa: ${f1(r.gHC)} g + Citrato: ${f1(r.citHCg)} g</span></div>`:``}
+    ${(S.p.citrate || r.sg5>0)?`<div class="ri" style="padding:.4rem .6rem;font-size:.73rem;color:var(--dim)"><span class="rl" style="margin-left:1.2rem">Glucosa: ${f1(r.gHC)} g ${S.p.citrate?`+ Citrato: ${f1(r.citHCg)} g`:''} ${r.sg5>0?`+ S.Gluc. 5%: ${f1(r.sg5HCg)} g`:''}</span></div>`:``}
     <div class="ri" style="padding:.7rem .6rem"><span class="rl">🟡 Lípidos (${f1(r.effLipPct)}%)</span><span class="rv" style="font-size:.95rem">${f1(r.totalGLip)}<span class="ru">g</span> <span style="color:#06b6d4;font-size:.8rem;font-weight:600">(${fi(r.totalKcalLip)} kcal)</span></span></div>
     ${(r.prop>0 || r.clev>0)?`<div class="ri" style="padding:.4rem .6rem;font-size:.73rem;color:var(--dim)"><span class="rl" style="margin-left:1.2rem">Dieta: ${f1(r.gLip)} g ${r.prop>0?`+ Propofol: ${f1(r.propLipg)} g`:''} ${r.clev>0?`+ Clevidipino: ${f1(r.clevLipg)} g`:''}</span></div>`:``}
     <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
@@ -3112,7 +3127,7 @@ function toggleTheme() {
 /* ── Init ── */
 window.addEventListener('DOMContentLoaded', () => {
   const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'light') {
+  if (savedTheme !== 'dark') {
     document.body.classList.add('light-mode');
     $('theme-toggle').textContent = '☀️';
   } else {
