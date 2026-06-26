@@ -985,7 +985,7 @@
       </table>
     </div>
     <div style="margin-top:.6rem;font-size:.71rem;color:var(--dim)">
-      ⚠️ <strong>Desv. N₂:</strong> Diferencia entre N₂ objetivo y N₂ aportado. <span style="color:#fbbf24">Positivo</span> = déficit → suplementar con RENAPRO. <span style="color:#f87171">Negativo</span> = exceso proteico. | <strong>RENAPRO</strong> 1 unidad ≈ 18 g proteínas (3.1 g N₂).
+      ⚠️ <strong>Desv. N₂:</strong> Diferencia entre N₂ objetivo y N₂ aportado. <span style="color:#fbbf24">Positivo</span> = déficit → suplementar con RENAPRO. <span style="color:#f87171">Negativo</span> = exceso proteico. | <strong>RENAPRO</strong> 1 unidad ≈ 18 g proteínas (2.88 g N₂).
     </div>
   </div>
 
@@ -2454,7 +2454,7 @@ function calcTol() {
   if (isYeyuno) {
     // Para yeyunostomía: ritmo constante (Volumen / 24h) ajustado a los traslados
     const totalInfused = infusedHours1 + infusedHours2Real;
-    r1 = vol > 0 && totalInfused > 0 ? vol / totalInfused : 0;
+    r1 = vol > 0 && totalInfused > 0 ? Math.round(vol / totalInfused) : 0;
     reqR1 = r1;
     r2Real = r1;
     r2 = r1;
@@ -2464,19 +2464,20 @@ function calcTol() {
     // Comportamiento original
     const denom = infusedHours1 + (2 * infusedHours2);
     reqR1 = vol > 0 && denom > 0 ? vol / denom : 0;
-    r1 = reqR1;
-    r2 = reqR1 * 2;
+    r1 = Math.round(reqR1);
+    r2 = Math.round(reqR1 * 2);
     v1 = r1 * infusedHours1;
-    v2 = r2 * infusedHours2;
-    r2Real = infusedHours2Real > 0 ? v2 / infusedHours2Real : r2;
+    const reqV2 = r2 * infusedHours2;
+    r2Real = infusedHours2Real > 0 ? Math.round(reqV2 / infusedHours2Real) : r2;
+    v2 = r2Real * infusedHours2Real;
   }
   
   tot  = v1 + v2;
   pct  = vol > 0 ? (tot / vol) * 100 : 0;
   over = pct > 100;
 
-  sv('t-r1', f1(reqR1));
-  sv('t-r2', f1(r2Real));
+  sv('t-r1', r1);
+  sv('t-r2', r2Real);
 
   if (isYeyuno) {
     $('t-p1r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours1 + infusedHours2Real)} h de infusion)</div>
@@ -2494,11 +2495,11 @@ function calcTol() {
     $('t-res').innerHTML = `
       <div class="sg" style="margin-bottom:.9rem">
         <div class="sb green"><div class="sv">${fi(tot)}</div><div class="su">ml</div><div class="sl">Total 24 h</div></div>
-        <div class="sb blue"><div class="sv">${f1(r1)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Único</div></div>
+        <div class="sb blue"><div class="sv">${fi(r1)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Único</div></div>
       </div>
       <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem;margin-bottom:.9rem">
         <div class="ri"><span class="rl">Pausas totales 24 h</span><span class="rv">${fi(extraPause1 + extraPause2)} min</span></div>
-        <div class="ri"><span class="rl">Ritmo calculado</span><span class="rv">${f1(reqR1)}<span class="ru">ml/h</span></span></div>
+        <div class="ri"><span class="rl">Ritmo calculado</span><span class="rv">${fi(reqR1)}<span class="ru">ml/h</span></span></div>
       </div>
       <div style="padding:.9rem;background:rgba(255,255,255,.02);border-radius:11px">
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.45rem">
@@ -2514,8 +2515,10 @@ function calcTol() {
         </div>
         <ul style="margin: 0; padding-left: 1.5rem; color: #f3f4f6;">
           <li style="margin-bottom:.3rem">Administrar nutrición por <strong>luz Yeyunal</strong>.</li>
+          <li style="margin-bottom:.3rem">Conectar luz Gástrica <strong>a bolsa de forma continua</strong>.</li>
           <li style="margin-bottom:.3rem"><strong>No hacer pausas</strong> para débito.</li>
-          <li>Administrar <strong>50 ml de Agua</strong> c/6H.</li>
+          <li>Administrar <strong>50 ml de Agua</strong> c/6H por luz Yeyunal.</li>
+          <li>Administrar <strong>medicación</strong> por luz Yeyunal.</li>
         </ul>
       </div>
       ${pct < 50 ? `<div class="alert alert-warn" style="margin-top:.9rem">⚠️ &lt;50% del objetivo. Si buena tolerancia, aumente el ritmo.</div>` : ''}
@@ -2529,8 +2532,8 @@ function calcTol() {
       <div class="sb green"><div class="sv">${fi(tot)}</div><div class="su">ml</div><div class="sl">Total 24 h</div></div>
     </div>
     <div class="sg" style="margin-bottom:.9rem">
-      <div class="sb blue"><div class="sv">${f1(r1)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Fase 1</div></div>
-      <div class="sb cyan"><div class="sv">${f1(r2Real)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo Fase 2</div></div>
+      <div class="sb blue"><div class="sv">${fi(r1)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Fase 1</div></div>
+      <div class="sb cyan"><div class="sv">${fi(r2Real)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo Fase 2</div></div>
     </div>
     <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem;margin-bottom:.9rem">
       <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.055em;margin-bottom:.65rem">Ajuste por pausas de control de debito</div>
@@ -2538,8 +2541,8 @@ function calcTol() {
       <div class="ri"><span class="rl">Pausa Fase 2</span><span class="rv">${fi(basePause2)} + ${fi(extraPause2)} = ${fi(totalPause2)} min</span></div>
       <div class="ri"><span class="rl">Pausas totales 24 h</span><span class="rv">${fi(totalPause1 + totalPause2)} min</span></div>
       <div class="ri"><span class="rl">Ritmo Fase 2</span><span class="rv">2x Fase 1</span></div>
-      <div class="ri"><span class="rl">Ritmo calculado Fase 1</span><span class="rv">${f1(reqR1)}<span class="ru">ml/h</span></span></div>
-      <div class="ri"><span class="rl">Ritmo calculado Fase 2</span><span class="rv">${f1(r2Real)}<span class="ru">ml/h</span></span></div>
+      <div class="ri"><span class="rl">Ritmo calculado Fase 1</span><span class="rv">${fi(reqR1)}<span class="ru">ml/h</span></span></div>
+      <div class="ri"><span class="rl">Ritmo calculado Fase 2</span><span class="rv">${fi(r2Real)}<span class="ru">ml/h</span></span></div>
     </div>
     <div style="padding:.9rem;background:rgba(255,255,255,.02);border-radius:11px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.45rem">
@@ -2551,7 +2554,18 @@ function calcTol() {
     </div>
     ${pct < 50 ? `<div class="alert alert-warn" style="margin-top:.9rem">⚠️ &lt;50% del objetivo. Si buena tolerancia, aumente el ritmo.</div>` : ''}
     ${pct >= 100 ? `<div class="alert alert-ok" style="margin-top:.9rem">✅ Se cubre el 100% del objetivo nutricional en las primeras 24 h.</div>` : ''}
-    ${pct >= 50 && pct < 100 ? `<div class="alert alert-info" style="margin-top:.9rem">ℹ️ Déficit de ${fi(vol-tot)} ml. Se completará con el ritmo de mantenimiento.</div>` : ''}`;
+    ${pct >= 50 && pct < 100 ? `<div class="alert alert-info" style="margin-top:.9rem">ℹ️ Déficit de ${fi(vol-tot)} ml. Se completará con el ritmo de mantenimiento.</div>` : ''}
+    <div style="margin-top:1.2rem; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); font-size: .9rem; font-weight: 500; line-height: 1.5;">
+      <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;">
+        <span>🛑</span> <span>Protocolo Alto Débito (> 250 ml)</span>
+      </div>
+      <ul style="margin: 0; padding-left: 1.5rem; color: #fef2f2;">
+        <li style="margin-bottom:.3rem"><strong>Parar nutrición</strong> y conectar a bolsa. Informar al Enfermero responsable.</li>
+        <li style="margin-bottom:.3rem">Dejar suspendida <strong>8 horas</strong>.</li>
+        <li style="margin-bottom:.3rem">Reiniciar al <strong>mismo ritmo</strong> (no añadir tiempo sin nutrición).</li>
+        <li>Si siguiente débito > 250 ml:<br>Reducir ritmo <strong>a la mitad</strong> e informar al Enfermero responsable.</span></li>
+      </ul>
+    </div>`;
   }
 }
 
@@ -2607,20 +2621,20 @@ function calcRitmo() {
 
   const volDay2     = vol;
   const volDay3     = vol;
-  const rateDay2    = infHours2 > 0 ? volDay2 / infHours2 : 0;
-  const rateDay3    = infHours3 > 0 ? volDay3 / infHours3 : 0;
+  const rateDay2    = infHours2 > 0 ? Math.round(volDay2 / infHours2) : 0;
+  const rateDay3    = infHours3 > 0 ? Math.round(volDay3 / infHours3) : 0;
 
   if (isYeyuno) {
     $('r-res').innerHTML = `
       <div class="sg" style="margin-bottom:.9rem">
-        <div class="sb blue"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${f1(rateDay2)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Único a 24h</div></div>
+        <div class="sb blue"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay2)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Único a 24h</div></div>
         <div class="sb green"><div class="sv">${fi(volDay2)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
       </div>
       <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
         <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
         <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
           <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔵 Ritmo Mantenimiento N. Enteral</span>
-          <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${f1(rateDay2)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</span></span>
+          <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${fi(rateDay2)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</span></span>
         </div>
         <div class="ri" style="padding:.7rem .6rem"><span class="rl">Pausas ajustadas (traslados, medicación)</span><span class="rv">${fi(extraPause2 + extraPause3)} min</span></div>
       </div>
@@ -2630,15 +2644,17 @@ function calcRitmo() {
         </div>
         <ul style="margin: 0; padding-left: 1.5rem; color: #f3f4f6;">
           <li style="margin-bottom:.3rem">Administrar nutrición por <strong>luz Yeyunal</strong>.</li>
+          <li style="margin-bottom:.3rem">Conectar luz Gástrica <strong>a bolsa de forma continua</strong>.</li>
           <li style="margin-bottom:.3rem"><strong>No hacer pausas</strong> para débito.</li>
-          <li>Administrar <strong>50 ml de Agua</strong> c/4H.</li>
+          <li>Administrar <strong>50 ml de Agua</strong> c/6H por luz Yeyunal.</li>
+          <li>Administrar <strong>medicación</strong> por luz Yeyunal.</li>
         </ul>
       </div>`;
   } else {
     $('r-res').innerHTML = `
       <div class="sg" style="margin-bottom:.9rem">
-        <div class="sb blue"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${f1(rateDay2)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo 2º día</div></div>
-        <div class="sb cyan"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${f1(rateDay3)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo ≥3er día</div></div>
+        <div class="sb blue"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay2)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo 2º día</div></div>
+        <div class="sb cyan"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay3)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo ≥3er día</div></div>
         <div class="sb green"><div class="sv">${fi(volDay2)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
       </div>
       <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
@@ -2646,14 +2662,25 @@ function calcRitmo() {
         <div class="ri"><span class="rl">Volumen total 2º día</span><span class="rv">${fi(volDay2)}<span class="ru">ml</span></span></div>
         <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
           <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔵 Ritmo N. Enteral 2º día</span>
-          <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${f1(rateDay2)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</span></span>
+          <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${fi(rateDay2)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</span></span>
         </div>
         <div class="ri" style="padding:.7rem .6rem"><span class="rl">Control débito c/12H</span><span class="rv">${fi(basePause2)} + ${fi(extraPause2)} = ${fi(totalPause2)} min pausas</span></div>
         <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
           <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo N. Enteral ≥3º día</span>
-          <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${f1(rateDay3)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</span></span>
+          <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${fi(rateDay3)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</span></span>
         </div>
         <div class="ri" style="padding:.7rem .6rem"><span class="rl">Control débito c/24H</span><span class="rv">${fi(basePause3)} + ${fi(extraPause3)} = ${fi(totalPause3)} min pausas</span></div>
+      </div>
+      <div style="margin-top:1.2rem; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); font-size: .9rem; font-weight: 500; line-height: 1.5;">
+        <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;">
+          <span>🛑</span> <span>Protocolo Alto Débito (> 250 ml)</span>
+        </div>
+        <ul style="margin: 0; padding-left: 1.5rem; color: #fef2f2;">
+          <li style="margin-bottom:.3rem"><strong>Parar nutrición</strong> y conectar a bolsa. Informar al Enfermero responsable.</li>
+          <li style="margin-bottom:.3rem">Dejar suspendida <strong>8 horas</strong>.</li>
+          <li style="margin-bottom:.3rem">Reiniciar al <strong>mismo ritmo</strong> (no añadir tiempo sin nutrición).</li>
+        <li>Si siguiente débito > 250 ml:<br>Reducir ritmo <strong>a la mitad</strong> e informar al Enfermero responsable.</span></li>
+        </ul>
       </div>`;
   }
 }
@@ -3015,6 +3042,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<footer class="app-footer">Creado por luisherrerapara@gmail.com para UCI-H.Santa Lucía (Cartagena). Todos los derechos reservados.</footer>
+<footer class="app-footer">Creado por luisherrerapara@gmail.com para UCI-H.Santa Lucía, con la colaboración del Servicio de Farmacia del H.Santa Lucía (Cartagena). Todos los derechos reservados.</footer>
 </body>
 </html>
