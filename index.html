@@ -764,12 +764,32 @@
       text-align: center;
     }
     .nutric-alert-precoz {
-      margin-top: .75rem; padding: .65rem .9rem;
-      background: rgba(239,68,68,.15);
-      border: 1px solid rgba(239,68,68,.4);
+      margin-top: .85rem; padding: .78rem .95rem;
+      background: linear-gradient(135deg, rgba(220,38,38,.22), rgba(245,158,11,.16));
+      border: 1px solid rgba(248,113,113,.72);
       border-radius: 9px;
-      font-size: .82rem; font-weight: 700; color: #f87171;
-      text-align: center; letter-spacing: .02em;
+      font-size: .86rem; font-weight: 800; color: #fee2e2;
+      text-align: center; letter-spacing: .03em; line-height: 1.35;
+      text-transform: uppercase;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 8px 20px rgba(239,68,68,.18);
+    }
+    .nutric-alert-precoz-detail {
+      margin-top: .45rem;
+      font-size: .82rem;
+      color: #fde68a;
+      line-height: 1.45;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    body.light-mode .nutric-alert-precoz {
+      background: linear-gradient(135deg, rgba(254,226,226,.96), rgba(254,243,199,.96));
+      border-color: rgba(185,28,28,.45);
+      color: #991b1b;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 6px 16px rgba(185,28,28,.12);
+    }
+    body.light-mode .nutric-alert-precoz-detail {
+      color: #92400e;
     }
 
     /* ===== FOOTER ===== */
@@ -1523,7 +1543,7 @@
         <div class="nutric-result-detail" id="nutric-result-detail"></div>
         <div class="nutric-alert-precoz" id="nutric-alert-precoz" style="display:none">
           ⚠️ INICIAR SOPORTE NUTRICIONAL PRECOZ
-          <div style="margin-top:.4rem;font-size:.92rem;color:#fbbf24;line-height:1.45;font-weight:600">
+          <div class="nutric-alert-precoz-detail">
             Valora el riesgo de Sd. de Realimentación. Inicia Tiamina IV y control de Fósforo a las 48h.
           </div>
         </div>
