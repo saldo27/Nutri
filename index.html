@@ -2223,6 +2223,7 @@ function updateFaseInfo(r) {
         <div style="margin-top:.55rem;font-size:.73rem;color:var(--muted)">Insuf. renal: <strong style="color:var(--text)">${protocolLabel}</strong></div>
         <div class="fase-warn" style="margin-top:.55rem">⚠️ Aumentar progresivamente según tolerancia.</div>
         ${protocol && protocol.monitorPhosphorus ? `<div style="margin-top:.35rem;font-size:.73rem;color:#67e8f9;font-weight:700">⭐ Monitorizar niveles de Fósforo</div>` : ''}
+        ${S.nutricScore >= 6 ? `<div class="alert alert-warn" style="margin-top:.6rem;padding:.5rem;font-size:.75rem">⚠️ <strong>Riesgo Alto de Desnutrición:</strong> Iniciar Tiamina IV y monitorizar Fósforo c/48 horas.</div>` : ''}
       </div>
     </div>`;
 }
@@ -2916,6 +2917,7 @@ function updateFaseInfoP(f) {
         <div style="margin-top:.55rem;font-size:.73rem;color:var(--muted)">Insuf. renal: <strong style="color:var(--text)">${protocolLabel}</strong></div>
         <div class="fase-warn" style="margin-top:.35rem">⚠️ Aumentar progresivamente</div>
         ${protocol && protocol.monitorPhosphorus ? `<div style="margin-top:.35rem;font-size:.73rem;color:#67e8f9;font-weight:700">⭐ Monitorizar niveles de Fósforo</div>` : ''}
+        ${S.nutricScore >= 6 ? `<div class="alert alert-warn" style="margin-top:.6rem;padding:.5rem;font-size:.75rem">⚠️ <strong>Riesgo Alto de Desnutrición:</strong> Iniciar Tiamina IV y monitorizar Fósforo c/48 horas.</div>` : ''}
       </div>
     </div>`;
 }
@@ -3136,6 +3138,10 @@ function calcNutricScore() {
 
   res.className  = 'nutric-result ' + (isHigh ? 'high' : 'low');
   res.style.display = 'block';
+
+  S.nutricScore = total;
+  calcEnteral();
+  calcParenteral();
 }
 
 function toggleTheme() {
