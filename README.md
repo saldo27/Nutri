@@ -191,7 +191,7 @@ index.html
 | **Citrato** | Anticoagulante CRRT (solo modo CRRT) | 300 kcal / 75 g HC |
 | **HC/Lípidos** | Ratio energético | 40–70% HC; 30–60% Lip (CRRT: forzado HC 70%) |
 | **N₂ óptimo** | Relación kcal NP / g N₂ | 100–130 kcal/g N₂ |
-| **RENAPRO** | Suplemento proteico | 1 sobre ≈ 19.4 g proteínas |
+| **RENAPRO** | Suplemento proteico | 1 sobre ≈ 18 g proteínas |
 
 ---
 
