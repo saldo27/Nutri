@@ -114,6 +114,32 @@
     }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
 
+    .salir-btn {
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.35);
+      color: #f87171;
+      cursor: pointer;
+      padding: .3rem .85rem;
+      border-radius: 100px;
+      font-size: .72rem; font-weight: 600;
+      display: flex; align-items: center; gap: .35rem;
+      white-space: nowrap;
+      margin-left: auto;
+      transition: background .2s, transform .15s;
+      outline: none;
+    }
+    .salir-btn:hover {
+      background: rgba(239,68,68,.22);
+      transform: scale(1.04);
+    }
+    body.light-mode .salir-btn {
+      background: rgba(239,68,68,.08);
+      color: #dc2626;
+    }
+    body.light-mode .salir-btn:hover {
+      background: rgba(239,68,68,.16);
+    }
+
     .theme-btn {
       background: rgba(255,255,255,.05);
       border: 1px solid var(--border);
@@ -138,6 +164,19 @@
     body.light-mode .theme-btn:hover {
       background: rgba(0,0,0,.08);
     }
+
+    .box-badge {
+      background: rgba(16,185,129,.12);
+      border: 1px solid rgba(16,185,129,.28);
+      color: #34d399;
+      padding: .3rem .85rem;
+      border-radius: 100px;
+      font-size: .72rem; font-weight: 600;
+      display: none; align-items: center; gap: .4rem;
+      white-space: nowrap;
+    }
+    .box-badge strong { color: #fff; font-size: .78rem; }
+    body.light-mode .box-badge strong { color: #065f46; }
 
     /* ===== TABS ===== */
     .tab-nav {
@@ -868,7 +907,11 @@
     <h1>CalcNutrición UCI</h1>
     <p>Calculadora de Nutrición Artificial en Paciente Crítico.</p>
   </div>
-  <div class="hdr-badge">Sistema activo</div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:.6rem">
+    <button class="salir-btn" onclick="salir()" aria-label="Salir">🚪 Salir</button>
+    <div class="hdr-badge" style="margin-left:0">Sistema activo</div>
+  </div>
+  <span id="box-badge" class="box-badge">📦 Box <strong id="box-badge-num">—</strong></span>
   <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
 </header>
 
@@ -1212,6 +1255,40 @@
               <button class="tl-clr-btn" onclick="clearTimeline('tol1')">↺ Limpiar</button>
             </div>
           </div>
+          <div id="tol-sny-block" style="display:none">
+            <div class="phase" style="padding-top:.9rem">
+              <div style="display:flex;align-items:center;margin-bottom:.7rem">
+                <strong style="font-size:.83rem">Turno de día (08:00 – 20:00)</strong>
+              </div>
+              <div class="tl-wrap" id="tl-wrap-tola">
+                <div class="tl-label">🕗 Tiempo sin nutrición — Turno día (08:00 – 20:00)</div>
+                <div class="tl-label" style="font-size:.65rem;margin-top:-.15rem;color:var(--dim)">Toca cada bloque de 20 min en que el paciente no recibe nutrición</div>
+                <div class="tl-scroll"><div class="tl-grid" id="tl-tola"></div></div>
+                <div class="tl-summary">
+                  <span class="tl-sum-lbl">Sin nutrición:</span>
+                  <span class="tl-sum-val" id="tl-tola-min">0 min</span>
+                  <span class="tl-sum-eff" id="tl-tola-eff"></span>
+                  <button class="tl-clr-btn" onclick="clearTimeline('tola')">↺ Limpiar</button>
+                </div>
+              </div>
+            </div>
+            <div class="phase" style="margin-top:.9rem">
+              <div style="display:flex;align-items:center;margin-bottom:.7rem">
+                <strong style="font-size:.83rem">Turno de noche (20:00 – 08:00)</strong>
+              </div>
+              <div class="tl-wrap" id="tl-wrap-tolb">
+                <div class="tl-label">🌙 Tiempo sin nutrición — Turno noche (20:00 – 08:00)</div>
+                <div class="tl-label" style="font-size:.65rem;margin-top:-.15rem;color:var(--dim)">Toca cada bloque de 20 min en que el paciente no recibe nutrición</div>
+                <div class="tl-scroll"><div class="tl-grid" id="tl-tolb"></div></div>
+                <div class="tl-summary">
+                  <span class="tl-sum-lbl">Sin nutrición:</span>
+                  <span class="tl-sum-val" id="tl-tolb-min">0 min</span>
+                  <span class="tl-sum-eff" id="tl-tolb-eff"></span>
+                  <button class="tl-clr-btn" onclick="clearTimeline('tolb')">↺ Limpiar</button>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="fg" style="margin-bottom:0">
             <label class="fl" for="t-r1">Ritmo de inicio (ml/h)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="t-r1" value="20" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
@@ -1494,12 +1571,30 @@
         Seleccione su Perfil
       </div>
     </div>
-    <div class="nutric-body" style="text-align:center">
+    <!-- Step 1: choose role -->
+    <div id="role-step-select" class="nutric-body" style="text-align:center">
       <div style="font-size:1.05rem; font-weight:700; margin-bottom:1.5rem; color:var(--text)">
         ¿Es usted Auxiliar de Enfermería o Médico?
       </div>
       <button class="btn-calc-nutric" style="margin-bottom:1rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding:.8rem" onclick="selectRole('auxiliar')">Auxiliar de Enfermería</button>
       <button class="btn-calc-nutric" style="padding:.8rem" onclick="selectRole('medico')">Médico</button>
+    </div>
+    <!-- Step 2: enter box number (auxiliar only) -->
+    <div id="role-step-box" class="nutric-body" style="display:none;text-align:center">
+      <div style="font-size:1.05rem; font-weight:700; margin-bottom:.6rem; color:var(--text)">
+        Auxiliar de Enfermería
+      </div>
+      <div style="font-size:.83rem; color:var(--muted); margin-bottom:1.2rem">
+        Introduzca el número de box del paciente
+      </div>
+      <label for="role-box-input" style="display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:.45rem;text-align:left">Nº de Box</label>
+      <input id="role-box-input" type="text" inputmode="numeric" maxlength="4"
+        style="width:100%;padding:.7rem .9rem;border-radius:9px;border:1px solid var(--border);background:var(--input-bg,rgba(255,255,255,.05));color:var(--text);font-size:1.4rem;font-weight:800;text-align:center;margin-bottom:.55rem;outline:none"
+        placeholder="Ej. 3"
+        onkeydown="if(event.key==='Enter')confirmAuxiliarBox()">
+      <div id="role-box-error" style="display:none;font-size:.78rem;color:#f87171;margin-bottom:.55rem">Por favor, introduzca el número de box.</div>
+      <button class="btn-calc-nutric" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding:.8rem; margin-bottom:.6rem" onclick="confirmAuxiliarBox()">Confirmar</button>
+      <button class="btn-calc-nutric" style="background:rgba(255,255,255,.06);color:var(--muted);padding:.55rem;font-size:.78rem" onclick="backToRoleSelect()">← Volver</button>
     </div>
   </div>
 </div>
@@ -1752,6 +1847,8 @@ const S = {
     tol1: new Array(24).fill(false),
     tol2: new Array(24).fill(false),
     tol3: new Array(24).fill(false),
+    tola: new Array(36).fill(false),
+    tolb: new Array(36).fill(false),
     r3a:  new Array(36).fill(false),
     r3b:  new Array(36).fill(false)
   }
@@ -2602,7 +2699,7 @@ function toggleTlBlock(key, idx) {
   }
   const numHours = (key === 'tol1' || key === 'tol2' || key === 'tol3') ? 8 : 12;
   updateTlSummary(key, numHours);
-  if (key === 'tol1' || key === 'tol2' || key === 'tol3') calcTol();
+  if (key === 'tol1' || key === 'tol2' || key === 'tol3' || key === 'tola' || key === 'tolb') calcTol();
   else calcRitmo();
 }
 
@@ -2620,6 +2717,8 @@ function getPauseContextLabel(key) {
   if (key === 'tol1') return 'Fase 1';
   if (key === 'tol2') return 'Fase 2';
   if (key === 'tol3') return 'Fase 3';
+  if (key === 'tola') return 'Turno día';
+  if (key === 'tolb') return 'Turno noche';
   if (key === 'r3a') return 'Turno día';
   if (key === 'r3b') return 'Turno noche';
   return key;
@@ -2741,10 +2840,10 @@ function renderTolPhaseResult(phaseLabel, hours, volume, rate, color) {
 function clearTimeline(key) {
   if (!S.tl || !S.tl[key]) return;
   S.tl[key].fill(false);
-  const startHour = key === 'tol2' ? 16 : key === 'tol3' ? 0 : key === 'r3b' ? 20 : 8;
+  const startHour = key === 'tol2' ? 16 : key === 'tol3' ? 0 : (key === 'r3b' || key === 'tolb') ? 20 : 8;
   const numHours  = (key === 'tol1' || key === 'tol2' || key === 'tol3') ? 8 : 12;
   renderTimeline(key, startHour, numHours);
-  if (key === 'tol1' || key === 'tol2' || key === 'tol3') calcTol();
+  if (key === 'tol1' || key === 'tol2' || key === 'tol3' || key === 'tola' || key === 'tolb') calcTol();
   else calcRitmo();
 }
 
@@ -2752,6 +2851,8 @@ function initTimelines() {
   renderTimeline('tol1', 8, 8);
   renderTimeline('tol2', 16, 8);
   renderTimeline('tol3', 0, 8);
+  renderTimeline('tola', 8, 12);
+  renderTimeline('tolb', 20, 12);
   renderTimeline('r3a', 8, 12);
   renderTimeline('r3b', 20, 12);
 }
@@ -2762,26 +2863,30 @@ function calcTol() {
   const vol             = gv('t-vol');
   const periodHours     = 8;
 
-  const totalPause1       = getTlMinutes('tol1');
+  const totalPause1       = isYeyuno ? 0 : getTlMinutes('tol1');
   const totalPause2       = isYeyuno ? 0 : getTlMinutes('tol2');
   const totalPause3       = isYeyuno ? 0 : getTlMinutes('tol3');
+  const totalPauseA       = isYeyuno ? getTlMinutes('tola') : 0;
+  const totalPauseB       = isYeyuno ? getTlMinutes('tolb') : 0;
   const infusedHours1     = Math.max(0, periodHours - (totalPause1 / 60));
   const infusedHours2     = Math.max(0, periodHours - (totalPause2 / 60));
   const infusedHours3     = Math.max(0, periodHours - (totalPause3 / 60));
+  const infusedHoursA     = Math.max(0, 12 - (totalPauseA / 60));
+  const infusedHoursB     = Math.max(0, 12 - (totalPauseB / 60));
   
   let reqR1, r1, r2Real, r3Real, v1, v2, v3, tot, pct, over;
   let capped = false;
   
   if (isYeyuno) {
-    // Para yeyunostomía: ritmo constante (Volumen / 24h) ajustado a los traslados (solo fase 1 como proxy)
-    const totalInfused = infusedHours1 + infusedHours2 + infusedHours3;
-    r1 = vol > 0 && totalInfused > 0 ? Math.round(vol / totalInfused) : 0;
+    // Para yeyunostomía: ritmo constante (Volumen / 24h) distribuido entre turno día y turno noche
+    const infusedHours = infusedHoursA + infusedHoursB;
+    r1 = vol > 0 && infusedHours > 0 ? Math.round(vol / infusedHours) : 0;
     if (r1 > 70) { r1 = 70; capped = true; }
     reqR1 = r1;
     r2Real = r1;
     r3Real = r1;
-    v1 = r1 * infusedHours1;
-    v2 = 0;
+    v1 = r1 * infusedHoursA;
+    v2 = r1 * infusedHoursB;
     v3 = 0;
   } else {
     const plan = calcForwardAdjustedPlan(vol, [
@@ -2810,8 +2915,9 @@ function calcTol() {
   sv('t-r3', r3Real);
 
   if (isYeyuno) {
-    $('t-p1r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours1 + infusedHours2 + infusedHours3)} h de infusion)</div>
-      <div style="font-size:1.35rem;font-weight:800;color:#60a5fa">${fi(tot)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
+    $('t-p1r').innerHTML = `
+      <div style="font-size:.73rem;color:var(--muted);margin-bottom:.2rem">Turno día: ${f1(infusedHoursA)} h infusión → ${fi(v1)} ml &nbsp;|&nbsp; Turno noche: ${f1(infusedHoursB)} h infusión → ${fi(v2)} ml</div>
+      <div style="font-size:1.35rem;font-weight:800;color:#60a5fa">${fi(tot)}<span style="font-size:.75rem;font-weight:400"> ml total</span></div>`;
     $('t-p2r').innerHTML = '';
     $('t-p3r').innerHTML = '';
   } else {
@@ -2824,11 +2930,15 @@ function calcTol() {
   if (isYeyuno) {
     $('t-res').innerHTML = `
       <div class="sg" style="margin-bottom:.9rem">
+        <div class="sb blue"><div class="sv">${fi(v1)}</div><div class="su">ml</div><div class="sl">Turno día (${f1(infusedHoursA)} h)</div></div>
+        <div class="sb cyan"><div class="sv">${fi(v2)}</div><div class="su">ml</div><div class="sl">Turno noche (${f1(infusedHoursB)} h)</div></div>
         <div class="sb green"><div class="sv">${fi(tot)}</div><div class="su">ml</div><div class="sl">Total 24 h</div></div>
         <div class="sb blue"><div class="sv">${fi(r1)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Único</div></div>
       </div>
       <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem;margin-bottom:.9rem">
-        <div class="ri"><span class="rl">Pausas totales 24 h</span><span class="rv">${fi(totalPause1 + totalPause2 + totalPause3)} min</span></div>
+        <div class="ri"><span class="rl">Pausas turno día</span><span class="rv">${fi(totalPauseA)} min</span></div>
+        <div class="ri"><span class="rl">Pausas turno noche</span><span class="rv">${fi(totalPauseB)} min</span></div>
+        <div class="ri"><span class="rl">Pausas totales 24 h</span><span class="rv">${fi(totalPauseA + totalPauseB)} min</span></div>
         <div class="ri"><span class="rl">Ritmo calculado</span><span class="rv">${fi(reqR1)}<span class="ru">ml/h</span></span></div>
       </div>
       <div style="padding:.9rem;background:rgba(255,255,255,.02);border-radius:11px">
@@ -2897,7 +3007,7 @@ function calcTol() {
       </div>
       <ul style="margin: 0; padding-left: 1.5rem; color: #fef2f2;">
         <li style="margin-bottom:.3rem"><strong>Parar nutrición</strong> y conectar a bolsa. Informar al Enfermero responsable.</li>
-        <li style="margin-bottom:.3rem">Dejar suspendida <strong>8 horas</strong>.</li>
+        <li style="margin-bottom:.3rem">Dejar suspendida <strong>6 horas</strong>.</li>
         <li style="margin-bottom:.3rem">Reiniciar al <strong>mismo ritmo</strong> (no añadir tiempo sin nutrición).</li>
         <li>Si siguiente débito > 250 ml:<br>Reducir ritmo <strong>a la mitad</strong> e informar al Enfermero responsable.</span></li>
       </ul>
@@ -2923,9 +3033,11 @@ function toggleYeyunoSNY(val) {
   const tR1Info = document.querySelector('#panel-tolerancia .phase.ph1 .fg:last-of-type div:last-child');
   if (tR1Info) tR1Info.textContent = val ? 'Automático según volumen objetivo y tiempo efectivo' : 'Automático según volumen pendiente tras cada pausa';
   
-  // Update timeline label for tolerancia phase 1 when yeyuno
-  const tlLbl1 = document.querySelector('#tl-wrap-tol1 .tl-label');
-  if (tlLbl1) tlLbl1.textContent = val ? '🕗 Tiempo sin nutrición — Pauta 24 h (08:00 – 08:00)' : '🕗 Tiempo sin nutrición — Fase 1 (08:00 – 16:00)';
+  // Toggle tol1 timeline vs SNY day/night timelines
+  const tlWrapTol1 = $('tl-wrap-tol1');
+  if (tlWrapTol1) tlWrapTol1.style.display = val ? 'none' : 'block';
+  const tolSnyBlock = $('tol-sny-block');
+  if (tolSnyBlock) tolSnyBlock.style.display = val ? 'block' : 'none';
 
   calcTol();
   calcRitmo();
@@ -3013,7 +3125,7 @@ function calcRitmo() {
         </div>
         <ul style="margin: 0; padding-left: 1.5rem; color: #fef2f2;">
           <li style="margin-bottom:.3rem"><strong>Parar nutrición</strong> y conectar a bolsa. Informar al Enfermero responsable.</li>
-          <li style="margin-bottom:.3rem">Dejar suspendida <strong>8 horas</strong>.</li>
+          <li style="margin-bottom:.3rem">Dejar suspendida <strong>6 horas</strong>.</li>
           <li style="margin-bottom:.3rem">Reiniciar al <strong>mismo ritmo</strong> (no añadir tiempo sin nutrición).</li>
         <li>Si siguiente débito > 250 ml:<br>Reducir ritmo <strong>a la mitad</strong> e informar al Enfermero responsable.</span></li>
         </ul>
@@ -3223,17 +3335,137 @@ function showTab(name) {
 
 /* ── Formula Selection Helpers ── */
 function selectRole(role) {
+  if (role === 'auxiliar') {
+    $('role-step-select').style.display = 'none';
+    $('role-step-box').style.display = 'block';
+    const inp = $('role-box-input');
+    if (inp) { inp.value = ''; inp.focus(); }
+    return;
+  }
   $('role-overlay').classList.remove('open');
   if (role === 'medico') {
     $('tab-tolerancia').style.display = 'none';
     $('tab-ritmo3').style.display = 'none';
     showTab('enteral');
-  } else if (role === 'auxiliar') {
-    $('tab-enteral').style.display = 'none';
-    $('tab-parenteral').style.display = 'none';
-    $('tab-catalogo').style.display = 'none';
-    showTab('tolerancia');
   }
+}
+
+function backToRoleSelect() {
+  $('role-box-error').style.display = 'none';
+  $('role-step-box').style.display = 'none';
+  $('role-step-select').style.display = 'block';
+}
+
+function confirmAuxiliarBox() {
+  const inp = $('role-box-input');
+  const box = (inp ? inp.value : '').trim();
+  if (!box) {
+    $('role-box-error').style.display = 'block';
+    if (inp) inp.focus();
+    return;
+  }
+  $('role-box-error').style.display = 'none';
+  saveAuxSession(box);
+  $('role-overlay').classList.remove('open');
+  applyAuxiliarRole(box);
+  restoreFormData(box);
+}
+
+function applyAuxiliarRole(box) {
+  $('tab-enteral').style.display = 'none';
+  $('tab-parenteral').style.display = 'none';
+  $('tab-catalogo').style.display = 'none';
+  showTab('tolerancia');
+  $('box-badge-num').textContent = box;
+  $('box-badge').style.display = 'flex';
+}
+
+function saveAuxSession(box) {
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate() + 1);
+  expiry.setHours(8, 30, 0, 0);
+  localStorage.setItem('nutri_session_v1', JSON.stringify({ role: 'auxiliar', box, expiry: expiry.getTime() }));
+}
+
+function clearAuxSession() {
+  localStorage.removeItem('nutri_session_v1');
+}
+
+const FORM_DATA_PREFIX = 'nutri_form_data_v1_box_';
+
+function formDataKey(box) {
+  return FORM_DATA_PREFIX + box;
+}
+
+function saveFormData(box) {
+  if (!box) return;
+  try {
+    const exp = new Date();
+    exp.setDate(exp.getDate() + 1);
+    exp.setHours(8, 20, 0, 0);
+    const data = {
+      tVol:      $('t-vol')  ? $('t-vol').value  : '',
+      r3Vol:     $('r3-vol') ? $('r3-vol').value : '',
+      yeyunoSNY: S.yeyunoSNY,
+      tl: {
+        tol1: Array.from(S.tl.tol1),
+        tol2: Array.from(S.tl.tol2),
+        tol3: Array.from(S.tl.tol3),
+        tola: Array.from(S.tl.tola),
+        tolb: Array.from(S.tl.tolb),
+        r3a:  Array.from(S.tl.r3a),
+        r3b:  Array.from(S.tl.r3b),
+      },
+      expiry: exp.getTime(),
+    };
+    localStorage.setItem(formDataKey(box), JSON.stringify(data));
+  } catch(e) {}
+}
+
+function restoreFormData(box) {
+  if (!box) return;
+  try {
+    const key = formDataKey(box);
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data || data.expiry <= Date.now()) {
+      localStorage.removeItem(key);
+      return;
+    }
+    if ($('t-vol')  && data.tVol  !== undefined) $('t-vol').value  = data.tVol;
+    if ($('r3-vol') && data.r3Vol !== undefined) $('r3-vol').value = data.r3Vol;
+    if (typeof data.yeyunoSNY === 'boolean') toggleYeyunoSNY(data.yeyunoSNY);
+    if (data.tl) {
+      ['tol1','tol2','tol3','tola','tolb','r3a','r3b'].forEach(key => {
+        if (Array.isArray(data.tl[key]) && S.tl[key]) {
+          data.tl[key].forEach((v, i) => { if (i < S.tl[key].length) S.tl[key][i] = !!v; });
+        }
+      });
+    }
+    initTimelines();
+    calcTol();
+    calcRitmo();
+  } catch(e) {}
+}
+
+function salir() {
+  const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
+  saveFormData(currentBox);
+  clearAuxSession();
+  const roleStep = $('role-step-select');
+  const roleBox  = $('role-step-box');
+  if (roleStep) roleStep.style.display = 'block';
+  if (roleBox)  roleBox.style.display  = 'none';
+  $('role-box-error').style.display = 'none';
+  // Reset tab visibility to default (all tabs visible)
+  ['tab-enteral','tab-parenteral','tab-tolerancia','tab-ritmo3','tab-catalogo'].forEach(id => {
+    const el = $(id); if (el) el.style.display = '';
+  });
+  // Hide box badge
+  const boxBadge = $('box-badge');
+  if (boxBadge) boxBadge.style.display = 'none';
+  $('role-overlay').classList.add('open');
 }
 
 
@@ -3381,6 +3613,9 @@ window.addEventListener('DOMContentLoaded', () => {
   updateRenalChip('e');
   updateRenalChip('p');
   lockFormulaManager();
+
+  // Always show the role-selection modal on (re-)entry — clear any stale session
+  clearAuxSession();
 });
 </script>
 
