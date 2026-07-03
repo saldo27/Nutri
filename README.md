@@ -11,7 +11,7 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 
 - **Nutrición Enteral (NE)** — entubación gástrica, yeyunal o SNY
 - **Nutrición Parenteral (NPT)** — soporte nutricional intravenoso
-- **Pauta de Tolerancia** — protocolo de inicio progresivo (primeras 24 h)
+- **Pauta de Tolerancia** — protocolo de inicio progresivo con control de débito cada 8 h
 - **Ritmo de Mantenimiento** — ajuste post-tolerancia
 - **Catálogo de Fórmulas** — base editable de dietas enterales disponibles
 - **NUTRIC Score** — evaluación del riesgo nutricional
@@ -45,17 +45,20 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 - Bloque visual de composición 24 h
 
 ### 3. **Pauta de Tolerancia (24 h)**
-- Dos fases de 12 h con ritmos independientes (ml/h)
+- Tres fases de 8 h con ritmos de inicio automáticos en cada control de débito
 - Cálculo de volumen total administrado en 24 h
+- Reajuste anterógrado del ritmo tras cada pausa, según el volumen pendiente al inicio de cada fase
 - Barra de progreso del objetivo
 - Alertas clínicas:
   - <50%: déficit crítico
   - 50–100%: déficit parcial (se completa en ritmo)
   - ≥100%: objetivo cubierto
 - Botón para aplicar automáticamente volumen desde prescripción enteral
+- Modo yeyunal/SNY con ritmo único continuo en turnos de 12 h
 
 ### 4. **Ritmo de Mantenimiento**
 - Cálculo del ritmo de continuación post-tolerancia
+- Reajuste del ritmo tras pausas considerando el volumen administrado antes de cada reinicio
 - Contador de volumen restante
 - Modalidad de control: c/12 h o c/24 h (para débito gástrico)
 - Recomendaciones según frecuencia
@@ -67,10 +70,19 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 - Edición en línea con validación
 - Restauración a valores por defecto
 
-### 6. **NUTRIC Score**
+### 6. **Sistema de Roles y Sesión**
+- Pantalla de selección de rol al iniciar: **Médico** o **Auxiliar de Enfermería**
+- Rol **Auxiliar**: flujo en dos pasos — selección de rol → introducción del **número de box**
+  - Badge visible en la cabecera con el box asignado (📦 Box N)
+  - Sesión persistida en localStorage hasta las 08:30 del día siguiente
+- **Botón Salir** (🚪) en la cabecera — guarda datos del formulario y vuelve al selector de rol
+  - Persiste volúmenes objetivo (`t-vol`, `r3-vol`), estado yeyuno/SNY y todas las pausas (tol1/tol2/tol3/r3a/r3b) hasta las 08:20 del día siguiente
+  - Al reentrar con el mismo rol, los datos del turno anterior se restauran automáticamente
+
+### 7. **NUTRIC Score**
 - Cálculo automático de riesgo nutricional
 - Parámetros: edad, APACHE II, SOFA, comorbilidades, días pre-UCI, IL-6 (opcional)
-- Scoring 0–10 con categorización riesgo bajo/alto
+- Puntuación 0–10 con categorización riesgo bajo/alto
 - Estimación de mortalidad a 28 días
 - Alerta para soporte nutricional precoz
 
@@ -110,16 +122,17 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 
 ### Pauta de Tolerancia (primeras 24 h)
 
-1. Ingresar ritmo fase 1 (ml/h × 12 h)
-2. Ingresar ritmo fase 2 (ml/h × 12 h)
-3. Ver resultado: volumen total, % cobertura, alertas
+1. Definir el volumen objetivo total (ml/24 h)
+2. Revisar los 3 bloques de 8 h (08:00–16:00, 16:00–00:00 y 00:00–08:00)
+3. Registrar pausas o tiempo sin nutrición en cada fase
+4. Ver resultado: volumen total, % cobertura, alertas y ritmo calculado en cada control
 
 ### Ritmo de Mantenimiento (post-tolerancia)
 
 1. Confirmar volumen objetivo 24h
-2. Ingresar volumen ya administrado en tolerancia
-3. Elegir modalidad control (c/12 h o c/24 h)
-4. Se calcula ritmo de continuidad
+2. Marcar pausas previstas o realizadas en cada turno
+3. Revisar el ritmo inicial y el ritmo de reinicio tras cada pausa
+4. El sistema recalcula el ritmo con el volumen pendiente
 
 ---
 
@@ -153,6 +166,14 @@ index.html
 │       │   ├── calcTol() — pauta 24h
 │       │   ├── calcRitmo() — mantenimiento
 │       │   └── calcNutricScore() — riesgo nutricional
+│       ├── Roles y sesión
+│       │   ├── selectRole() — selección Médico/Auxiliar
+│       │   ├── confirmBox() — validación y guardado de box (auxiliar)
+│       │   ├── applyAuxiliarRole() — aplica modo auxiliar + badge
+│       │   ├── clearAuxSession() — limpia sesión del rol
+│       │   ├── saveFormData() — persiste volúmenes y pausas del turno
+│       │   ├── restoreFormData() — restaura datos al reentrar
+│       │   └── salir() — guarda datos, limpia sesión, muestra overlay
 │       ├── Protocolos renales (toggleRenalChoice, setCit)
 │       ├── UI (renderTable, updates)
 │       └── Init
@@ -177,9 +198,9 @@ index.html
 ## 💾 Persistencia de Datos
 
 ### LocalStorage
-- **nutri_enteral_formulas_v1** — array JSON de fórmulas personalizadas
-- Se carga automáticamente al iniciar
-- Se sincroniza con cambios en gestor
+- **nutri_enteral_formulas_v1** — array JSON de fórmulas personalizadas; se carga al iniciar y se sincroniza con el gestor
+- **nutri_session_v1** — sesión del rol auxiliar (box asignado); expira a las 08:30 del día siguiente
+- **nutri_form_data_v1_box_{N}** — datos del formulario del turno para el box N (volúmenes, pausas, yeyuno/SNY); expira a las 08:20 del día siguiente; se restaura automáticamente al introducir el mismo número de box
 
 ---
 
@@ -209,7 +230,7 @@ index.html
 |---------|-------------|
 | 🧪 N. Enteral | Cálculo de dieta enteral + fórmulas |
 | 💉 N. Parenteral | Composición NPT + macronutrientes |
-| 📋 Pauta Tolerancia | Protocolo 24 h (primeras 24 h) |
+| 📋 Pauta Tolerancia | Protocolo 24 h con control de débito cada 8 h |
 | ⏱ Ritmo N. Enteral | Ritmo mantenimiento post-tolerancia |
 | 📚 Catálogo Fórmulas | Gestión + catálogo farmacia |
 
@@ -222,6 +243,8 @@ Al cargar la página:
 2. Se calculan todos los tabs (calcEnteral, calcParenteral, etc.)
 3. Se establece fase clínica por defecto (aguda) en Enteral y Parenteral
 4. Se bloquea gestor de fórmulas
+5. Se restauran datos del formulario del turno anterior (`restoreFormData`) si aún no han caducado
+6. Se muestra el selector de rol (siempre al (re)entrar)
 
 ---
 
