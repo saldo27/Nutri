@@ -1255,6 +1255,40 @@
               <button class="tl-clr-btn" onclick="clearTimeline('tol1')">↺ Limpiar</button>
             </div>
           </div>
+          <div id="tol-sny-block" style="display:none">
+            <div class="phase" style="padding-top:.9rem">
+              <div style="display:flex;align-items:center;margin-bottom:.7rem">
+                <strong style="font-size:.83rem">Turno de día (08:00 – 20:00)</strong>
+              </div>
+              <div class="tl-wrap" id="tl-wrap-tola">
+                <div class="tl-label">🕗 Tiempo sin nutrición — Turno día (08:00 – 20:00)</div>
+                <div class="tl-label" style="font-size:.65rem;margin-top:-.15rem;color:var(--dim)">Toca cada bloque de 20 min en que el paciente no recibe nutrición</div>
+                <div class="tl-scroll"><div class="tl-grid" id="tl-tola"></div></div>
+                <div class="tl-summary">
+                  <span class="tl-sum-lbl">Sin nutrición:</span>
+                  <span class="tl-sum-val" id="tl-tola-min">0 min</span>
+                  <span class="tl-sum-eff" id="tl-tola-eff"></span>
+                  <button class="tl-clr-btn" onclick="clearTimeline('tola')">↺ Limpiar</button>
+                </div>
+              </div>
+            </div>
+            <div class="phase" style="margin-top:.9rem">
+              <div style="display:flex;align-items:center;margin-bottom:.7rem">
+                <strong style="font-size:.83rem">Turno de noche (20:00 – 08:00)</strong>
+              </div>
+              <div class="tl-wrap" id="tl-wrap-tolb">
+                <div class="tl-label">🌙 Tiempo sin nutrición — Turno noche (20:00 – 08:00)</div>
+                <div class="tl-label" style="font-size:.65rem;margin-top:-.15rem;color:var(--dim)">Toca cada bloque de 20 min en que el paciente no recibe nutrición</div>
+                <div class="tl-scroll"><div class="tl-grid" id="tl-tolb"></div></div>
+                <div class="tl-summary">
+                  <span class="tl-sum-lbl">Sin nutrición:</span>
+                  <span class="tl-sum-val" id="tl-tolb-min">0 min</span>
+                  <span class="tl-sum-eff" id="tl-tolb-eff"></span>
+                  <button class="tl-clr-btn" onclick="clearTimeline('tolb')">↺ Limpiar</button>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="fg" style="margin-bottom:0">
             <label class="fl" for="t-r1">Ritmo de inicio (ml/h)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="t-r1" value="20" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
@@ -1813,6 +1847,8 @@ const S = {
     tol1: new Array(24).fill(false),
     tol2: new Array(24).fill(false),
     tol3: new Array(24).fill(false),
+    tola: new Array(36).fill(false),
+    tolb: new Array(36).fill(false),
     r3a:  new Array(36).fill(false),
     r3b:  new Array(36).fill(false)
   }
@@ -2663,7 +2699,7 @@ function toggleTlBlock(key, idx) {
   }
   const numHours = (key === 'tol1' || key === 'tol2' || key === 'tol3') ? 8 : 12;
   updateTlSummary(key, numHours);
-  if (key === 'tol1' || key === 'tol2' || key === 'tol3') calcTol();
+  if (key === 'tol1' || key === 'tol2' || key === 'tol3' || key === 'tola' || key === 'tolb') calcTol();
   else calcRitmo();
 }
 
@@ -2681,6 +2717,8 @@ function getPauseContextLabel(key) {
   if (key === 'tol1') return 'Fase 1';
   if (key === 'tol2') return 'Fase 2';
   if (key === 'tol3') return 'Fase 3';
+  if (key === 'tola') return 'Turno día';
+  if (key === 'tolb') return 'Turno noche';
   if (key === 'r3a') return 'Turno día';
   if (key === 'r3b') return 'Turno noche';
   return key;
@@ -2802,10 +2840,10 @@ function renderTolPhaseResult(phaseLabel, hours, volume, rate, color) {
 function clearTimeline(key) {
   if (!S.tl || !S.tl[key]) return;
   S.tl[key].fill(false);
-  const startHour = key === 'tol2' ? 16 : key === 'tol3' ? 0 : key === 'r3b' ? 20 : 8;
+  const startHour = key === 'tol2' ? 16 : key === 'tol3' ? 0 : (key === 'r3b' || key === 'tolb') ? 20 : 8;
   const numHours  = (key === 'tol1' || key === 'tol2' || key === 'tol3') ? 8 : 12;
   renderTimeline(key, startHour, numHours);
-  if (key === 'tol1' || key === 'tol2' || key === 'tol3') calcTol();
+  if (key === 'tol1' || key === 'tol2' || key === 'tol3' || key === 'tola' || key === 'tolb') calcTol();
   else calcRitmo();
 }
 
@@ -2813,6 +2851,8 @@ function initTimelines() {
   renderTimeline('tol1', 8, 8);
   renderTimeline('tol2', 16, 8);
   renderTimeline('tol3', 0, 8);
+  renderTimeline('tola', 8, 12);
+  renderTimeline('tolb', 20, 12);
   renderTimeline('r3a', 8, 12);
   renderTimeline('r3b', 20, 12);
 }
@@ -2823,26 +2863,30 @@ function calcTol() {
   const vol             = gv('t-vol');
   const periodHours     = 8;
 
-  const totalPause1       = getTlMinutes('tol1');
+  const totalPause1       = isYeyuno ? 0 : getTlMinutes('tol1');
   const totalPause2       = isYeyuno ? 0 : getTlMinutes('tol2');
   const totalPause3       = isYeyuno ? 0 : getTlMinutes('tol3');
+  const totalPauseA       = isYeyuno ? getTlMinutes('tola') : 0;
+  const totalPauseB       = isYeyuno ? getTlMinutes('tolb') : 0;
   const infusedHours1     = Math.max(0, periodHours - (totalPause1 / 60));
   const infusedHours2     = Math.max(0, periodHours - (totalPause2 / 60));
   const infusedHours3     = Math.max(0, periodHours - (totalPause3 / 60));
+  const infusedHoursA     = Math.max(0, 12 - (totalPauseA / 60));
+  const infusedHoursB     = Math.max(0, 12 - (totalPauseB / 60));
   
   let reqR1, r1, r2Real, r3Real, v1, v2, v3, tot, pct, over;
   let capped = false;
   
   if (isYeyuno) {
-    // Para yeyunostomía: ritmo constante (Volumen / 24h) ajustado a los traslados (solo fase 1 como proxy)
-    const totalInfused = infusedHours1 + infusedHours2 + infusedHours3;
-    r1 = vol > 0 && totalInfused > 0 ? Math.round(vol / totalInfused) : 0;
+    // Para yeyunostomía: ritmo constante (Volumen / 24h) distribuido entre turno día y turno noche
+    const infusedHours = infusedHoursA + infusedHoursB;
+    r1 = vol > 0 && infusedHours > 0 ? Math.round(vol / infusedHours) : 0;
     if (r1 > 70) { r1 = 70; capped = true; }
     reqR1 = r1;
     r2Real = r1;
     r3Real = r1;
-    v1 = r1 * infusedHours1;
-    v2 = 0;
+    v1 = r1 * infusedHoursA;
+    v2 = r1 * infusedHoursB;
     v3 = 0;
   } else {
     const plan = calcForwardAdjustedPlan(vol, [
@@ -2871,8 +2915,9 @@ function calcTol() {
   sv('t-r3', r3Real);
 
   if (isYeyuno) {
-    $('t-p1r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours1 + infusedHours2 + infusedHours3)} h de infusion)</div>
-      <div style="font-size:1.35rem;font-weight:800;color:#60a5fa">${fi(tot)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
+    $('t-p1r').innerHTML = `
+      <div style="font-size:.73rem;color:var(--muted);margin-bottom:.2rem">Turno día: ${f1(infusedHoursA)} h infusión → ${fi(v1)} ml &nbsp;|&nbsp; Turno noche: ${f1(infusedHoursB)} h infusión → ${fi(v2)} ml</div>
+      <div style="font-size:1.35rem;font-weight:800;color:#60a5fa">${fi(tot)}<span style="font-size:.75rem;font-weight:400"> ml total</span></div>`;
     $('t-p2r').innerHTML = '';
     $('t-p3r').innerHTML = '';
   } else {
@@ -2885,11 +2930,15 @@ function calcTol() {
   if (isYeyuno) {
     $('t-res').innerHTML = `
       <div class="sg" style="margin-bottom:.9rem">
+        <div class="sb blue"><div class="sv">${fi(v1)}</div><div class="su">ml</div><div class="sl">Turno día (${f1(infusedHoursA)} h)</div></div>
+        <div class="sb cyan"><div class="sv">${fi(v2)}</div><div class="su">ml</div><div class="sl">Turno noche (${f1(infusedHoursB)} h)</div></div>
         <div class="sb green"><div class="sv">${fi(tot)}</div><div class="su">ml</div><div class="sl">Total 24 h</div></div>
         <div class="sb blue"><div class="sv">${fi(r1)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Único</div></div>
       </div>
       <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem;margin-bottom:.9rem">
-        <div class="ri"><span class="rl">Pausas totales 24 h</span><span class="rv">${fi(totalPause1 + totalPause2 + totalPause3)} min</span></div>
+        <div class="ri"><span class="rl">Pausas turno día</span><span class="rv">${fi(totalPauseA)} min</span></div>
+        <div class="ri"><span class="rl">Pausas turno noche</span><span class="rv">${fi(totalPauseB)} min</span></div>
+        <div class="ri"><span class="rl">Pausas totales 24 h</span><span class="rv">${fi(totalPauseA + totalPauseB)} min</span></div>
         <div class="ri"><span class="rl">Ritmo calculado</span><span class="rv">${fi(reqR1)}<span class="ru">ml/h</span></span></div>
       </div>
       <div style="padding:.9rem;background:rgba(255,255,255,.02);border-radius:11px">
@@ -2984,9 +3033,11 @@ function toggleYeyunoSNY(val) {
   const tR1Info = document.querySelector('#panel-tolerancia .phase.ph1 .fg:last-of-type div:last-child');
   if (tR1Info) tR1Info.textContent = val ? 'Automático según volumen objetivo y tiempo efectivo' : 'Automático según volumen pendiente tras cada pausa';
   
-  // Update timeline label for tolerancia phase 1 when yeyuno
-  const tlLbl1 = document.querySelector('#tl-wrap-tol1 .tl-label');
-  if (tlLbl1) tlLbl1.textContent = val ? '🕗 Tiempo sin nutrición — Pauta 24 h (08:00 – 08:00)' : '🕗 Tiempo sin nutrición — Fase 1 (08:00 – 16:00)';
+  // Toggle tol1 timeline vs SNY day/night timelines
+  const tlWrapTol1 = $('tl-wrap-tol1');
+  if (tlWrapTol1) tlWrapTol1.style.display = val ? 'none' : 'block';
+  const tolSnyBlock = $('tol-sny-block');
+  if (tolSnyBlock) tolSnyBlock.style.display = val ? 'block' : 'none';
 
   calcTol();
   calcRitmo();
@@ -3360,6 +3411,8 @@ function saveFormData(box) {
         tol1: Array.from(S.tl.tol1),
         tol2: Array.from(S.tl.tol2),
         tol3: Array.from(S.tl.tol3),
+        tola: Array.from(S.tl.tola),
+        tolb: Array.from(S.tl.tolb),
         r3a:  Array.from(S.tl.r3a),
         r3b:  Array.from(S.tl.r3b),
       },
@@ -3384,7 +3437,7 @@ function restoreFormData(box) {
     if ($('r3-vol') && data.r3Vol !== undefined) $('r3-vol').value = data.r3Vol;
     if (typeof data.yeyunoSNY === 'boolean') toggleYeyunoSNY(data.yeyunoSNY);
     if (data.tl) {
-      ['tol1','tol2','tol3','r3a','r3b'].forEach(key => {
+      ['tol1','tol2','tol3','tola','tolb','r3a','r3b'].forEach(key => {
         if (Array.isArray(data.tl[key]) && S.tl[key]) {
           data.tl[key].forEach((v, i) => { if (i < S.tl[key].length) S.tl[key][i] = !!v; });
         }
