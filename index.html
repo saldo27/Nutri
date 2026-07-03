@@ -504,6 +504,53 @@
     }
     .pfill.over { background:linear-gradient(90deg,#f59e0b,#ef4444); }
 
+    /* ===== TIMELINE RULER ===== */
+    .tl-wrap { margin:.75rem 0; }
+    .tl-label {
+      font-size:.72rem; color:var(--muted); font-weight:600;
+      margin-bottom:.35rem; display:flex; align-items:center; gap:.4rem;
+    }
+    .tl-scroll { overflow-x:auto; padding-bottom:.35rem; }
+    .tl-grid {
+      display:flex; min-width:660px;
+      border:1px solid var(--border-dim); border-radius:8px; overflow:hidden;
+    }
+    .tl-hour { flex:1; display:flex; flex-direction:column; min-width:24px; }
+    .tl-hour:not(:last-child) { border-right:1px solid var(--border-dim); }
+    .tl-hour-lbl {
+      font-size:.58rem; text-align:center; color:var(--muted);
+      background:var(--primary-gl); padding:.18rem .05rem;
+      border-bottom:1px solid var(--border-dim); font-weight:700; line-height:1.2;
+    }
+    .tl-blocks { display:flex; flex:1; }
+    .tl-block {
+      flex:1; height:30px;
+      background:var(--inp-bg); cursor:pointer;
+      transition:background .12s, border-color .12s;
+      border:none; outline:none;
+    }
+    .tl-block:not(:last-child) { border-right:1px solid var(--border-dim); }
+    .tl-block:hover:not(.paused) { background:rgba(239,68,68,.22); }
+    .tl-block.paused { background:rgba(239,68,68,.60); }
+    .tl-block.paused:hover { background:rgba(239,68,68,.82); }
+    .tl-phase-bar {
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:.6rem; color:var(--muted); padding:.1rem 0;
+    }
+    .tl-summary {
+      display:flex; align-items:center; gap:.65rem;
+      margin-top:.45rem; flex-wrap:wrap;
+    }
+    .tl-sum-lbl { font-size:.75rem; color:var(--muted); }
+    .tl-sum-val { font-size:.82rem; font-weight:800; color:#ef4444; }
+    .tl-sum-eff { font-size:.75rem; color:#34d399; font-weight:600; }
+    .tl-clr-btn {
+      cursor:pointer; color:var(--muted); font-size:.7rem;
+      padding:.18rem .5rem; border:1px solid var(--border-dim); border-radius:5px;
+      background:transparent; margin-left:auto;
+    }
+    .tl-clr-btn:hover { background:rgba(255,255,255,.05); }
+
     /* ===== CATALOG ===== */
     .cat-t {
       font-size:.88rem; font-weight:800; color:var(--primary);
@@ -830,8 +877,7 @@
   <button class="tab-btn active" onclick="showTab('enteral')"    id="tab-enteral">🧪 N. Enteral</button>
   <button class="tab-btn"        onclick="showTab('parenteral')" id="tab-parenteral">💉 N. Parenteral</button>
   <button class="tab-btn"        onclick="showTab('tolerancia')" id="tab-tolerancia">📋 Pauta Tolerancia</button>
-  <button class="tab-btn"        onclick="showTab('ritmo2')"     id="tab-ritmo2">⏱ Ritmo N. Enteral 2º día</button>
-  <button class="tab-btn"        onclick="showTab('ritmo3')"     id="tab-ritmo3">⏱ Ritmo N. Enteral a partir del 3er día</button>
+  <button class="tab-btn"        onclick="showTab('ritmo3')"     id="tab-ritmo3">⏱ Ritmo N.Enteral a partir 2º día</button>
   <button class="tab-btn"        onclick="showTab('catalogo')"   id="tab-catalogo">📚 Catálogo Fórmulas</button>
 </nav>
 
@@ -1140,7 +1186,7 @@
           <div class="c-icon blue">📋</div>
           <div><div class="c-title tab-title">📋 Inicio y Progresión N. Enteral</div><div class="c-sub">Pauta de tolerancia · primeras 24 horas</div></div>
         </div>
-        <div class="alert alert-info">ℹ️ Protocolo de inicio de N. Enteral. Se controla el débito gástrico cada 12 horas para ajustar el ritmo.</div>
+        <div class="alert alert-info">ℹ️ Protocolo de inicio de N. Enteral. Se controla el débito gástrico cada 8 horas para ajustar el ritmo.</div>
         <label style="display:inline-flex;align-items:center;gap:.45rem;font-size:.85rem;color:var(--text);cursor:pointer;margin-bottom:1rem;background:rgba(139,92,246,.08);padding:.65rem;border-radius:8px;width:100%;border:1px solid rgba(139,92,246,.2)">
           <input type="checkbox" id="t-yeyuno" style="width:18px;height:18px;accent-color:#8b5cf6" onchange="toggleYeyunoSNY(this.checked)">
           <strong>El paciente es portador de Yeyunostomía o Sonda NasoYeyunal (SNY)</strong>
@@ -1153,42 +1199,71 @@
         <div class="phase ph1">
           <div style="display:flex;align-items:center;margin-bottom:.7rem">
             <span class="ph-num">1</span>
-            <strong style="font-size:.83rem">Primeras 12 h — hasta 1.er control de débito</strong>
+            <strong style="font-size:.83rem">Primeras 8 h — hasta 1.er control de débito</strong>
           </div>
-          <div class="fg">
-            <label class="fl">Pausas para débito</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="t-pause-base1" value="20" min="0" max="720" step="5" oninput="calcTol()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
-          </div>
-          <div class="fg">
-            <label class="fl" for="t-extra1">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="t-extra1" value="0" min="0" max="720" step="5" oninput="calcTol()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
+          <div class="tl-wrap" id="tl-wrap-tol1">
+            <div class="tl-label">🕗 Tiempo sin nutrición — Fase 1 (08:00 – 16:00)</div>
+            <div class="tl-label" style="font-size:.65rem;margin-top:-.15rem;color:var(--dim)">Toca cada bloque de 20 min en que el paciente no recibe nutrición</div>
+            <div class="tl-scroll"><div class="tl-grid" id="tl-tol1"></div></div>
+            <div class="tl-summary">
+              <span class="tl-sum-lbl">Sin nutrición:</span>
+              <span class="tl-sum-val" id="tl-tol1-min">0 min</span>
+              <span class="tl-sum-eff" id="tl-tol1-eff"></span>
+              <button class="tl-clr-btn" onclick="clearTimeline('tol1')">↺ Limpiar</button>
+            </div>
           </div>
           <div class="fg" style="margin-bottom:0">
-            <label class="fl" for="t-r1">Ritmo (ml/h)</label>
+            <label class="fl" for="t-r1">Ritmo de inicio (ml/h)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="t-r1" value="20" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
-            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen objetivo y pausas</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen pendiente tras cada pausa</div>
           </div>
           <div id="t-p1r" style="padding-top:.9rem"></div>
         </div>
         <div class="phase ph2">
           <div style="display:flex;align-items:center;margin-bottom:.7rem">
             <span class="ph-num">2</span>
-            <strong style="font-size:.83rem">Siguientes 12 h — hasta 2.º control de débito</strong>
+            <strong style="font-size:.83rem">Siguientes 8 h — hasta 2.º control de débito</strong>
           </div>
-          <div class="fg">
-            <label class="fl">Pausas para débito</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="t-pause-base2" value="20" min="0" max="720" step="5" oninput="calcTol()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
-          </div>
-          <div class="fg">
-            <label class="fl" for="t-extra2">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="t-extra2" value="0" min="0" max="720" step="5" oninput="calcTol()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
+          <div class="tl-wrap" id="tl-wrap-tol2">
+            <div class="tl-label">🌆 Tiempo sin nutrición — Fase 2 (16:00 – 00:00)</div>
+            <div class="tl-label" style="font-size:.65rem;margin-top:-.15rem;color:var(--dim)">Toca cada bloque de 20 min en que el paciente no recibe nutrición</div>
+            <div class="tl-scroll"><div class="tl-grid" id="tl-tol2"></div></div>
+            <div class="tl-summary">
+              <span class="tl-sum-lbl">Sin nutrición:</span>
+              <span class="tl-sum-val" id="tl-tol2-min">0 min</span>
+              <span class="tl-sum-eff" id="tl-tol2-eff"></span>
+              <button class="tl-clr-btn" onclick="clearTimeline('tol2')">↺ Limpiar</button>
+            </div>
           </div>
           <div class="fg" style="margin-bottom:0">
-            <label class="fl" for="t-r2">Ritmo (ml/h)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="t-r2" value="40" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
-            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático: 2x ritmo de la Fase 1</div>
+            <label class="fl" for="t-r2">Ritmo de inicio (ml/h)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-r2" value="30" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen restante al inicio de la fase</div>
           </div>
           <div id="t-p2r" style="padding-top:.9rem"></div>
+        </div>
+        <div class="phase ph3">
+          <div style="display:flex;align-items:center;margin-bottom:.7rem">
+            <span class="ph-num">3</span>
+            <strong style="font-size:.83rem">Últimas 8 h — hasta 3.er control de débito</strong>
+          </div>
+          <div class="tl-wrap" id="tl-wrap-tol3">
+            <div class="tl-label">🌙 Tiempo sin nutrición — Fase 3 (00:00 – 08:00)</div>
+            <div class="tl-label" style="font-size:.65rem;margin-top:-.15rem;color:var(--dim)">Toca cada bloque de 20 min en que el paciente no recibe nutrición</div>
+            <div class="tl-scroll"><div class="tl-grid" id="tl-tol3"></div></div>
+            <div class="tl-summary">
+              <span class="tl-sum-lbl">Sin nutrición:</span>
+              <span class="tl-sum-val" id="tl-tol3-min">0 min</span>
+              <span class="tl-sum-eff" id="tl-tol3-eff"></span>
+              <button class="tl-clr-btn" onclick="clearTimeline('tol3')">↺ Limpiar</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:0">
+            <label class="fl" for="t-r3">Ritmo de inicio (ml/h)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-r3" value="40" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen restante al inicio de la fase</div>
+          </div>
+          <div id="t-p3r" style="padding-top:.9rem"></div>
         </div>
       </div>
     </div>
@@ -1206,57 +1281,7 @@
 
 
 <!-- ══════════════════════════════════════════════════
-     TAB 4: RITMO N. ENTERAL 2º DÍA
-══════════════════════════════════════════════════ -->
-<div class="tab-panel" id="panel-ritmo2">
-  <div class="g2">
-    <div>
-      <div class="card">
-        <div class="card-head">
-          <div class="c-icon cyan">⏱</div>
-          <div><div class="c-title tab-title">⏱ Ritmo N. Enteral 2º día</div><div class="c-sub">Tras completar la Pauta de Tolerancia</div></div>
-        </div>
-        <div class="alert alert-ok">✅ Pauta de tolerancia completada. Calcule el ritmo del 2º día. Débito c/12 horas.</div>
-        <label style="display:inline-flex;align-items:center;gap:.45rem;font-size:.85rem;color:var(--text);cursor:pointer;margin-bottom:1rem;background:rgba(139,92,246,.08);padding:.65rem;border-radius:8px;width:100%;border:1px solid rgba(139,92,246,.2)">
-          <input type="checkbox" id="r2-yeyuno" style="width:18px;height:18px;accent-color:#8b5cf6" onchange="toggleYeyunoSNY(this.checked)">
-          <strong>El paciente es portador de Yeyunostomía o Sonda NasoYeyunal (SNY)</strong>
-        </label>
-        <div style="background:rgba(96,165,250,.08);border-left:3px solid #60a5fa;padding:.9rem;margin-bottom:.9rem;border-radius:8px">
-          <div class="fg" style="margin-bottom:0">
-            <label class="fl" for="r2-vol" style="font-weight:700;font-size:.95rem">Volumen objetivo (ml/24h)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r2-vol" value="1200" min="100" max="3000" step="50" oninput="syncRitmoVolume('r2')" style="font-weight:600;font-size:1.1rem"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#60a5fa">ml</span></div>
-          </div>
-        </div>
-        <div class="phase ph1">
-          <div style="display:flex;align-items:center;margin-bottom:.7rem">
-            <strong style="font-size:.83rem">2º día</strong>
-          </div>
-          <div class="fg">
-            <label class="fl">Pausas para débito (C/12 horas)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r2-pause2" value="40" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
-          </div>
-          <div class="fg">
-            <label class="fl" for="r2-extra2">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r2-extra2" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div>
-      <div class="card">
-        <div class="card-head">
-          <div class="c-icon green">📊</div>
-          <div><div class="c-title">Ritmo Calculado</div></div>
-        </div>
-        <div id="r2-res"></div>
-      </div>
-    </div>
-  </div>
-</div><!-- end panel-ritmo2 -->
-
-
-<!-- ══════════════════════════════════════════════════
-  TAB 5: RITMO N. ENTERAL A PARTIR DEL 3ER DÍA
+  TAB 4: RITMO N.ENTERAL A PARTIR 2º DÍA
 ══════════════════════════════════════════════════ -->
 <div class="tab-panel" id="panel-ritmo3">
   <div class="g2">
@@ -1264,9 +1289,9 @@
       <div class="card">
         <div class="card-head">
           <div class="c-icon cyan">⏱</div>
-          <div><div class="c-title tab-title">⏱ Ritmo N. Enteral a partir del 3er día</div><div class="c-sub">Mantenimiento diario tras 2º día</div></div>
+          <div><div class="c-title tab-title">⏱ Ritmo N.Enteral a partir 2º día</div><div class="c-sub">Débito cada 24 h</div></div>
         </div>
-        <div class="alert alert-ok">✅ Protocolo en mantenimiento. Ajuste el ritmo a partir del 3er día.</div>
+        <div class="alert alert-ok">✅ Pauta de tolerancia completada. Ajuste el ritmo a partir del 2º día.</div>
         <label style="display:inline-flex;align-items:center;gap:.45rem;font-size:.85rem;color:var(--text);cursor:pointer;margin-bottom:1rem;background:rgba(139,92,246,.08);padding:.65rem;border-radius:8px;width:100%;border:1px solid rgba(139,92,246,.2)">
           <input type="checkbox" id="r3-yeyuno" style="width:18px;height:18px;accent-color:#8b5cf6" onchange="toggleYeyunoSNY(this.checked)">
           <strong>El paciente es portador de Yeyunostomía o Sonda NasoYeyunal (SNY)</strong>
@@ -1274,20 +1299,39 @@
         <div style="background:rgba(34,211,238,.08);border-left:3px solid #22d3ee;padding:.9rem;margin-bottom:.9rem;border-radius:8px">
           <div class="fg" style="margin-bottom:0">
             <label class="fl" for="r3-vol" style="font-weight:700;font-size:.95rem">Volumen objetivo (ml/24h)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r3-vol" value="1200" min="100" max="3000" step="50" oninput="syncRitmoVolume('r3')" style="font-weight:600;font-size:1.1rem"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#22d3ee">ml</span></div>
+            <div class="fi-wrap"><input class="fi" type="number" id="r3-vol" value="1200" min="100" max="3000" step="50" oninput="calcRitmo()" style="font-weight:600;font-size:1.1rem"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#22d3ee">ml</span></div>
           </div>
         </div>
         <div class="phase ph1">
           <div style="display:flex;align-items:center;margin-bottom:.7rem">
-            <strong style="font-size:.83rem">A partir de 3er día</strong>
+            <strong style="font-size:.83rem">Turno de día (08:00 – 20:00)</strong>
           </div>
-          <div class="fg" id="r3-base-wrap">
-            <label class="fl">Pausas para débito (C/24 horas)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r3-pause3" value="20" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
+          <div class="tl-wrap" id="tl-wrap-r3a">
+            <div class="tl-label">🕗 Tiempo sin nutrición — 8.00 a 19.00 horas</div>
+            <div class="tl-label" style="font-size:.65rem;margin-top:-.15rem;color:var(--dim)">Toca cada bloque de 20 min en que el paciente no recibe nutrición</div>
+            <div class="tl-scroll"><div class="tl-grid" id="tl-r3a"></div></div>
+            <div class="tl-summary">
+              <span class="tl-sum-lbl">Sin nutrición:</span>
+              <span class="tl-sum-val" id="tl-r3a-min">0 min</span>
+              <span class="tl-sum-eff" id="tl-r3a-eff"></span>
+              <button class="tl-clr-btn" onclick="clearTimeline('r3a')">↺ Limpiar</button>
+            </div>
           </div>
-          <div class="fg">
-            <label class="fl" for="r3-extra3">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
-            <div class="fi-wrap"><input class="fi" type="number" id="r3-extra3" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
+        </div>
+        <div class="phase ph2" style="margin-top:.9rem">
+          <div style="display:flex;align-items:center;margin-bottom:.7rem">
+            <strong style="font-size:.83rem">Turno de noche (20:00 – 08:00)</strong>
+          </div>
+          <div class="tl-wrap" id="tl-wrap-r3b">
+            <div class="tl-label">🌙 Tiempo sin nutrición — 20.00 a 7.00 horas</div>
+            <div class="tl-label" style="font-size:.65rem;margin-top:-.15rem;color:var(--dim)">Toca cada bloque de 20 min en que el paciente no recibe nutrición</div>
+            <div class="tl-scroll"><div class="tl-grid" id="tl-r3b"></div></div>
+            <div class="tl-summary">
+              <span class="tl-sum-lbl">Sin nutrición:</span>
+              <span class="tl-sum-val" id="tl-r3b-min">0 min</span>
+              <span class="tl-sum-eff" id="tl-r3b-eff"></span>
+              <button class="tl-clr-btn" onclick="clearTimeline('r3b')">↺ Limpiar</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1704,6 +1748,13 @@ const S = {
   fase: 'aguda',
   fltType: 'aguda',
   yeyunoSNY: false,
+  tl: {
+    tol1: new Array(24).fill(false),
+    tol2: new Array(24).fill(false),
+    tol3: new Array(24).fill(false),
+    r3a:  new Array(36).fill(false),
+    r3b:  new Array(36).fill(false)
+  }
 };
 
 
@@ -1715,6 +1766,7 @@ const f1 = n => (isNaN(n)||!isFinite(n)) ? '—' : n.toFixed(1);
 const f2 = n => (isNaN(n)||!isFinite(n)) ? '—' : n.toFixed(2);
 const fi = n => (isNaN(n)||!isFinite(n)) ? '—' : Math.round(n).toString();
 const FORMULA_MANAGER_PASSWORD = 'Nutr1';
+const TL_BLOCK_HOURS = 20 / 60;
 
 function isFormulaManagerUnlocked() {
   return $('fm-protected')?.style.display !== 'none';
@@ -2496,75 +2548,276 @@ function setFltType(t) {
   renderTable(null);
 }
 
+/* ── Timeline helpers ── */
+function getTlMinutes(key) {
+  if (!S.tl || !S.tl[key]) return 0;
+  return S.tl[key].filter(Boolean).length * 20;
+}
+
+function renderTimeline(key, startHour, numHours) {
+  const container = $('tl-' + key);
+  if (!container) return;
+  container.innerHTML = '';
+  const state = S.tl[key];
+  for (let h = 0; h < numHours; h++) {
+    const hour = (startHour + h) % 24;
+    const hourDiv = document.createElement('div');
+    hourDiv.className = 'tl-hour';
+    const lbl = document.createElement('div');
+    lbl.className = 'tl-hour-lbl';
+    lbl.textContent = String(hour).padStart(2, '0');
+    hourDiv.appendChild(lbl);
+    const blocksDiv = document.createElement('div');
+    blocksDiv.className = 'tl-blocks';
+    for (let b = 0; b < 3; b++) {
+      const idx = h * 3 + b;
+      const minFrom = b * 20;
+      const minTo   = minFrom + 20;
+      const hTo     = minTo === 60 ? (hour + 1) % 24 : hour;
+      const mTo     = minTo === 60 ? 0 : minTo;
+      const timeStr = `${String(hour).padStart(2,'0')}:${String(minFrom).padStart(2,'0')}–${String(hTo).padStart(2,'0')}:${String(mTo).padStart(2,'0')}`;
+      const block = document.createElement('button');
+      block.type = 'button';
+      block.className = 'tl-block' + (state[idx] ? ' paused' : '');
+      block.title = timeStr;
+      block.setAttribute('aria-label', timeStr + (state[idx] ? ' (sin nutrición)' : ''));
+      block.addEventListener('click', () => toggleTlBlock(key, idx));
+      blocksDiv.appendChild(block);
+    }
+    hourDiv.appendChild(blocksDiv);
+    container.appendChild(hourDiv);
+  }
+  updateTlSummary(key, numHours);
+}
+
+function toggleTlBlock(key, idx) {
+  S.tl[key][idx] = !S.tl[key][idx];
+  const container = $('tl-' + key);
+  if (container) {
+    const blocks = container.querySelectorAll('.tl-block');
+    if (blocks[idx]) {
+      blocks[idx].classList.toggle('paused', S.tl[key][idx]);
+      blocks[idx].setAttribute('aria-label', blocks[idx].title + (S.tl[key][idx] ? ' (sin nutrición)' : ''));
+    }
+  }
+  const numHours = (key === 'tol1' || key === 'tol2' || key === 'tol3') ? 8 : 12;
+  updateTlSummary(key, numHours);
+  if (key === 'tol1' || key === 'tol2' || key === 'tol3') calcTol();
+  else calcRitmo();
+}
+
+function updateTlSummary(key, numHours) {
+  const mins = getTlMinutes(key);
+  const periodH = numHours || ((key === 'tol1' || key === 'tol2' || key === 'tol3') ? 8 : 12);
+  const effH = Math.max(0, periodH - mins / 60);
+  const minEl = $('tl-' + key + '-min');
+  if (minEl) minEl.textContent = mins + ' min';
+  const effEl = $('tl-' + key + '-eff');
+  if (effEl) effEl.textContent = mins > 0 ? ('→ ' + effH.toFixed(1) + ' h infusión') : '';
+}
+
+function getPauseContextLabel(key) {
+  if (key === 'tol1') return 'Fase 1';
+  if (key === 'tol2') return 'Fase 2';
+  if (key === 'tol3') return 'Fase 3';
+  if (key === 'r3a') return 'Turno día';
+  if (key === 'r3b') return 'Turno noche';
+  return key;
+}
+
+function calcForwardAdjustedPlan(targetVolume, phases, rateCap=70) {
+  const blocks = [];
+  phases.forEach(phase => {
+    const tlState = (S.tl && S.tl[phase.key]) || [];
+    tlState.forEach(paused => {
+      blocks.push({
+        key: phase.key,
+        label: phase.label || getPauseContextLabel(phase.key),
+        weight: phase.weight || 1,
+        paused: !!paused,
+        duration: TL_BLOCK_HOURS
+      });
+    });
+  });
+
+  const remainingWeightedHours = new Array(blocks.length + 1).fill(0);
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    remainingWeightedHours[i] = remainingWeightedHours[i + 1] + (blocks[i].weight * blocks[i].duration);
+  }
+
+  let remainingVolume = Math.max(0, targetVolume);
+  let totalInfused = 0;
+  let capped = false;
+  let lastWasPause = false;
+  let pauseMinutes = 0;
+  let pauseVolumeBefore = 0;
+  let currentBaseRate = remainingWeightedHours[0] > 0 ? remainingVolume / remainingWeightedHours[0] : 0;
+
+  const phaseTotals = {};
+  const phaseHours = {};
+  const phaseStartRates = {};
+  const pauseAdjustments = [];
+
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i];
+    if (block.paused) {
+      if (!lastWasPause) pauseVolumeBefore = totalInfused;
+      pauseMinutes += 20;
+      lastWasPause = true;
+      continue;
+    }
+
+    if (lastWasPause) {
+      const weightedHours = remainingWeightedHours[i];
+      currentBaseRate = weightedHours > 0 ? remainingVolume / weightedHours : 0;
+    }
+
+    const rawRate = currentBaseRate * block.weight;
+    const actualRate = Math.min(rawRate, rateCap);
+    const infused = Math.min(remainingVolume, actualRate * block.duration);
+
+    if (actualRate + 1e-9 < rawRate) capped = true;
+    if (phaseStartRates[block.key] == null) phaseStartRates[block.key] = actualRate;
+    if (lastWasPause) {
+      pauseAdjustments.push({
+        label: block.label,
+        minutes: pauseMinutes,
+        infusedBeforePause: pauseVolumeBefore,
+        remainingVolume,
+        resumedRate: actualRate
+      });
+      lastWasPause = false;
+      pauseMinutes = 0;
+    }
+
+    phaseTotals[block.key] = (phaseTotals[block.key] || 0) + infused;
+    phaseHours[block.key] = (phaseHours[block.key] || 0) + block.duration;
+    totalInfused += infused;
+    remainingVolume = Math.max(0, remainingVolume - infused);
+  }
+
+  return {
+    totalInfused,
+    remainingVolume,
+    capped,
+    pauseAdjustments,
+    phaseTotals,
+    phaseHours,
+    phaseStartRates,
+    initialRate: Object.values(phaseStartRates)[0] || 0,
+    finalRate: pauseAdjustments.length ? pauseAdjustments[pauseAdjustments.length - 1].resumedRate : (Object.values(phaseStartRates).slice(-1)[0] || 0),
+    totalPauseMinutes: blocks.filter(block => block.paused).length * 20,
+    effectiveHours: blocks.filter(block => !block.paused).length * TL_BLOCK_HOURS
+  };
+}
+
+function renderPauseAdjustments(items, accentColor='#22d3ee') {
+  if (!items.length) {
+    return `<div style="margin-top:.9rem;padding:.85rem;border-radius:11px;background:rgba(255,255,255,.02);font-size:.78rem;color:var(--muted)">Sin pausas marcadas. No hace falta reajustar el ritmo.</div>`;
+  }
+
+  return `<div style="margin-top:.9rem;padding:.9rem;border-radius:11px;background:rgba(255,255,255,.02)">
+    <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.055em;margin-bottom:.65rem">Ajustes anterógrados tras pausas</div>
+    ${items.map((item, idx) => `
+      <div class="ri"${idx ? ' style="border-top:1px solid var(--border);margin-top:.35rem;padding-top:.55rem"' : ''}>
+        <span class="rl">${item.label} · pausa ${idx + 1} (${fi(item.minutes)} min)</span>
+        <span class="rv">${fi(item.infusedBeforePause)} ml → <span style="color:${accentColor}">${fi(item.resumedRate)}<span class="ru">ml/h</span></span></span>
+      </div>
+      <div style="font-size:.72rem;color:var(--dim);padding:.15rem .6rem 0">Volumen administrado antes de la pausa y ritmo necesario al reiniciar para completar el objetivo.</div>
+    `).join('')}
+  </div>`;
+}
+
+function renderTolPhaseResult(phaseLabel, hours, volume, rate, color) {
+  return `
+    <div style="padding:.75rem;border-radius:11px;background:rgba(255,255,255,.02);margin-bottom:.55rem">
+      <div style="font-size:.72rem;color:var(--muted)">Nuevo ritmo para iniciar ${phaseLabel}</div>
+      <div style="font-size:1.2rem;font-weight:800;color:${color}">${fi(rate)}<span style="font-size:.72rem;font-weight:600"> ml/h</span></div>
+    </div>
+    <div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(hours)} h de infusion)</div>
+    <div style="font-size:1.35rem;font-weight:800;color:${color}">${fi(volume)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
+}
+
+function clearTimeline(key) {
+  if (!S.tl || !S.tl[key]) return;
+  S.tl[key].fill(false);
+  const startHour = key === 'tol2' ? 16 : key === 'tol3' ? 0 : key === 'r3b' ? 20 : 8;
+  const numHours  = (key === 'tol1' || key === 'tol2' || key === 'tol3') ? 8 : 12;
+  renderTimeline(key, startHour, numHours);
+  if (key === 'tol1' || key === 'tol2' || key === 'tol3') calcTol();
+  else calcRitmo();
+}
+
+function initTimelines() {
+  renderTimeline('tol1', 8, 8);
+  renderTimeline('tol2', 16, 8);
+  renderTimeline('tol3', 0, 8);
+  renderTimeline('r3a', 8, 12);
+  renderTimeline('r3b', 20, 12);
+}
+
 /* ── Tolerancia ── */
 function calcTol() {
   const isYeyuno = !!S.yeyunoSNY;
   const vol             = gv('t-vol');
-  const periodHours     = 12;
-  
-  const elBase1 = $('t-pause-base1');
-  if (elBase1) elBase1.parentElement.parentElement.style.display = isYeyuno ? 'none' : 'block';
-  const elBase2 = $('t-pause-base2');
-  if (elBase2) elBase2.parentElement.parentElement.style.display = isYeyuno ? 'none' : 'block';
+  const periodHours     = 8;
 
-  let basePause1 = 0, basePause2 = 0;
-  if (!isYeyuno) {
-    basePause1 = gv('t-pause-base1');
-    basePause2 = gv('t-pause-base2');
-  }
-
-  const extraPause1     = gv('t-extra1');
-  const extraPause2     = gv('t-extra2');
-  const totalPause1     = basePause1 + extraPause1;
-  const totalPause2     = basePause2 + extraPause2;
-  const infusedHours1   = Math.max(0, periodHours - (totalPause1 / 60));
-  const infusedHours2   = Math.max(0, periodHours - (basePause2 / 60));
-  const infusedHours2Real = Math.max(0, periodHours - (totalPause2 / 60));
+  const totalPause1       = getTlMinutes('tol1');
+  const totalPause2       = isYeyuno ? 0 : getTlMinutes('tol2');
+  const totalPause3       = isYeyuno ? 0 : getTlMinutes('tol3');
+  const infusedHours1     = Math.max(0, periodHours - (totalPause1 / 60));
+  const infusedHours2     = Math.max(0, periodHours - (totalPause2 / 60));
+  const infusedHours3     = Math.max(0, periodHours - (totalPause3 / 60));
   
-  let reqR1, r1, r2, v1, v2, r2Real, tot, pct, over, reqR2;
+  let reqR1, r1, r2Real, r3Real, v1, v2, v3, tot, pct, over;
   let capped = false;
   
   if (isYeyuno) {
-    // Para yeyunostomía: ritmo constante (Volumen / 24h) ajustado a los traslados
-    const totalInfused = infusedHours1 + infusedHours2Real;
+    // Para yeyunostomía: ritmo constante (Volumen / 24h) ajustado a los traslados (solo fase 1 como proxy)
+    const totalInfused = infusedHours1 + infusedHours2 + infusedHours3;
     r1 = vol > 0 && totalInfused > 0 ? Math.round(vol / totalInfused) : 0;
     if (r1 > 70) { r1 = 70; capped = true; }
     reqR1 = r1;
     r2Real = r1;
-    r2 = r1;
+    r3Real = r1;
     v1 = r1 * infusedHours1;
-    v2 = r1 * infusedHours2Real;
+    v2 = 0;
+    v3 = 0;
   } else {
-    // Comportamiento original
-    const denom = infusedHours1 + (2 * infusedHours2);
-    reqR1 = vol > 0 && denom > 0 ? vol / denom : 0;
+    const plan = calcForwardAdjustedPlan(vol, [
+      { key:'tol1', weight:1, label:'Fase 1' },
+      { key:'tol2', weight:1.5, label:'Fase 2' },
+      { key:'tol3', weight:2, label:'Fase 3' }
+    ]);
+    reqR1 = plan.phaseStartRates.tol1 || 0;
     r1 = Math.round(reqR1);
-    if (r1 > 70) { r1 = 70; capped = true; }
-    r2 = Math.round(reqR1 * 2);
-    if (r2 > 70) { r2 = 70; capped = true; }
-    v1 = r1 * infusedHours1;
-    const reqV2 = r2 * infusedHours2;
-    r2Real = infusedHours2Real > 0 ? Math.round(reqV2 / infusedHours2Real) : r2;
-    if (r2Real > 70) { r2Real = 70; capped = true; }
-    v2 = r2Real * infusedHours2Real;
+    r2Real = Math.round(plan.phaseStartRates.tol2 || 0);
+    r3Real = Math.round(plan.phaseStartRates.tol3 || 0);
+    v1 = plan.phaseTotals.tol1 || 0;
+    v2 = plan.phaseTotals.tol2 || 0;
+    v3 = plan.phaseTotals.tol3 || 0;
+    tot = plan.totalInfused;
+    capped = plan.capped;
+    var tolPauseAdjustments = plan.pauseAdjustments;
   }
-  
-  tot  = v1 + v2;
+
+  if (isYeyuno) tot  = v1 + v2 + v3;
   pct  = vol > 0 ? (tot / vol) * 100 : 0;
   over = pct > 100;
 
   sv('t-r1', r1);
   sv('t-r2', r2Real);
+  sv('t-r3', r3Real);
 
   if (isYeyuno) {
-    $('t-p1r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours1 + infusedHours2Real)} h de infusion)</div>
+    $('t-p1r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours1 + infusedHours2 + infusedHours3)} h de infusion)</div>
       <div style="font-size:1.35rem;font-weight:800;color:#60a5fa">${fi(tot)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
     $('t-p2r').innerHTML = '';
+    $('t-p3r').innerHTML = '';
   } else {
-    $('t-p1r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours1)} h de infusion)</div>
-      <div style="font-size:1.35rem;font-weight:800;color:#60a5fa">${fi(v1)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
-    $('t-p2r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours2)} h de infusion)</div>
-      <div style="font-size:1.35rem;font-weight:800;color:#22d3ee">${fi(v2)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
+    $('t-p1r').innerHTML = renderTolPhaseResult('la Fase 1', infusedHours1, v1, r1, '#60a5fa');
+    $('t-p2r').innerHTML = renderTolPhaseResult('la Fase 2', infusedHours2, v2, r2Real, '#22d3ee');
+    $('t-p3r').innerHTML = renderTolPhaseResult('la Fase 3', infusedHours3, v3, r3Real, '#34d399');
   }
 
   const pc = Math.min(pct, 100);
@@ -2575,7 +2828,7 @@ function calcTol() {
         <div class="sb blue"><div class="sv">${fi(r1)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Único</div></div>
       </div>
       <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem;margin-bottom:.9rem">
-        <div class="ri"><span class="rl">Pausas totales 24 h</span><span class="rv">${fi(extraPause1 + extraPause2)} min</span></div>
+        <div class="ri"><span class="rl">Pausas totales 24 h</span><span class="rv">${fi(totalPause1 + totalPause2 + totalPause3)} min</span></div>
         <div class="ri"><span class="rl">Ritmo calculado</span><span class="rv">${fi(reqR1)}<span class="ru">ml/h</span></span></div>
       </div>
       <div style="padding:.9rem;background:rgba(255,255,255,.02);border-radius:11px">
@@ -2607,20 +2860,23 @@ function calcTol() {
     <div class="sg" style="margin-bottom:.9rem">
       <div class="sb blue"><div class="sv">${fi(v1)}</div><div class="su">ml</div><div class="sl">Fase 1 (${f1(infusedHours1)} h infusion)</div></div>
       <div class="sb cyan"><div class="sv">${fi(v2)}</div><div class="su">ml</div><div class="sl">Fase 2 (${f1(infusedHours2)} h infusion)</div></div>
+      <div class="sb green"><div class="sv">${fi(v3)}</div><div class="su">ml</div><div class="sl">Fase 3 (${f1(infusedHours3)} h infusion)</div></div>
       <div class="sb green"><div class="sv">${fi(tot)}</div><div class="su">ml</div><div class="sl">Total 24 h</div></div>
     </div>
     <div class="sg" style="margin-bottom:.9rem">
       <div class="sb blue"><div class="sv">${fi(r1)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Fase 1</div></div>
       <div class="sb cyan"><div class="sv">${fi(r2Real)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo Fase 2</div></div>
+      <div class="sb green"><div class="sv">${fi(r3Real)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#34d399">ml/h</div><div class="sl">Ritmo Fase 3</div></div>
     </div>
     <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem;margin-bottom:.9rem">
-      <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.055em;margin-bottom:.65rem">Ajuste por pausas de control de debito</div>
-      <div class="ri"><span class="rl">Pausa Fase 1</span><span class="rv">${fi(basePause1)} + ${fi(extraPause1)} = ${fi(totalPause1)} min</span></div>
-      <div class="ri"><span class="rl">Pausa Fase 2</span><span class="rv">${fi(basePause2)} + ${fi(extraPause2)} = ${fi(totalPause2)} min</span></div>
-      <div class="ri"><span class="rl">Pausas totales 24 h</span><span class="rv">${fi(totalPause1 + totalPause2)} min</span></div>
-      <div class="ri"><span class="rl">Ritmo Fase 2</span><span class="rv">2x Fase 1</span></div>
-      <div class="ri"><span class="rl">Ritmo calculado Fase 1</span><span class="rv">${fi(reqR1)}<span class="ru">ml/h</span></span></div>
-      <div class="ri"><span class="rl">Ritmo calculado Fase 2</span><span class="rv">${fi(r2Real)}<span class="ru">ml/h</span></span></div>
+      <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.055em;margin-bottom:.65rem">Tiempo sin nutrición y ritmo calculado</div>
+      <div class="ri"><span class="rl">Tiempo sin nutrición Fase 1</span><span class="rv">${fi(totalPause1)} min</span></div>
+      <div class="ri"><span class="rl">Tiempo sin nutrición Fase 2</span><span class="rv">${fi(totalPause2)} min</span></div>
+      <div class="ri"><span class="rl">Tiempo sin nutrición Fase 3</span><span class="rv">${fi(totalPause3)} min</span></div>
+      <div class="ri"><span class="rl">Tiempo sin nutrición total 24 h</span><span class="rv">${fi(totalPause1 + totalPause2 + totalPause3)} min</span></div>
+      <div class="ri"><span class="rl">Ritmo al inicio de Fase 1</span><span class="rv">${fi(reqR1)}<span class="ru">ml/h</span></span></div>
+      <div class="ri"><span class="rl">Ritmo al inicio de Fase 2</span><span class="rv">${fi(r2Real)}<span class="ru">ml/h</span></span></div>
+      <div class="ri"><span class="rl">Ritmo al inicio de Fase 3</span><span class="rv">${fi(r3Real)}<span class="ru">ml/h</span></span></div>
     </div>
     <div style="padding:.9rem;background:rgba(255,255,255,.02);border-radius:11px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.45rem">
@@ -2630,6 +2886,7 @@ function calcTol() {
       <div class="pbar"><div class="pfill ${over?'over':''}" style="width:${pc}%"></div></div>
       <div style="font-size:.72rem;color:var(--dim);margin-top:.45rem">Objetivo: ${fi(vol)} ml &nbsp;|&nbsp; Administrado: ${fi(tot)} ml &nbsp;|&nbsp; Diferencia: ${fi(tot-vol)} ml</div>
     </div>
+    ${renderPauseAdjustments(tolPauseAdjustments || [], '#34d399')}
     ${capped ? `<div style="margin-top:1.2rem; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5); border: 1px solid rgba(255, 255, 255, 0.3); text-align: center; animation: pulse 2s infinite;">
       <div style="font-size: 1.15rem; font-weight: 900; letter-spacing: 0.05em; margin-bottom: .4rem; text-transform: uppercase;">🚨 Ritmo limitado a 70 ml/h</div>
       <div style="font-size: .95rem; font-weight: 600;">El ritmo calculado era mayor. Avisad a Médico para ajustar tratamiento.</div>
@@ -2651,101 +2908,53 @@ function calcTol() {
 function toggleYeyunoSNY(val) {
   S.yeyunoSNY = val;
   if ($('t-yeyuno')) $('t-yeyuno').checked = val;
-  if ($('r2-yeyuno')) $('r2-yeyuno').checked = val;
   if ($('r3-yeyuno')) $('r3-yeyuno').checked = val;
   
   const tPh2 = document.querySelector('#panel-tolerancia .phase.ph2');
   if (tPh2) tPh2.style.display = val ? 'none' : 'block';
+  const tPh3 = document.querySelector('#panel-tolerancia .phase.ph3');
+  if (tPh3) tPh3.style.display = val ? 'none' : 'block';
   const tPh1Title = document.querySelector('#panel-tolerancia .phase.ph1 strong');
-  if (tPh1Title) tPh1Title.textContent = val ? 'Pauta Continua de 24 horas' : 'Primeras 12 h — hasta 1.er control de débito';
+  if (tPh1Title) tPh1Title.textContent = val ? 'Pauta Continua de 24 horas' : 'Primeras 8 h — hasta 1.er control de débito';
   const tPh1Num = document.querySelector('#panel-tolerancia .phase.ph1 .ph-num');
   if (tPh1Num) tPh1Num.style.display = val ? 'none' : 'inline-flex';
   const tR1Label = document.querySelector('label[for="t-r1"]');
-  if (tR1Label) tR1Label.textContent = val ? 'Ritmo Único (ml/h)' : 'Ritmo (ml/h)';
+  if (tR1Label) tR1Label.textContent = val ? 'Ritmo Único (ml/h)' : 'Ritmo de inicio (ml/h)';
   const tR1Info = document.querySelector('#panel-tolerancia .phase.ph1 .fg:last-of-type div:last-child');
-  if (tR1Info) tR1Info.textContent = val ? 'Automático según volumen objetivo y tiempo efectivo' : 'Automático según volumen objetivo y pausas';
+  if (tR1Info) tR1Info.textContent = val ? 'Automático según volumen objetivo y tiempo efectivo' : 'Automático según volumen pendiente tras cada pausa';
   
-  const r3Base = $('r3-base-wrap');
-  if (r3Base) r3Base.style.display = val ? 'none' : 'block';
+  // Update timeline label for tolerancia phase 1 when yeyuno
+  const tlLbl1 = document.querySelector('#tl-wrap-tol1 .tl-label');
+  if (tlLbl1) tlLbl1.textContent = val ? '🕗 Tiempo sin nutrición — Pauta 24 h (08:00 – 08:00)' : '🕗 Tiempo sin nutrición — Fase 1 (08:00 – 16:00)';
 
   calcTol();
   calcRitmo();
 }
 
 function syncRitmoVolume(source) {
-  const val = source === 'r3' ? gv('r3-vol') : gv('r2-vol');
-  sv('r2-vol', val);
-  sv('r3-vol', val);
   calcRitmo();
 }
 
 /* ── Ritmo ── */
 function calcRitmo() {
   const isYeyuno    = !!S.yeyunoSNY;
-  const vol2        = gv('r2-vol');
-  const vol3        = gv('r3-vol');
-  const vol         = vol2 || vol3;
+  const vol         = gv('r3-vol');
 
-  sv('r2-vol', vol);
-  sv('r3-vol', vol);
+  const totalPauseA = getTlMinutes('r3a');
+  const totalPauseB = getTlMinutes('r3b');
+  const infHoursA   = Math.max(0, 12 - (totalPauseA / 60));
+  const infHoursB   = Math.max(0, 12 - (totalPauseB / 60));
+  const plan = calcForwardAdjustedPlan(vol, [
+    { key:'r3a', weight:1, label:'Turno día' },
+    { key:'r3b', weight:1, label:'Turno noche' }
+  ]);
 
-  const elBase2 = $('r2-pause2');
-  if (elBase2) elBase2.parentElement.parentElement.style.display = isYeyuno ? 'none' : 'block';
-  const elBase3 = $('r3-pause3');
-  if (elBase3) elBase3.parentElement.parentElement.style.display = isYeyuno ? 'none' : 'block';
-
-  const basePause2 = isYeyuno ? 0 : 40;
-  const basePause3 = isYeyuno ? 0 : 20;
-
-  const extraPause2 = gv('r2-extra2');
-  const extraPause3 = gv('r3-extra3');
-  const totalPause2 = basePause2 + extraPause2;
-  const totalPause3 = basePause3 + extraPause3;
-  const infHours2   = Math.max(0, 24 - (totalPause2 / 60));
-  const infHours3   = Math.max(0, 24 - (totalPause3 / 60));
-
-  let volDay2     = vol;
-  let volDay3     = vol;
-  let rateDay2    = infHours2 > 0 ? Math.round(volDay2 / infHours2) : 0;
-  let rateDay3    = infHours3 > 0 ? Math.round(volDay3 / infHours3) : 0;
-
-  let capped2 = false;
-  let capped3 = false;
-  
-  if (rateDay2 > 70) { rateDay2 = 70; capped2 = true; volDay2 = rateDay2 * infHours2; }
-  if (rateDay3 > 70) { rateDay3 = 70; capped3 = true; volDay3 = rateDay3 * infHours3; }
+  let volDay3     = plan.totalInfused;
+  let rateDay3    = Math.round(plan.finalRate || plan.initialRate || 0);
+  let startRateDay3 = Math.round(plan.initialRate || 0);
+  let capped3 = plan.capped;
 
   if (isYeyuno) {
-    $('r2-res').innerHTML = `
-      <div class="sg" style="margin-bottom:.9rem">
-        <div class="sb blue"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay2)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo Único a 24h</div></div>
-        <div class="sb green"><div class="sv">${fi(volDay2)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
-      </div>
-      <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
-        <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
-        <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
-          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔵 Ritmo N. Enteral 2º día</span>
-          <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${fi(rateDay2)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</span></span>
-        </div>
-        <div class="ri" style="padding:.7rem .6rem"><span class="rl">Pausas ajustadas (traslados, medicación)</span><span class="rv">${fi(extraPause2)} min</span></div>
-      </div>
-      <div style="margin-top:1.2rem; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); font-size: .95rem; font-weight: 500; line-height: 1.6;">
-        <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: 1.05rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;">
-          <span>⚠️</span> <span>Protocolo Yeyunal</span>
-        </div>
-        <ul style="margin: 0; padding-left: 1.5rem; color: #f3f4f6;">
-          <li style="margin-bottom:.3rem">Administrar nutrición por <strong>luz Yeyunal</strong>.</li>
-          <li style="margin-bottom:.3rem">Conectar luz Gástrica <strong>a bolsa de forma continua</strong>.</li>
-          <li style="margin-bottom:.3rem"><strong>No hacer pausas</strong> para débito.</li>
-          <li>Administrar <strong>50 ml de Agua</strong> c/6H por luz Yeyunal.</li>
-          <li>Administrar <strong>medicación</strong> por luz Yeyunal.</li>
-        </ul>
-      </div>
-      ${capped2 ? `<div style="margin-top:1.2rem; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5); border: 1px solid rgba(255, 255, 255, 0.3); text-align: center; animation: pulse 2s infinite;">
-        <div style="font-size: 1.15rem; font-weight: 900; letter-spacing: 0.05em; margin-bottom: .4rem; text-transform: uppercase;">🚨 Ritmo limitado a 70 ml/h</div>
-        <div style="font-size: .95rem; font-weight: 600;">El ritmo calculado era mayor. Avisad a Médico para ajustar tratamiento.</div>
-      </div>` : ''}`;
-
     $('r3-res').innerHTML = `
       <div class="sg" style="margin-bottom:.9rem">
         <div class="sb cyan"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay3)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo Único a 24h</div></div>
@@ -2753,12 +2962,14 @@ function calcRitmo() {
       </div>
       <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
         <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
+        <div class="ri"><span class="rl">Ritmo inicial del día</span><span class="rv">${fi(startRateDay3)}<span class="ru">ml/h</span></span></div>
         <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
-          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo N. Enteral a partir del 3er día</span>
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo tras la última pausa</span>
           <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${fi(rateDay3)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</span></span>
         </div>
-        <div class="ri" style="padding:.7rem .6rem"><span class="rl">Pausas ajustadas (traslados, medicación)</span><span class="rv">${fi(extraPause3)} min</span></div>
+        <div class="ri" style="padding:.7rem .6rem"><span class="rl">Pausas ajustadas (traslados, medicación)</span><span class="rv">${fi(totalPauseA + totalPauseB)} min</span></div>
       </div>
+      ${renderPauseAdjustments(plan.pauseAdjustments, '#22d3ee')}
       <div style="margin-top:1.2rem; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); font-size: .95rem; font-weight: 500; line-height: 1.6;">
         <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: 1.05rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;">
           <span>⚠️</span> <span>Protocolo Yeyunal</span>
@@ -2775,50 +2986,23 @@ function calcRitmo() {
         <div style="font-size: .95rem; font-weight: 600;">El ritmo calculado era mayor. Avisad a Médico para ajustar tratamiento.</div>
       </div>` : ''}`;
   } else {
-    $('r2-res').innerHTML = `
-      <div class="sg" style="margin-bottom:.9rem">
-        <div class="sb blue"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay2)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</div><div class="sl">Ritmo 2º día</div></div>
-        <div class="sb green"><div class="sv">${fi(volDay2)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
-      </div>
-      <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
-        <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
-        <div class="ri"><span class="rl">Volumen total 2º día</span><span class="rv">${fi(volDay2)}<span class="ru">ml</span></span></div>
-        <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
-          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🔵 Ritmo N. Enteral 2º día</span>
-          <span class="rv" style="font-size:1.1rem;font-weight:700;color:#60a5fa">${fi(rateDay2)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#60a5fa">ml/h</span></span>
-        </div>
-        <div class="ri" style="padding:.7rem .6rem"><span class="rl">Control débito c/12H</span><span class="rv">${fi(basePause2)} + ${fi(extraPause2)} = ${fi(totalPause2)} min pausas</span></div>
-      </div>
-      ${capped2 ? `<div style="margin-top:1.2rem; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5); border: 1px solid rgba(255, 255, 255, 0.3); text-align: center; animation: pulse 2s infinite;">
-        <div style="font-size: 1.15rem; font-weight: 900; letter-spacing: 0.05em; margin-bottom: .4rem; text-transform: uppercase;">🚨 Ritmo limitado a 70 ml/h</div>
-        <div style="font-size: .95rem; font-weight: 600;">El ritmo calculado era mayor. Avisad a Médico para ajustar tratamiento.</div>
-      </div>` : ''}
-      <div style="margin-top:1.2rem; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); font-size: .9rem; font-weight: 500; line-height: 1.5;">
-        <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;">
-          <span>🛑</span> <span>Protocolo Alto Débito (> 250 ml)</span>
-        </div>
-        <ul style="margin: 0; padding-left: 1.5rem; color: #fef2f2;">
-          <li style="margin-bottom:.3rem"><strong>Parar nutrición</strong> y conectar a bolsa. Informar al Enfermero responsable.</li>
-          <li style="margin-bottom:.3rem">Dejar suspendida <strong>8 horas</strong>.</li>
-          <li style="margin-bottom:.3rem">Reiniciar al <strong>mismo ritmo</strong> (no añadir tiempo sin nutrición).</li>
-          <li>Si siguiente débito > 250 ml:<br>Reducir ritmo <strong>a la mitad</strong> e informar al Enfermero responsable.</li>
-        </ul>
-      </div>`;
-
     $('r3-res').innerHTML = `
       <div class="sg" style="margin-bottom:.9rem">
-        <div class="sb cyan"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay3)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo a partir del 3er día</div></div>
+        <div class="sb cyan"><div class="sv" style="font-size:1.9rem;font-weight:800;letter-spacing:-.03em">${fi(rateDay3)}</div><div class="su" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</div><div class="sl">Ritmo a partir 2º día</div></div>
         <div class="sb green"><div class="sv">${fi(volDay3)}</div><div class="su">ml</div><div class="sl">Volumen total 24 h</div></div>
       </div>
       <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
         <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
-        <div class="ri"><span class="rl">Volumen total a partir del 3er día</span><span class="rv">${fi(volDay3)}<span class="ru">ml</span></span></div>
+        <div class="ri"><span class="rl">Volumen total a partir 2º día</span><span class="rv">${fi(volDay3)}<span class="ru">ml</span></span></div>
+        <div class="ri"><span class="rl">Ritmo inicial del día</span><span class="rv">${fi(startRateDay3)}<span class="ru">ml/h</span></span></div>
         <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
-          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo N. Enteral a partir del 3er día</span>
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo tras la última pausa</span>
           <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${fi(rateDay3)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</span></span>
         </div>
-        <div class="ri" style="padding:.7rem .6rem"><span class="rl">Control débito c/24H</span><span class="rv">${fi(basePause3)} + ${fi(extraPause3)} = ${fi(totalPause3)} min pausas</span></div>
+        <div class="ri" style="padding:.7rem .6rem"><span class="rl">Tiempo sin nutrición turno día</span><span class="rv">${fi(totalPauseA)} min</span></div>
+        <div class="ri" style="padding:.4rem .6rem"><span class="rl">Tiempo sin nutrición turno noche</span><span class="rv">${fi(totalPauseB)} min</span></div>
       </div>
+      ${renderPauseAdjustments(plan.pauseAdjustments, '#22d3ee')}
       ${capped3 ? `<div style="margin-top:1.2rem; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5); border: 1px solid rgba(255, 255, 255, 0.3); text-align: center; animation: pulse 2s infinite;">
         <div style="font-size: 1.15rem; font-weight: 900; letter-spacing: 0.05em; margin-bottom: .4rem; text-transform: uppercase;">🚨 Ritmo limitado a 70 ml/h</div>
         <div style="font-size: .95rem; font-weight: 600;">El ritmo calculado era mayor. Avisad a Médico para ajustar tratamiento.</div>
@@ -3042,7 +3226,6 @@ function selectRole(role) {
   $('role-overlay').classList.remove('open');
   if (role === 'medico') {
     $('tab-tolerancia').style.display = 'none';
-    $('tab-ritmo2').style.display = 'none';
     $('tab-ritmo3').style.display = 'none';
     showTab('enteral');
   } else if (role === 'auxiliar') {
@@ -3068,7 +3251,6 @@ function selectFormula(idx) {
 
 function applyPrescription(vol) {
   sv('t-vol', vol);
-  sv('r2-vol', vol);
   sv('r3-vol', vol);
   calcTol();
   calcRitmo();
@@ -3090,7 +3272,7 @@ function applyPrescription(vol) {
   feedback.style.alignItems = 'center';
   feedback.style.gap = '.5rem';
   feedback.style.border = '1px solid rgba(255,255,255,.15)';
-  feedback.innerHTML = `<span>✓</span> <span>Volumen de ${vol} ml copiado a Tolerancia y ambas pestañas de Ritmo</span>`;
+  feedback.innerHTML = `<span>✓</span> <span>Volumen de ${vol} ml copiado a Tolerancia y Ritmo N.Enteral</span>`;
   document.body.appendChild(feedback);
   
   setTimeout(() => {
@@ -3189,6 +3371,7 @@ window.addEventListener('DOMContentLoaded', () => {
     $('theme-toggle').textContent = '🌙';
   }
   loadFormulasStorage();
+  initTimelines();
   calcEnteral();
   calcParenteral();
   calcTol();
