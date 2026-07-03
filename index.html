@@ -3317,6 +3317,7 @@ function confirmAuxiliarBox() {
   saveAuxSession(box);
   $('role-overlay').classList.remove('open');
   applyAuxiliarRole(box);
+  restoreFormData(box);
 }
 
 function applyAuxiliarRole(box) {
@@ -3339,9 +3340,14 @@ function clearAuxSession() {
   localStorage.removeItem('nutri_session_v1');
 }
 
-const FORM_DATA_KEY = 'nutri_form_data_v1';
+const FORM_DATA_PREFIX = 'nutri_form_data_v1_box_';
 
-function saveFormData() {
+function formDataKey(box) {
+  return FORM_DATA_PREFIX + box;
+}
+
+function saveFormData(box) {
+  if (!box) return;
   try {
     const exp = new Date();
     exp.setDate(exp.getDate() + 1);
@@ -3359,17 +3365,19 @@ function saveFormData() {
       },
       expiry: exp.getTime(),
     };
-    localStorage.setItem(FORM_DATA_KEY, JSON.stringify(data));
+    localStorage.setItem(formDataKey(box), JSON.stringify(data));
   } catch(e) {}
 }
 
-function restoreFormData() {
+function restoreFormData(box) {
+  if (!box) return;
   try {
-    const raw = localStorage.getItem(FORM_DATA_KEY);
+    const key = formDataKey(box);
+    const raw = localStorage.getItem(key);
     if (!raw) return;
     const data = JSON.parse(raw);
     if (!data || data.expiry <= Date.now()) {
-      localStorage.removeItem(FORM_DATA_KEY);
+      localStorage.removeItem(key);
       return;
     }
     if ($('t-vol')  && data.tVol  !== undefined) $('t-vol').value  = data.tVol;
@@ -3389,7 +3397,8 @@ function restoreFormData() {
 }
 
 function salir() {
-  saveFormData();
+  const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
+  saveFormData(currentBox);
   clearAuxSession();
   const roleStep = $('role-step-select');
   const roleBox  = $('role-step-box');
@@ -3551,9 +3560,6 @@ window.addEventListener('DOMContentLoaded', () => {
   updateRenalChip('e');
   updateRenalChip('p');
   lockFormulaManager();
-
-  // Restore saved form data (volumes, pauses) if still within the 8:20 expiry window
-  restoreFormData();
 
   // Always show the role-selection modal on (re-)entry — clear any stale session
   clearAuxSession();

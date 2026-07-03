@@ -199,7 +199,7 @@ index.html
 ### LocalStorage
 - **nutri_enteral_formulas_v1** — array JSON de fórmulas personalizadas; se carga al iniciar y se sincroniza con el gestor
 - **nutri_session_v1** — sesión del rol auxiliar (box asignado); expira a las 08:30 del día siguiente
-- **nutri_form_data_v1** — datos del formulario del turno (volúmenes, pausas, yeyuno/SNY); expira a las 08:20 del día siguiente; se restaura automáticamente al reentrar
+- **nutri_form_data_v1_box_{N}** — datos del formulario del turno para el box N (volúmenes, pausas, yeyuno/SNY); expira a las 08:20 del día siguiente; se restaura automáticamente al introducir el mismo número de box
 
 ---
 
