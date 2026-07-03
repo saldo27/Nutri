@@ -139,6 +139,19 @@
       background: rgba(0,0,0,.08);
     }
 
+    .box-badge {
+      background: rgba(16,185,129,.12);
+      border: 1px solid rgba(16,185,129,.28);
+      color: #34d399;
+      padding: .3rem .85rem;
+      border-radius: 100px;
+      font-size: .72rem; font-weight: 600;
+      display: none; align-items: center; gap: .4rem;
+      white-space: nowrap;
+    }
+    .box-badge strong { color: #fff; font-size: .78rem; }
+    body.light-mode .box-badge strong { color: #065f46; }
+
     /* ===== TABS ===== */
     .tab-nav {
       background: var(--tab-nav-bg);
@@ -869,6 +882,7 @@
     <p>Calculadora de Nutrición Artificial en Paciente Crítico.</p>
   </div>
   <div class="hdr-badge">Sistema activo</div>
+  <span id="box-badge" class="box-badge">📦 Box <strong id="box-badge-num">—</strong></span>
   <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
 </header>
 
@@ -1494,12 +1508,30 @@
         Seleccione su Perfil
       </div>
     </div>
-    <div class="nutric-body" style="text-align:center">
+    <!-- Step 1: choose role -->
+    <div id="role-step-select" class="nutric-body" style="text-align:center">
       <div style="font-size:1.05rem; font-weight:700; margin-bottom:1.5rem; color:var(--text)">
         ¿Es usted Auxiliar de Enfermería o Médico?
       </div>
       <button class="btn-calc-nutric" style="margin-bottom:1rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding:.8rem" onclick="selectRole('auxiliar')">Auxiliar de Enfermería</button>
       <button class="btn-calc-nutric" style="padding:.8rem" onclick="selectRole('medico')">Médico</button>
+    </div>
+    <!-- Step 2: enter box number (auxiliar only) -->
+    <div id="role-step-box" class="nutric-body" style="display:none;text-align:center">
+      <div style="font-size:1.05rem; font-weight:700; margin-bottom:.6rem; color:var(--text)">
+        Auxiliar de Enfermería
+      </div>
+      <div style="font-size:.83rem; color:var(--muted); margin-bottom:1.2rem">
+        Introduzca el número de box del paciente
+      </div>
+      <label for="role-box-input" style="display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:.45rem;text-align:left">Nº de Box</label>
+      <input id="role-box-input" type="text" inputmode="numeric" maxlength="4"
+        style="width:100%;padding:.7rem .9rem;border-radius:9px;border:1px solid var(--border);background:var(--input-bg,rgba(255,255,255,.05));color:var(--text);font-size:1.4rem;font-weight:800;text-align:center;margin-bottom:.55rem;outline:none"
+        placeholder="Ej. 3"
+        onkeydown="if(event.key==='Enter')confirmAuxiliarBox()">
+      <div id="role-box-error" style="display:none;font-size:.78rem;color:#f87171;margin-bottom:.55rem">Por favor, introduzca el número de box.</div>
+      <button class="btn-calc-nutric" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding:.8rem; margin-bottom:.6rem" onclick="confirmAuxiliarBox()">Confirmar</button>
+      <button class="btn-calc-nutric" style="background:rgba(255,255,255,.06);color:var(--muted);padding:.55rem;font-size:.78rem" onclick="backToRoleSelect()">← Volver</button>
     </div>
   </div>
 </div>
@@ -3223,17 +3255,59 @@ function showTab(name) {
 
 /* ── Formula Selection Helpers ── */
 function selectRole(role) {
+  if (role === 'auxiliar') {
+    $('role-step-select').style.display = 'none';
+    $('role-step-box').style.display = 'block';
+    const inp = $('role-box-input');
+    if (inp) { inp.value = ''; inp.focus(); }
+    return;
+  }
   $('role-overlay').classList.remove('open');
   if (role === 'medico') {
     $('tab-tolerancia').style.display = 'none';
     $('tab-ritmo3').style.display = 'none';
     showTab('enteral');
-  } else if (role === 'auxiliar') {
-    $('tab-enteral').style.display = 'none';
-    $('tab-parenteral').style.display = 'none';
-    $('tab-catalogo').style.display = 'none';
-    showTab('tolerancia');
   }
+}
+
+function backToRoleSelect() {
+  $('role-box-error').style.display = 'none';
+  $('role-step-box').style.display = 'none';
+  $('role-step-select').style.display = 'block';
+}
+
+function confirmAuxiliarBox() {
+  const inp = $('role-box-input');
+  const box = (inp ? inp.value : '').trim();
+  if (!box) {
+    $('role-box-error').style.display = 'block';
+    if (inp) inp.focus();
+    return;
+  }
+  $('role-box-error').style.display = 'none';
+  saveAuxSession(box);
+  $('role-overlay').classList.remove('open');
+  applyAuxiliarRole(box);
+}
+
+function applyAuxiliarRole(box) {
+  $('tab-enteral').style.display = 'none';
+  $('tab-parenteral').style.display = 'none';
+  $('tab-catalogo').style.display = 'none';
+  showTab('tolerancia');
+  $('box-badge-num').textContent = box;
+  $('box-badge').style.display = 'flex';
+}
+
+function saveAuxSession(box) {
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate() + 1);
+  expiry.setHours(8, 30, 0, 0);
+  localStorage.setItem('nutri_session_v1', JSON.stringify({ role: 'auxiliar', box, expiry: expiry.getTime() }));
+}
+
+function clearAuxSession() {
+  localStorage.removeItem('nutri_session_v1');
 }
 
 
@@ -3381,6 +3455,22 @@ window.addEventListener('DOMContentLoaded', () => {
   updateRenalChip('e');
   updateRenalChip('p');
   lockFormulaManager();
+
+  // Restore auxiliar session if still valid (expires at 08:30 of the next calendar day)
+  try {
+    const raw = localStorage.getItem('nutri_session_v1');
+    if (raw) {
+      const sess = JSON.parse(raw);
+      if (sess && sess.role === 'auxiliar' && sess.box && sess.expiry > Date.now()) {
+        $('role-overlay').classList.remove('open');
+        applyAuxiliarRole(sess.box);
+      } else {
+        clearAuxSession();
+      }
+    }
+  } catch (e) {
+    clearAuxSession();
+  }
 });
 </script>
 
