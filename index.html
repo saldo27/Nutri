@@ -2642,7 +2642,7 @@ function calcForwardAdjustedPlan(targetVolume, phases, rateCap=70) {
 
   const remainingWeightedHours = new Array(blocks.length + 1).fill(0);
   for (let i = blocks.length - 1; i >= 0; i--) {
-    remainingWeightedHours[i] = remainingWeightedHours[i + 1] + (blocks[i].paused ? 0 : blocks[i].weight * blocks[i].duration);
+    remainingWeightedHours[i] = remainingWeightedHours[i + 1] + (blocks[i].weight * blocks[i].duration);
   }
 
   let remainingVolume = Math.max(0, targetVolume);
