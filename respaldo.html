@@ -810,80 +810,6 @@
       body { background:#fff; color:#000; }
       .card { border:1px solid #ccc; background:#fff; }
     }
-
-    /* ===== TIMELINE PAUSE GRID ===== */
-    .tl-wrap {
-      margin: .6rem 0 .3rem;
-    }
-    .tl-label {
-      font-size: .72rem;
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      margin-bottom: .45rem;
-    }
-    .tl-phase-label {
-      font-size: .7rem;
-      color: var(--dim);
-      margin: .25rem 0 .15rem;
-    }
-    .tl-hours {
-      display: grid;
-      grid-template-columns: repeat(24, 1fr);
-      gap: 2px;
-      width: 100%;
-    }
-    .tl-hour-block {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-    }
-    .tl-hour-label {
-      font-size: .55rem;
-      color: var(--dim);
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .tl-segs {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      width: 100%;
-    }
-    .tl-seg {
-      height: 14px;
-      width: 100%;
-      border-radius: 3px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.1);
-      cursor: pointer;
-      transition: background .15s, transform .1s;
-    }
-    .tl-seg:hover {
-      background: rgba(245,158,11,.3);
-      transform: scaleY(1.1);
-    }
-    .tl-seg.selected {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      border-color: #f59e0b;
-      box-shadow: 0 0 6px rgba(245,158,11,.5);
-    }
-    .tl-seg.phase2 { border-color: rgba(34,211,238,.15); }
-    .tl-seg.phase2.selected {
-      background: linear-gradient(135deg, #22d3ee, #0891b2);
-      border-color: #22d3ee;
-      box-shadow: 0 0 6px rgba(34,211,238,.5);
-    }
-    .tl-summary {
-      margin-top: .4rem;
-      font-size: .72rem;
-      color: var(--muted);
-    }
-    .tl-summary span { color: #f59e0b; font-weight: 700; }
-    .tl-summary span.p2 { color: #22d3ee; }
-
   </style>
 </head>
 <body>
@@ -1233,7 +1159,10 @@
             <label class="fl">Pausas para débito</label>
             <div class="fi-wrap"><input class="fi" type="number" id="t-pause-base1" value="20" min="0" max="720" step="5" oninput="calcTol()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
           </div>
-          <div id="tl-tol" class="tl-wrap"></div>
+          <div class="fg">
+            <label class="fl" for="t-extra1">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-extra1" value="0" min="0" max="720" step="5" oninput="calcTol()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
+          </div>
           <div class="fg" style="margin-bottom:0">
             <label class="fl" for="t-r1">Ritmo (ml/h)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="t-r1" value="20" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
@@ -1245,6 +1174,14 @@
           <div style="display:flex;align-items:center;margin-bottom:.7rem">
             <span class="ph-num">2</span>
             <strong style="font-size:.83rem">Siguientes 12 h — hasta 2.º control de débito</strong>
+          </div>
+          <div class="fg">
+            <label class="fl">Pausas para débito</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-pause-base2" value="20" min="0" max="720" step="5" oninput="calcTol()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
+          </div>
+          <div class="fg">
+            <label class="fl" for="t-extra2">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="t-extra2" value="0" min="0" max="720" step="5" oninput="calcTol()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
           </div>
           <div class="fg" style="margin-bottom:0">
             <label class="fl" for="t-r2">Ritmo (ml/h)</label>
@@ -1298,7 +1235,10 @@
             <label class="fl">Pausas para débito (C/12 horas)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="r2-pause2" value="40" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
           </div>
-          <div id="tl-r2" class="tl-wrap"></div>
+          <div class="fg">
+            <label class="fl" for="r2-extra2">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="r2-extra2" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1345,7 +1285,10 @@
             <label class="fl">Pausas para débito (C/24 horas)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="r3-pause3" value="20" min="0" max="720" step="5" oninput="calcRitmo()" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#34d399">min</span></div>
           </div>
-          <div id="tl-r3" class="tl-wrap"></div>
+          <div class="fg">
+            <label class="fl" for="r3-extra3">Tiempo sin nutrición (traslado, medicación por SNG,..)</label>
+            <div class="fi-wrap"><input class="fi" type="number" id="r3-extra3" value="0" min="0" max="720" step="5" oninput="calcRitmo()"><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#f59e0b">min</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1772,78 +1715,6 @@ const f1 = n => (isNaN(n)||!isFinite(n)) ? '—' : n.toFixed(1);
 const f2 = n => (isNaN(n)||!isFinite(n)) ? '—' : n.toFixed(2);
 const fi = n => (isNaN(n)||!isFinite(n)) ? '—' : Math.round(n).toString();
 const FORMULA_MANAGER_PASSWORD = 'Nutr1';
-
-/* ── Timeline Pause Grid ── */
-// State: map of tlId -> array of 72 booleans (24h * 3 segs/h)
-const TL_STATE = { tol: new Array(72).fill(false), r2: new Array(72).fill(false), r3: new Array(72).fill(false) };
-
-function tlGetMins(tlId, startSeg, endSeg) {
-  // returns total minutes selected in [startSeg, endSeg)
-  const arr = TL_STATE[tlId];
-  if (!arr) return 0;
-  let count = 0;
-  for (let i = startSeg; i < endSeg; i++) { if (arr[i]) count++; }
-  return count * 20;
-}
-
-function tlBuildGrid(containerId, tlId, isYeyuno, isTol) {
-  const el = $(containerId);
-  if (!el) return;
-
-  // Hours start at 08:00. The grid shows 24 hours (08 -> 08 next day)
-  const HOURS_START = 8;
-  const arr = TL_STATE[tlId];
-
-  // Determine phase boundaries (segment indices)
-  // Each hour = 3 segments. Phase1 = first 12h = segs 0-35, Phase2 = segs 36-71
-  const phase2Start = 36; // only relevant for Tolerancia non-SNY
-
-  let labelHtml = `<div class="tl-label">⏱ Tiempo sin nutrición <small style="font-weight:400;text-transform:none;">(clic en bloques de 20 min)</small></div>`;
-
-  // Build hour columns
-  let hoursHtml = '';
-  for (let h = 0; h < 24; h++) {
-    const hourLabel = ((HOURS_START + h) % 24).toString().padStart(2,'0') + 'h';
-    const segBase = h * 3;
-    let segsHtml = '';
-    for (let s = 0; s < 3; s++) {
-      const segIdx = segBase + s;
-      const isP2 = isTol && !isYeyuno && segIdx >= phase2Start;
-      const p2Class = isP2 ? ' phase2' : '';
-      const selClass = arr[segIdx] ? ' selected' : '';
-      segsHtml += `<div class="tl-seg${p2Class}${selClass}" data-tl="${tlId}" data-seg="${segIdx}" onclick="tlToggle('${tlId}',${segIdx},'${containerId}',${isYeyuno},${!!isTol})"></div>`;
-    }
-    hoursHtml += `<div class="tl-hour-block"><div class="tl-hour-label">${hourLabel}</div><div class="tl-segs">${segsHtml}</div></div>`;
-  }
-
-  // Summary line
-  let summaryHtml = '';
-  if (isTol && !isYeyuno) {
-    const p1Mins = tlGetMins(tlId, 0, 36);
-    const p2Mins = tlGetMins(tlId, 36, 72);
-    summaryHtml = `<div class="tl-summary">Fase 1 sin nutrición: <span>${p1Mins} min</span> &nbsp;|&nbsp; Fase 2: <span class="p2">${p2Mins} min</span></div>`;
-  } else {
-    const totalMins = tlGetMins(tlId, 0, 72);
-    summaryHtml = `<div class="tl-summary">Tiempo sin nutrición: <span>${totalMins} min</span></div>`;
-  }
-
-  el.innerHTML = labelHtml + `<div class="tl-hours">${hoursHtml}</div>` + summaryHtml;
-}
-
-function tlToggle(tlId, segIdx, containerId, isYeyuno, isTol) {
-  TL_STATE[tlId][segIdx] = !TL_STATE[tlId][segIdx];
-  tlBuildGrid(containerId, tlId, isYeyuno, isTol);
-  if (isTol) { calcTol(); } else { calcRitmo(); }
-}
-
-function tlInitAll() {
-  const isYeyuno = !!S.yeyunoSNY;
-  tlBuildGrid('tl-tol', 'tol', isYeyuno, true);
-  tlBuildGrid('tl-r2',  'r2',  isYeyuno, false);
-  tlBuildGrid('tl-r3',  'r3',  isYeyuno, false);
-}
-
-
 
 function isFormulaManagerUnlocked() {
   return $('fm-protected')?.style.display !== 'none';
@@ -2642,8 +2513,8 @@ function calcTol() {
     basePause2 = gv('t-pause-base2');
   }
 
-  const extraPause1     = tlGetMins('tol', 0, 36);
-  const extraPause2     = tlGetMins('tol', 36, 72);
+  const extraPause1     = gv('t-extra1');
+  const extraPause2     = gv('t-extra2');
   const totalPause1     = basePause1 + extraPause1;
   const totalPause2     = basePause2 + extraPause2;
   const infusedHours1   = Math.max(0, periodHours - (totalPause1 / 60));
@@ -2775,7 +2646,6 @@ function calcTol() {
       </ul>
     </div>`;
   }
-  tlBuildGrid('tl-tol', 'tol', isYeyuno, true);
 }
 
 function toggleYeyunoSNY(val) {
@@ -2798,7 +2668,6 @@ function toggleYeyunoSNY(val) {
   const r3Base = $('r3-base-wrap');
   if (r3Base) r3Base.style.display = val ? 'none' : 'block';
 
-  tlInitAll();
   calcTol();
   calcRitmo();
 }
@@ -2828,8 +2697,8 @@ function calcRitmo() {
   const basePause2 = isYeyuno ? 0 : 40;
   const basePause3 = isYeyuno ? 0 : 20;
 
-  const extraPause2 = tlGetMins('r2', 0, 72);
-  const extraPause3 = tlGetMins('r3', 0, 72);
+  const extraPause2 = gv('r2-extra2');
+  const extraPause3 = gv('r3-extra3');
   const totalPause2 = basePause2 + extraPause2;
   const totalPause3 = basePause3 + extraPause3;
   const infHours2   = Math.max(0, 24 - (totalPause2 / 60));
@@ -3320,7 +3189,6 @@ window.addEventListener('DOMContentLoaded', () => {
     $('theme-toggle').textContent = '🌙';
   }
   loadFormulasStorage();
-  tlInitAll();
   calcEnteral();
   calcParenteral();
   calcTol();
