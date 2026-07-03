@@ -1213,7 +1213,7 @@
             </div>
           </div>
           <div class="fg" style="margin-bottom:0">
-            <label class="fl" for="t-r1">Ritmo (ml/h)</label>
+            <label class="fl" for="t-r1">Ritmo de inicio (ml/h)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="t-r1" value="20" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
             <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen pendiente tras cada pausa</div>
           </div>
@@ -1236,7 +1236,7 @@
             </div>
           </div>
           <div class="fg" style="margin-bottom:0">
-            <label class="fl" for="t-r2">Ritmo (ml/h)</label>
+            <label class="fl" for="t-r2">Ritmo de inicio (ml/h)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="t-r2" value="30" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
             <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen restante al inicio de la fase</div>
           </div>
@@ -1259,7 +1259,7 @@
             </div>
           </div>
           <div class="fg" style="margin-bottom:0">
-            <label class="fl" for="t-r3">Ritmo (ml/h)</label>
+            <label class="fl" for="t-r3">Ritmo de inicio (ml/h)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="t-r3" value="40" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
             <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen restante al inicio de la fase</div>
           </div>
@@ -2728,6 +2728,16 @@ function renderPauseAdjustments(items, accentColor='#22d3ee') {
   </div>`;
 }
 
+function renderTolPhaseResult(phaseLabel, hours, volume, rate, color) {
+  return `
+    <div style="padding:.75rem;border-radius:11px;background:rgba(255,255,255,.02);margin-bottom:.55rem">
+      <div style="font-size:.72rem;color:var(--muted)">Nuevo ritmo para iniciar ${phaseLabel}</div>
+      <div style="font-size:1.2rem;font-weight:800;color:${color}">${fi(rate)}<span style="font-size:.72rem;font-weight:600"> ml/h</span></div>
+    </div>
+    <div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(hours)} h de infusion)</div>
+    <div style="font-size:1.35rem;font-weight:800;color:${color}">${fi(volume)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
+}
+
 function clearTimeline(key) {
   if (!S.tl || !S.tl[key]) return;
   S.tl[key].fill(false);
@@ -2805,12 +2815,9 @@ function calcTol() {
     $('t-p2r').innerHTML = '';
     $('t-p3r').innerHTML = '';
   } else {
-    $('t-p1r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours1)} h de infusion)</div>
-      <div style="font-size:1.35rem;font-weight:800;color:#60a5fa">${fi(v1)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
-    $('t-p2r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours2)} h de infusion)</div>
-      <div style="font-size:1.35rem;font-weight:800;color:#22d3ee">${fi(v2)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
-    $('t-p3r').innerHTML = `<div style="font-size:.73rem;color:var(--muted)">Vol. administrado (${f1(infusedHours3)} h de infusion)</div>
-      <div style="font-size:1.35rem;font-weight:800;color:#34d399">${fi(v3)}<span style="font-size:.75rem;font-weight:400"> ml</span></div>`;
+    $('t-p1r').innerHTML = renderTolPhaseResult('la Fase 1', infusedHours1, v1, r1, '#60a5fa');
+    $('t-p2r').innerHTML = renderTolPhaseResult('la Fase 2', infusedHours2, v2, r2Real, '#22d3ee');
+    $('t-p3r').innerHTML = renderTolPhaseResult('la Fase 3', infusedHours3, v3, r3Real, '#34d399');
   }
 
   const pc = Math.min(pct, 100);
@@ -2912,7 +2919,7 @@ function toggleYeyunoSNY(val) {
   const tPh1Num = document.querySelector('#panel-tolerancia .phase.ph1 .ph-num');
   if (tPh1Num) tPh1Num.style.display = val ? 'none' : 'inline-flex';
   const tR1Label = document.querySelector('label[for="t-r1"]');
-  if (tR1Label) tR1Label.textContent = val ? 'Ritmo Único (ml/h)' : 'Ritmo (ml/h)';
+  if (tR1Label) tR1Label.textContent = val ? 'Ritmo Único (ml/h)' : 'Ritmo de inicio (ml/h)';
   const tR1Info = document.querySelector('#panel-tolerancia .phase.ph1 .fg:last-of-type div:last-child');
   if (tR1Info) tR1Info.textContent = val ? 'Automático según volumen objetivo y tiempo efectivo' : 'Automático según volumen pendiente tras cada pausa';
   
