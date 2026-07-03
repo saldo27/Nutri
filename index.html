@@ -114,6 +114,32 @@
     }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
 
+    .salir-btn {
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.35);
+      color: #f87171;
+      cursor: pointer;
+      padding: .3rem .85rem;
+      border-radius: 100px;
+      font-size: .72rem; font-weight: 600;
+      display: flex; align-items: center; gap: .35rem;
+      white-space: nowrap;
+      margin-left: auto;
+      transition: background .2s, transform .15s;
+      outline: none;
+    }
+    .salir-btn:hover {
+      background: rgba(239,68,68,.22);
+      transform: scale(1.04);
+    }
+    body.light-mode .salir-btn {
+      background: rgba(239,68,68,.08);
+      color: #dc2626;
+    }
+    body.light-mode .salir-btn:hover {
+      background: rgba(239,68,68,.16);
+    }
+
     .theme-btn {
       background: rgba(255,255,255,.05);
       border: 1px solid var(--border);
@@ -881,7 +907,10 @@
     <h1>CalcNutrición UCI</h1>
     <p>Calculadora de Nutrición Artificial en Paciente Crítico.</p>
   </div>
-  <div class="hdr-badge">Sistema activo</div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:.6rem">
+    <button class="salir-btn" onclick="salir()" aria-label="Salir">🚪 Salir</button>
+    <div class="hdr-badge" style="margin-left:0">Sistema activo</div>
+  </div>
   <span id="box-badge" class="box-badge">📦 Box <strong id="box-badge-num">—</strong></span>
   <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
 </header>
@@ -3310,6 +3339,73 @@ function clearAuxSession() {
   localStorage.removeItem('nutri_session_v1');
 }
 
+const FORM_DATA_KEY = 'nutri_form_data_v1';
+
+function saveFormData() {
+  try {
+    const exp = new Date();
+    exp.setDate(exp.getDate() + 1);
+    exp.setHours(8, 20, 0, 0);
+    const data = {
+      tVol:      $('t-vol')  ? $('t-vol').value  : '',
+      r3Vol:     $('r3-vol') ? $('r3-vol').value : '',
+      yeyunoSNY: S.yeyunoSNY,
+      tl: {
+        tol1: Array.from(S.tl.tol1),
+        tol2: Array.from(S.tl.tol2),
+        tol3: Array.from(S.tl.tol3),
+        r3a:  Array.from(S.tl.r3a),
+        r3b:  Array.from(S.tl.r3b),
+      },
+      expiry: exp.getTime(),
+    };
+    localStorage.setItem(FORM_DATA_KEY, JSON.stringify(data));
+  } catch(e) {}
+}
+
+function restoreFormData() {
+  try {
+    const raw = localStorage.getItem(FORM_DATA_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data || data.expiry <= Date.now()) {
+      localStorage.removeItem(FORM_DATA_KEY);
+      return;
+    }
+    if ($('t-vol')  && data.tVol  !== undefined) $('t-vol').value  = data.tVol;
+    if ($('r3-vol') && data.r3Vol !== undefined) $('r3-vol').value = data.r3Vol;
+    if (typeof data.yeyunoSNY === 'boolean') toggleYeyunoSNY(data.yeyunoSNY);
+    if (data.tl) {
+      ['tol1','tol2','tol3','r3a','r3b'].forEach(key => {
+        if (Array.isArray(data.tl[key]) && S.tl[key]) {
+          data.tl[key].forEach((v, i) => { if (i < S.tl[key].length) S.tl[key][i] = !!v; });
+        }
+      });
+    }
+    initTimelines();
+    calcTol();
+    calcRitmo();
+  } catch(e) {}
+}
+
+function salir() {
+  saveFormData();
+  clearAuxSession();
+  const roleStep = $('role-step-select');
+  const roleBox  = $('role-step-box');
+  if (roleStep) roleStep.style.display = 'block';
+  if (roleBox)  roleBox.style.display  = 'none';
+  $('role-box-error').style.display = 'none';
+  // Reset tab visibility to default (all tabs visible)
+  ['tab-enteral','tab-parenteral','tab-tolerancia','tab-ritmo3','tab-catalogo'].forEach(id => {
+    const el = $(id); if (el) el.style.display = '';
+  });
+  // Hide box badge
+  const boxBadge = $('box-badge');
+  if (boxBadge) boxBadge.style.display = 'none';
+  $('role-overlay').classList.add('open');
+}
+
 
 function selectFormula(idx) {
   const r = calcNutr('e');
@@ -3456,21 +3552,11 @@ window.addEventListener('DOMContentLoaded', () => {
   updateRenalChip('p');
   lockFormulaManager();
 
-  // Restore auxiliar session if still valid (expires at 08:30 of the next calendar day)
-  try {
-    const raw = localStorage.getItem('nutri_session_v1');
-    if (raw) {
-      const sess = JSON.parse(raw);
-      if (sess && sess.role === 'auxiliar' && sess.box && sess.expiry > Date.now()) {
-        $('role-overlay').classList.remove('open');
-        applyAuxiliarRole(sess.box);
-      } else {
-        clearAuxSession();
-      }
-    }
-  } catch (e) {
-    clearAuxSession();
-  }
+  // Restore saved form data (volumes, pauses) if still within the 8:20 expiry window
+  restoreFormData();
+
+  // Always show the role-selection modal on (re-)entry — clear any stale session
+  clearAuxSession();
 });
 </script>
 
