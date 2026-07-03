@@ -11,7 +11,7 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 
 - **Nutrición Enteral (NE)** — entubación gástrica, yeyunal o SNY
 - **Nutrición Parenteral (NPT)** — soporte nutricional intravenoso
-- **Pauta de Tolerancia** — protocolo de inicio progresivo (primeras 24 h)
+- **Pauta de Tolerancia** — protocolo de inicio progresivo con control de débito cada 8 h
 - **Ritmo de Mantenimiento** — ajuste post-tolerancia
 - **Catálogo de Fórmulas** — base editable de dietas enterales disponibles
 - **NUTRIC Score** — evaluación del riesgo nutricional
@@ -45,15 +45,16 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 - Bloque visual de composición 24 h
 
 ### 3. **Pauta de Tolerancia (24 h)**
-- Dos fases de 12 h con ritmos independientes (ml/h)
+- Tres fases de 8 h con ritmos de inicio automáticos en cada control de débito
 - Cálculo de volumen total administrado en 24 h
-- Reajuste anterógrado del ritmo tras cada pausa, según el volumen ya administrado
+- Reajuste anterógrado del ritmo tras cada pausa, según el volumen pendiente al inicio de cada fase
 - Barra de progreso del objetivo
 - Alertas clínicas:
   - <50%: déficit crítico
   - 50–100%: déficit parcial (se completa en ritmo)
   - ≥100%: objetivo cubierto
 - Botón para aplicar automáticamente volumen desde prescripción enteral
+- Modo yeyunal/SNY con ritmo único continuo en turnos de 12 h
 
 ### 4. **Ritmo de Mantenimiento**
 - Cálculo del ritmo de continuación post-tolerancia
@@ -121,10 +122,10 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 
 ### Pauta de Tolerancia (primeras 24 h)
 
-1. Ingresar ritmo fase 1 (ml/h × 12 h)
-2. Ingresar ritmo fase 2 (ml/h × 12 h)
-3. Ver resultado: volumen total, % cobertura, alertas
-4. Si hay pausas, revisar el ritmo de reinicio calculado con el volumen pendiente
+1. Definir el volumen objetivo total (ml/24 h)
+2. Revisar los 3 bloques de 8 h (08:00–16:00, 16:00–00:00 y 00:00–08:00)
+3. Registrar pausas o tiempo sin nutrición en cada fase
+4. Ver resultado: volumen total, % cobertura, alertas y ritmo calculado en cada control
 
 ### Ritmo de Mantenimiento (post-tolerancia)
 
@@ -229,7 +230,7 @@ index.html
 |---------|-------------|
 | 🧪 N. Enteral | Cálculo de dieta enteral + fórmulas |
 | 💉 N. Parenteral | Composición NPT + macronutrientes |
-| 📋 Pauta Tolerancia | Protocolo 24 h (primeras 24 h) |
+| 📋 Pauta Tolerancia | Protocolo 24 h con control de débito cada 8 h |
 | ⏱ Ritmo N. Enteral | Ritmo mantenimiento post-tolerancia |
 | 📚 Catálogo Fórmulas | Gestión + catálogo farmacia |
 
