@@ -1215,7 +1215,7 @@
           <div class="fg" style="margin-bottom:0">
             <label class="fl" for="t-r1">Ritmo (ml/h)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="t-r1" value="20" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
-            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen objetivo y pausas</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen pendiente tras cada pausa</div>
           </div>
           <div id="t-p1r" style="padding-top:.9rem"></div>
         </div>
@@ -1238,7 +1238,7 @@
           <div class="fg" style="margin-bottom:0">
             <label class="fl" for="t-r2">Ritmo (ml/h)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="t-r2" value="30" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
-            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático: 1.5x ritmo de la Fase 1</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen restante al inicio de la fase</div>
           </div>
           <div id="t-p2r" style="padding-top:.9rem"></div>
         </div>
@@ -1261,7 +1261,7 @@
           <div class="fg" style="margin-bottom:0">
             <label class="fl" for="t-r3">Ritmo (ml/h)</label>
             <div class="fi-wrap"><input class="fi" type="number" id="t-r3" value="40" min="5" max="200" step="5" readonly><span class="fi-unit" style="font-size:.85rem;font-weight:700;color:#a78bfa">ml/h</span></div>
-            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático: 2x ritmo de la Fase 1</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:.45rem">Automático según volumen restante al inicio de la fase</div>
           </div>
           <div id="t-p3r" style="padding-top:.9rem"></div>
         </div>
@@ -1766,6 +1766,7 @@ const f1 = n => (isNaN(n)||!isFinite(n)) ? '—' : n.toFixed(1);
 const f2 = n => (isNaN(n)||!isFinite(n)) ? '—' : n.toFixed(2);
 const fi = n => (isNaN(n)||!isFinite(n)) ? '—' : Math.round(n).toString();
 const FORMULA_MANAGER_PASSWORD = 'Nutr1';
+const TL_BLOCK_HOURS = 20 / 60;
 
 function isFormulaManagerUnlocked() {
   return $('fm-protected')?.style.display !== 'none';
@@ -2615,6 +2616,118 @@ function updateTlSummary(key, numHours) {
   if (effEl) effEl.textContent = mins > 0 ? ('→ ' + effH.toFixed(1) + ' h infusión') : '';
 }
 
+function getPauseContextLabel(key) {
+  if (key === 'tol1') return 'Fase 1';
+  if (key === 'tol2') return 'Fase 2';
+  if (key === 'tol3') return 'Fase 3';
+  if (key === 'r3a') return 'Turno día';
+  if (key === 'r3b') return 'Turno noche';
+  return key;
+}
+
+function calcForwardAdjustedPlan(targetVolume, phases, rateCap=70) {
+  const blocks = [];
+  phases.forEach(phase => {
+    const tlState = (S.tl && S.tl[phase.key]) || [];
+    tlState.forEach(paused => {
+      blocks.push({
+        key: phase.key,
+        label: phase.label || getPauseContextLabel(phase.key),
+        weight: phase.weight || 1,
+        paused: !!paused,
+        duration: TL_BLOCK_HOURS
+      });
+    });
+  });
+
+  const remainingWeightedHours = new Array(blocks.length + 1).fill(0);
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    remainingWeightedHours[i] = remainingWeightedHours[i + 1] + (blocks[i].weight * blocks[i].duration);
+  }
+
+  let remainingVolume = Math.max(0, targetVolume);
+  let totalInfused = 0;
+  let capped = false;
+  let lastWasPause = false;
+  let pauseMinutes = 0;
+  let pauseVolumeBefore = 0;
+  let currentBaseRate = remainingWeightedHours[0] > 0 ? remainingVolume / remainingWeightedHours[0] : 0;
+
+  const phaseTotals = {};
+  const phaseHours = {};
+  const phaseStartRates = {};
+  const pauseAdjustments = [];
+
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i];
+    if (block.paused) {
+      if (!lastWasPause) pauseVolumeBefore = totalInfused;
+      pauseMinutes += 20;
+      lastWasPause = true;
+      continue;
+    }
+
+    if (lastWasPause) {
+      const weightedHours = remainingWeightedHours[i];
+      currentBaseRate = weightedHours > 0 ? remainingVolume / weightedHours : 0;
+    }
+
+    const rawRate = currentBaseRate * block.weight;
+    const actualRate = Math.min(rawRate, rateCap);
+    const infused = Math.min(remainingVolume, actualRate * block.duration);
+
+    if (actualRate + 1e-9 < rawRate) capped = true;
+    if (phaseStartRates[block.key] == null) phaseStartRates[block.key] = actualRate;
+    if (lastWasPause) {
+      pauseAdjustments.push({
+        label: block.label,
+        minutes: pauseMinutes,
+        infusedBeforePause: pauseVolumeBefore,
+        remainingVolume,
+        resumedRate: actualRate
+      });
+      lastWasPause = false;
+      pauseMinutes = 0;
+    }
+
+    phaseTotals[block.key] = (phaseTotals[block.key] || 0) + infused;
+    phaseHours[block.key] = (phaseHours[block.key] || 0) + block.duration;
+    totalInfused += infused;
+    remainingVolume = Math.max(0, remainingVolume - infused);
+  }
+
+  return {
+    totalInfused,
+    remainingVolume,
+    capped,
+    pauseAdjustments,
+    phaseTotals,
+    phaseHours,
+    phaseStartRates,
+    initialRate: Object.values(phaseStartRates)[0] || 0,
+    finalRate: pauseAdjustments.length ? pauseAdjustments[pauseAdjustments.length - 1].resumedRate : (Object.values(phaseStartRates).slice(-1)[0] || 0),
+    totalPauseMinutes: blocks.filter(block => block.paused).length * 20,
+    effectiveHours: blocks.filter(block => !block.paused).length * TL_BLOCK_HOURS
+  };
+}
+
+function renderPauseAdjustments(items, accentColor='#22d3ee') {
+  if (!items.length) {
+    return `<div style="margin-top:.9rem;padding:.85rem;border-radius:11px;background:rgba(255,255,255,.02);font-size:.78rem;color:var(--muted)">Sin pausas marcadas. No hace falta reajustar el ritmo.</div>`;
+  }
+
+  return `<div style="margin-top:.9rem;padding:.9rem;border-radius:11px;background:rgba(255,255,255,.02)">
+    <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.055em;margin-bottom:.65rem">Ajustes anterógrados tras pausas</div>
+    ${items.map((item, idx) => `
+      <div class="ri"${idx ? ' style="border-top:1px solid var(--border);margin-top:.35rem;padding-top:.55rem"' : ''}>
+        <span class="rl">${item.label} · pausa ${idx + 1} (${fi(item.minutes)} min)</span>
+        <span class="rv">${fi(item.infusedBeforePause)} ml → <span style="color:${accentColor}">${fi(item.resumedRate)}<span class="ru">ml/h</span></span></span>
+      </div>
+      <div style="font-size:.72rem;color:var(--dim);padding:.15rem .6rem 0">Volumen administrado antes de la pausa y ritmo necesario al reiniciar para completar el objetivo.</div>
+    `).join('')}
+  </div>`;
+}
+
 function clearTimeline(key) {
   if (!S.tl || !S.tl[key]) return;
   S.tl[key].fill(false);
@@ -2661,21 +2774,24 @@ function calcTol() {
     v2 = 0;
     v3 = 0;
   } else {
-    // 3 fases: Fase 1 = 1x, Fase 2 = 1.5x, Fase 3 = 2x
-    const denom = infusedHours1 + (1.5 * infusedHours2) + (2 * infusedHours3);
-    reqR1 = vol > 0 && denom > 0 ? vol / denom : 0;
+    const plan = calcForwardAdjustedPlan(vol, [
+      { key:'tol1', weight:1, label:'Fase 1' },
+      { key:'tol2', weight:1.5, label:'Fase 2' },
+      { key:'tol3', weight:2, label:'Fase 3' }
+    ]);
+    reqR1 = plan.phaseStartRates.tol1 || 0;
     r1 = Math.round(reqR1);
-    if (r1 > 70) { r1 = 70; capped = true; }
-    r2Real = Math.round(reqR1 * 1.5);
-    if (r2Real > 70) { r2Real = 70; capped = true; }
-    r3Real = Math.round(reqR1 * 2);
-    if (r3Real > 70) { r3Real = 70; capped = true; }
-    v1 = r1 * infusedHours1;
-    v2 = r2Real * infusedHours2;
-    v3 = r3Real * infusedHours3;
+    r2Real = Math.round(plan.phaseStartRates.tol2 || 0);
+    r3Real = Math.round(plan.phaseStartRates.tol3 || 0);
+    v1 = plan.phaseTotals.tol1 || 0;
+    v2 = plan.phaseTotals.tol2 || 0;
+    v3 = plan.phaseTotals.tol3 || 0;
+    tot = plan.totalInfused;
+    capped = plan.capped;
+    var tolPauseAdjustments = plan.pauseAdjustments;
   }
-  
-  tot  = v1 + v2 + v3;
+
+  if (isYeyuno) tot  = v1 + v2 + v3;
   pct  = vol > 0 ? (tot / vol) * 100 : 0;
   over = pct > 100;
 
@@ -2751,11 +2867,9 @@ function calcTol() {
       <div class="ri"><span class="rl">Tiempo sin nutrición Fase 2</span><span class="rv">${fi(totalPause2)} min</span></div>
       <div class="ri"><span class="rl">Tiempo sin nutrición Fase 3</span><span class="rv">${fi(totalPause3)} min</span></div>
       <div class="ri"><span class="rl">Tiempo sin nutrición total 24 h</span><span class="rv">${fi(totalPause1 + totalPause2 + totalPause3)} min</span></div>
-      <div class="ri"><span class="rl">Ritmo Fase 2</span><span class="rv">1.5x Fase 1</span></div>
-      <div class="ri"><span class="rl">Ritmo Fase 3</span><span class="rv">2x Fase 1</span></div>
-      <div class="ri"><span class="rl">Ritmo calculado Fase 1</span><span class="rv">${fi(reqR1)}<span class="ru">ml/h</span></span></div>
-      <div class="ri"><span class="rl">Ritmo calculado Fase 2</span><span class="rv">${fi(r2Real)}<span class="ru">ml/h</span></span></div>
-      <div class="ri"><span class="rl">Ritmo calculado Fase 3</span><span class="rv">${fi(r3Real)}<span class="ru">ml/h</span></span></div>
+      <div class="ri"><span class="rl">Ritmo al inicio de Fase 1</span><span class="rv">${fi(reqR1)}<span class="ru">ml/h</span></span></div>
+      <div class="ri"><span class="rl">Ritmo al inicio de Fase 2</span><span class="rv">${fi(r2Real)}<span class="ru">ml/h</span></span></div>
+      <div class="ri"><span class="rl">Ritmo al inicio de Fase 3</span><span class="rv">${fi(r3Real)}<span class="ru">ml/h</span></span></div>
     </div>
     <div style="padding:.9rem;background:rgba(255,255,255,.02);border-radius:11px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.45rem">
@@ -2765,6 +2879,7 @@ function calcTol() {
       <div class="pbar"><div class="pfill ${over?'over':''}" style="width:${pc}%"></div></div>
       <div style="font-size:.72rem;color:var(--dim);margin-top:.45rem">Objetivo: ${fi(vol)} ml &nbsp;|&nbsp; Administrado: ${fi(tot)} ml &nbsp;|&nbsp; Diferencia: ${fi(tot-vol)} ml</div>
     </div>
+    ${renderPauseAdjustments(tolPauseAdjustments || [], '#34d399')}
     ${capped ? `<div style="margin-top:1.2rem; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5); border: 1px solid rgba(255, 255, 255, 0.3); text-align: center; animation: pulse 2s infinite;">
       <div style="font-size: 1.15rem; font-weight: 900; letter-spacing: 0.05em; margin-bottom: .4rem; text-transform: uppercase;">🚨 Ritmo limitado a 70 ml/h</div>
       <div style="font-size: .95rem; font-weight: 600;">El ritmo calculado era mayor. Avisad a Médico para ajustar tratamiento.</div>
@@ -2799,7 +2914,7 @@ function toggleYeyunoSNY(val) {
   const tR1Label = document.querySelector('label[for="t-r1"]');
   if (tR1Label) tR1Label.textContent = val ? 'Ritmo Único (ml/h)' : 'Ritmo (ml/h)';
   const tR1Info = document.querySelector('#panel-tolerancia .phase.ph1 .fg:last-of-type div:last-child');
-  if (tR1Info) tR1Info.textContent = val ? 'Automático según volumen objetivo y tiempo efectivo' : 'Automático según volumen objetivo y pausas';
+  if (tR1Info) tR1Info.textContent = val ? 'Automático según volumen objetivo y tiempo efectivo' : 'Automático según volumen pendiente tras cada pausa';
   
   // Update timeline label for tolerancia phase 1 when yeyuno
   const tlLbl1 = document.querySelector('#tl-wrap-tol1 .tl-label');
@@ -2822,14 +2937,15 @@ function calcRitmo() {
   const totalPauseB = getTlMinutes('r3b');
   const infHoursA   = Math.max(0, 12 - (totalPauseA / 60));
   const infHoursB   = Math.max(0, 12 - (totalPauseB / 60));
-  const infHoursTotal = infHoursA + infHoursB;
+  const plan = calcForwardAdjustedPlan(vol, [
+    { key:'r3a', weight:1, label:'Turno día' },
+    { key:'r3b', weight:1, label:'Turno noche' }
+  ]);
 
-  let volDay3     = vol;
-  let rateDay3    = infHoursTotal > 0 ? Math.round(volDay3 / infHoursTotal) : 0;
-
-  let capped3 = false;
-  
-  if (rateDay3 > 70) { rateDay3 = 70; capped3 = true; volDay3 = rateDay3 * infHoursTotal; }
+  let volDay3     = plan.totalInfused;
+  let rateDay3    = Math.round(plan.finalRate || plan.initialRate || 0);
+  let startRateDay3 = Math.round(plan.initialRate || 0);
+  let capped3 = plan.capped;
 
   if (isYeyuno) {
     $('r3-res').innerHTML = `
@@ -2839,12 +2955,14 @@ function calcRitmo() {
       </div>
       <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
         <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
+        <div class="ri"><span class="rl">Ritmo inicial del día</span><span class="rv">${fi(startRateDay3)}<span class="ru">ml/h</span></span></div>
         <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
-          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo N.Enteral a partir 2º día</span>
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo tras la última pausa</span>
           <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${fi(rateDay3)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</span></span>
         </div>
         <div class="ri" style="padding:.7rem .6rem"><span class="rl">Pausas ajustadas (traslados, medicación)</span><span class="rv">${fi(totalPauseA + totalPauseB)} min</span></div>
       </div>
+      ${renderPauseAdjustments(plan.pauseAdjustments, '#22d3ee')}
       <div style="margin-top:1.2rem; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); font-size: .95rem; font-weight: 500; line-height: 1.6;">
         <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; font-size: 1.05rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;">
           <span>⚠️</span> <span>Protocolo Yeyunal</span>
@@ -2869,13 +2987,15 @@ function calcRitmo() {
       <div style="background:rgba(255,255,255,.02);border-radius:11px;padding:.9rem">
         <div class="ri"><span class="rl">Volumen objetivo 24 h</span><span class="rv">${fi(vol)}<span class="ru">ml</span></span></div>
         <div class="ri"><span class="rl">Volumen total a partir 2º día</span><span class="rv">${fi(volDay3)}<span class="ru">ml</span></span></div>
+        <div class="ri"><span class="rl">Ritmo inicial del día</span><span class="rv">${fi(startRateDay3)}<span class="ru">ml/h</span></span></div>
         <div class="ri" style="border-top:1px solid var(--border);padding:.8rem .6rem;margin-top:.4rem">
-          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo N.Enteral a partir 2º día</span>
+          <span class="rl" style="font-weight:700;color:var(--text);font-size:.82rem">🧊 Ritmo tras la última pausa</span>
           <span class="rv" style="font-size:1.1rem;font-weight:700;color:#22d3ee">${fi(rateDay3)}<span class="ru" style="font-size:.85rem;font-weight:600;color:#22d3ee">ml/h</span></span>
         </div>
         <div class="ri" style="padding:.7rem .6rem"><span class="rl">Tiempo sin nutrición turno día</span><span class="rv">${fi(totalPauseA)} min</span></div>
         <div class="ri" style="padding:.4rem .6rem"><span class="rl">Tiempo sin nutrición turno noche</span><span class="rv">${fi(totalPauseB)} min</span></div>
       </div>
+      ${renderPauseAdjustments(plan.pauseAdjustments, '#22d3ee')}
       ${capped3 ? `<div style="margin-top:1.2rem; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: #fff; padding: 1.1rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5); border: 1px solid rgba(255, 255, 255, 0.3); text-align: center; animation: pulse 2s infinite;">
         <div style="font-size: 1.15rem; font-weight: 900; letter-spacing: 0.05em; margin-bottom: .4rem; text-transform: uppercase;">🚨 Ritmo limitado a 70 ml/h</div>
         <div style="font-size: .95rem; font-weight: 600;">El ritmo calculado era mayor. Avisad a Médico para ajustar tratamiento.</div>

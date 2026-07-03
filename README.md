@@ -47,6 +47,7 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 ### 3. **Pauta de Tolerancia (24 h)**
 - Dos fases de 12 h con ritmos independientes (ml/h)
 - Cálculo de volumen total administrado en 24 h
+- Reajuste anterógrado del ritmo tras cada pausa, según el volumen ya administrado
 - Barra de progreso del objetivo
 - Alertas clínicas:
   - <50%: déficit crítico
@@ -56,6 +57,7 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 
 ### 4. **Ritmo de Mantenimiento**
 - Cálculo del ritmo de continuación post-tolerancia
+- Reajuste del ritmo tras pausas considerando el volumen administrado antes de cada reinicio
 - Contador de volumen restante
 - Modalidad de control: c/12 h o c/24 h (para débito gástrico)
 - Recomendaciones según frecuencia
@@ -113,13 +115,14 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 1. Ingresar ritmo fase 1 (ml/h × 12 h)
 2. Ingresar ritmo fase 2 (ml/h × 12 h)
 3. Ver resultado: volumen total, % cobertura, alertas
+4. Si hay pausas, revisar el ritmo de reinicio calculado con el volumen pendiente
 
 ### Ritmo de Mantenimiento (post-tolerancia)
 
 1. Confirmar volumen objetivo 24h
-2. Ingresar volumen ya administrado en tolerancia
-3. Elegir modalidad control (c/12 h o c/24 h)
-4. Se calcula ritmo de continuidad
+2. Marcar pausas previstas o realizadas en cada turno
+3. Revisar el ritmo inicial y el ritmo de reinicio tras cada pausa
+4. El sistema recalcula el ritmo con el volumen pendiente
 
 ---
 
