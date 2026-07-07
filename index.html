@@ -3387,6 +3387,22 @@ function saveAuxSession(box) {
   localStorage.setItem('nutri_session_v1', JSON.stringify({ role: 'auxiliar', box, expiry: expiry.getTime() }));
 }
 
+function loadAuxSession() {
+  try {
+    const raw = localStorage.getItem('nutri_session_v1');
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || data.role !== 'auxiliar' || !data.box || data.expiry <= Date.now()) {
+      localStorage.removeItem('nutri_session_v1');
+      return null;
+    }
+    return data;
+  } catch(e) {
+    localStorage.removeItem('nutri_session_v1');
+    return null;
+  }
+}
+
 function clearAuxSession() {
   localStorage.removeItem('nutri_session_v1');
 }
@@ -3465,6 +3481,11 @@ function restoreFormData(box) {
     calcTol();
     calcRitmo();
   } catch(e) {}
+}
+
+function persistCurrentAuxFormData() {
+  const session = loadAuxSession();
+  if (session && session.box) saveFormData(session.box);
 }
 
 function salir() {
@@ -3632,9 +3653,16 @@ window.addEventListener('DOMContentLoaded', () => {
   updateRenalChip('p');
   lockFormulaManager();
 
-  // Always show the role-selection modal on (re-)entry — clear any stale session
-  clearAuxSession();
+  const savedAuxSession = loadAuxSession();
+  if (savedAuxSession) {
+    $('role-overlay').classList.remove('open');
+    applyAuxiliarRole(savedAuxSession.box);
+    restoreFormData(savedAuxSession.box);
+  }
 });
+
+window.addEventListener('beforeunload', persistCurrentAuxFormData);
+window.addEventListener('pagehide', persistCurrentAuxFormData);
 </script>
 
 <footer class="app-footer">Creado por luisherrerapara@gmail.com para UCI-H.Santa Lucía, con la colaboración del Servicio de Farmacia del H.Santa Lucía (Cartagena). Todos los derechos reservados.</footer>
