@@ -3,8 +3,8 @@ const path = require('path');
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1280,
-    height: 900,
+    width: 1920,
+    height: 1080,
     minWidth: 800,
     minHeight: 600,
     icon: path.join(__dirname, 'Icono nutri.ico'),
