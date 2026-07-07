@@ -3641,6 +3641,8 @@ function selectRole(role) {
     $('role-step-box').style.display = 'block';
     const inp = $('role-box-input');
     if (inp) { inp.value = ''; inp.focus(); }
+    const fileInput = $('aux-import-input');
+    if (fileInput) fileInput.click();
     return;
   }
   $('role-overlay').classList.remove('open');
