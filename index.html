@@ -3635,12 +3635,14 @@ function showTab(name) {
 }
 
 /* ── Formula Selection Helpers ── */
-function selectRole(role) {
+async function selectRole(role) {
   if (role === 'auxiliar') {
     $('role-step-select').style.display = 'none';
     $('role-step-box').style.display = 'block';
     const inp = $('role-box-input');
     if (inp) { inp.value = ''; inp.focus(); }
+    const imported = await importLatestAuxSession();
+    if (imported) return;
     const fileInput = $('aux-import-input');
     if (fileInput) fileInput.click();
     return;
@@ -3711,9 +3713,39 @@ async function clearAuxSession() {
 }
 
 const FORM_DATA_PREFIX = 'nutri_form_data_v1_box_';
+const AUX_LATEST_IMPORT_KEY = 'nutri_aux_latest_import_v1';
 
 function formDataKey(box) {
   return FORM_DATA_PREFIX + box;
+}
+
+async function saveLatestAuxImport(data) {
+  if (!data || data.version !== 1 || !data.box) return;
+  try {
+    await storageSetItem(AUX_LATEST_IMPORT_KEY, JSON.stringify({
+      savedAt: Date.now(),
+      data
+    }));
+  } catch(e) {}
+}
+
+async function loadLatestAuxImport() {
+  try {
+    const raw = await storageGetItem(AUX_LATEST_IMPORT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.data || parsed.data.version !== 1 || !parsed.data.box) return null;
+    return parsed.data;
+  } catch(e) {
+    return null;
+  }
+}
+
+async function importLatestAuxSession() {
+  const latest = await loadLatestAuxImport();
+  if (!latest) return false;
+  const ok = await importAuxSession(latest, { silentError: true });
+  return !!ok;
 }
 
 function nextAuxiliaryExpiry() {
@@ -3816,25 +3848,30 @@ async function exportAuxSession(box) {
   } catch(e) {}
 }
 
-async function importAuxSession(data) {
+async function importAuxSession(data, options = {}) {
   const errEl = $('aux-import-error');
+  const silentError = !!options.silentError;
   try {
     if (!data || data.version !== 1 || !data.box) throw new Error('invalid');
     const { version, box, ...rest } = data;
     if (rest.expiry && rest.expiry <= Date.now()) {
       rest.expiry = nextAuxiliaryExpiry().getTime();
     }
+    const normalized = { version: 1, box, ...rest };
     await storageSetItem(formDataKey(box), JSON.stringify(rest));
+    await saveLatestAuxImport(normalized);
     await saveAuxSession(box);
     $('role-overlay').classList.remove('open');
     if (errEl) errEl.style.display = 'none';
     applyAuxiliarRole(box);
     await restoreFormData(box);
+    return true;
   } catch(e) {
-    if (errEl) {
+    if (!silentError && errEl) {
       errEl.textContent = 'Archivo no válido. Compruebe que es un fichero de sesión Nutri.';
       errEl.style.display = 'block';
     }
+    return false;
   }
 }
 
