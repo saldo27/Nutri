@@ -1,0 +1,35 @@
+{
+  "name": "nutri",
+  "version": "1.0.0",
+  "description": "Calculadora de Nutrición Enteral y Parenteral",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.nutri.app",
+    "productName": "Nutri",
+    "files": [
+      "main.js",
+      "index.html",
+      "Icono nutri.ico"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "Icono nutri.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "Icono nutri.ico",
+      "uninstallerIcon": "Icono nutri.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^43.1.0",
+    "electron-builder": "^26.15.3"
+  }
+}

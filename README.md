@@ -279,6 +279,52 @@ Al cargar la página:
 
 ---
 
+## 🖥️ App de Escritorio (Electron)
+
+La app puede ejecutarse como **aplicación de escritorio Windows** usando Electron, lo que permite el guardado automático del JSON al pulsar "Salir" sin restricciones de `file://`.
+
+### Requisitos
+
+- [Node.js](https://nodejs.org/) v18 o superior (incluye npm)
+
+### Instalación de dependencias
+
+```bash
+npm install
+```
+
+### Ejecutar en modo desarrollo
+
+```bash
+npm start
+```
+
+Esto abre directamente `index.html` como una aplicación de escritorio.
+
+### Generar instalador `.exe` para Windows
+
+```bash
+npm run dist
+```
+
+El instalador se genera en la carpeta `dist/`. Busca un archivo `Nutri Setup X.X.X.exe`.
+
+El instalador:
+- Permite elegir la carpeta de instalación
+- Crea acceso directo en el escritorio y menú inicio
+- Incluye desinstalador
+
+### Ventajas frente a abrir `index.html` en el navegador
+
+| Función | Navegador (`file://`) | Electron |
+|---|---|---|
+| Guardar/sobrescribir JSON automáticamente | ❌ Bloqueado | ✅ Funciona |
+| `localStorage` + `IndexedDB` | ✅ | ✅ |
+| Vincular archivo compartido (`index.html`) | ✅ (solo en `http://`) | ✅ |
+| Sin necesidad de servidor local | ❌ | ✅ |
+
+---
+
 ## 📄 Licencia
 
 Uso exclusivo clínico — Hospital Santa Lucía.
