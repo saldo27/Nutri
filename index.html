@@ -2130,7 +2130,7 @@ async function syncToHtmlFile({ showPicker = false } = {}) {
   try {
     const file = await handle.getFile();
     let html = await file.text();
-    // Escape </script> inside JSON to avoid premature tag close when browser parses the HTML
+    // Escape <\/script> sequences inside JSON to avoid premature tag close when browser parses the HTML
     const formulasJson = JSON.stringify(FORMULAS).replace(/<\/script/gi, '<\\/script');
     html = html.replace(
       /(<script[^>]+id="nutri-sync-data"[^>]*>)([\s\S]*?)(<\/script>)/,
