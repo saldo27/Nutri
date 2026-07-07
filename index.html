@@ -1866,6 +1866,7 @@ const FORMULA_MANAGER_PASSWORD = 'Nutr1';
 const TL_BLOCK_HOURS = 20 / 60;
 const AUX_PERSIST_HOUR = 8;
 const AUX_PERSIST_MINUTE = 10;
+let AUX_PERSIST_READY = false;
 
 function isFormulaManagerUnlocked() {
   return $('fm-protected')?.style.display !== 'none';
@@ -3015,6 +3016,7 @@ function calcTol() {
       </ul>
     </div>`;
   }
+  autoSaveAuxFormData();
 }
 
 function toggleYeyunoSNY(val) {
@@ -3133,6 +3135,7 @@ function calcRitmo() {
         </ul>
       </div>`;
   }
+  autoSaveAuxFormData();
 }
 
 /* ── Fase clínica ── */
@@ -3488,6 +3491,12 @@ function persistCurrentAuxFormData() {
   if (session && session.box) saveFormData(session.box);
 }
 
+function autoSaveAuxFormData() {
+  if (!AUX_PERSIST_READY) return;
+  const session = loadAuxSession();
+  if (session && session.box) saveFormData(session.box);
+}
+
 function salir() {
   const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
   saveFormData(currentBox);
@@ -3659,6 +3668,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyAuxiliarRole(savedAuxSession.box);
     restoreFormData(savedAuxSession.box);
   }
+  AUX_PERSIST_READY = true;
 });
 
 window.addEventListener('beforeunload', persistCurrentAuxFormData);
