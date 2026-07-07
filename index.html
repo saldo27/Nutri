@@ -1866,7 +1866,121 @@ const FORMULA_MANAGER_PASSWORD = 'Nutr1';
 const TL_BLOCK_HOURS = 20 / 60;
 const AUX_PERSIST_HOUR = 8;
 const AUX_PERSIST_MINUTE = 10;
+const STORAGE_DB_NAME = 'nutri_storage_v1';
+const STORAGE_STORE_NAME = 'kv';
 let AUX_PERSIST_READY = false;
+let storageDbPromise = null;
+
+function canUseLocalStorage() {
+  try {
+    const probeKey = '__nutri_storage_probe__';
+    localStorage.setItem(probeKey, '1');
+    localStorage.removeItem(probeKey);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+const HAS_LOCAL_STORAGE = canUseLocalStorage();
+
+function openStorageDb() {
+  if (storageDbPromise) return storageDbPromise;
+  if (!('indexedDB' in window)) {
+    storageDbPromise = Promise.resolve(null);
+    return storageDbPromise;
+  }
+  storageDbPromise = new Promise(resolve => {
+    try {
+      const request = indexedDB.open(STORAGE_DB_NAME, 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(STORAGE_STORE_NAME)) {
+          db.createObjectStore(STORAGE_STORE_NAME);
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => resolve(null);
+    } catch (_) {
+      resolve(null);
+    }
+  });
+  return storageDbPromise;
+}
+
+async function idbGetItem(key) {
+  const db = await openStorageDb();
+  if (!db) return null;
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction(STORAGE_STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORAGE_STORE_NAME);
+      const request = store.get(key);
+      request.onsuccess = () => resolve(request.result ?? null);
+      request.onerror = () => resolve(null);
+    } catch (_) {
+      resolve(null);
+    }
+  });
+}
+
+async function idbSetItem(key, value) {
+  const db = await openStorageDb();
+  if (!db) return;
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction(STORAGE_STORE_NAME, 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+      tx.objectStore(STORAGE_STORE_NAME).put(value, key);
+    } catch (_) {
+      resolve();
+    }
+  });
+}
+
+async function idbRemoveItem(key) {
+  const db = await openStorageDb();
+  if (!db) return;
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction(STORAGE_STORE_NAME, 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+      tx.objectStore(STORAGE_STORE_NAME).delete(key);
+    } catch (_) {
+      resolve();
+    }
+  });
+}
+
+function storageSetItem(key, value) {
+  if (HAS_LOCAL_STORAGE) {
+    try { localStorage.setItem(key, value); } catch (_) {}
+  }
+  void idbSetItem(key, value);
+}
+
+async function storageGetItem(key) {
+  if (HAS_LOCAL_STORAGE) {
+    try {
+      const localValue = localStorage.getItem(key);
+      if (localValue !== null) return localValue;
+    } catch (_) {}
+  }
+  const persistedValue = await idbGetItem(key);
+  if (persistedValue !== null && HAS_LOCAL_STORAGE) {
+    try { localStorage.setItem(key, persistedValue); } catch (_) {}
+  }
+  return persistedValue;
+}
+
+function storageRemoveItem(key) {
+  if (HAS_LOCAL_STORAGE) {
+    try { localStorage.removeItem(key); } catch (_) {}
+  }
+  void idbRemoveItem(key);
+}
 
 function isFormulaManagerUnlocked() {
   return $('fm-protected')?.style.display !== 'none';
@@ -1932,11 +2046,11 @@ function sanitizeFormula(raw, idx) {
 }
 
 function saveFormulasStorage() {
-  localStorage.setItem(FORMULAS_STORAGE_KEY, JSON.stringify(FORMULAS));
+  storageSetItem(FORMULAS_STORAGE_KEY, JSON.stringify(FORMULAS));
 }
 
-function loadFormulasStorage() {
-  const raw = localStorage.getItem(FORMULAS_STORAGE_KEY);
+async function loadFormulasStorage() {
+  const raw = await storageGetItem(FORMULAS_STORAGE_KEY);
   if (!raw) return;
 
   try {
@@ -3361,7 +3475,7 @@ function backToRoleSelect() {
   $('role-step-select').style.display = 'block';
 }
 
-function confirmAuxiliarBox() {
+async function confirmAuxiliarBox() {
   const inp = $('role-box-input');
   const box = (inp ? inp.value : '').trim();
   if (!box) {
@@ -3373,7 +3487,7 @@ function confirmAuxiliarBox() {
   saveAuxSession(box);
   $('role-overlay').classList.remove('open');
   applyAuxiliarRole(box);
-  restoreFormData(box);
+  await restoreFormData(box);
 }
 
 function applyAuxiliarRole(box) {
@@ -3387,27 +3501,27 @@ function applyAuxiliarRole(box) {
 
 function saveAuxSession(box) {
   const expiry = nextAuxiliaryExpiry();
-  localStorage.setItem('nutri_session_v1', JSON.stringify({ role: 'auxiliar', box, expiry: expiry.getTime() }));
+  storageSetItem('nutri_session_v1', JSON.stringify({ role: 'auxiliar', box, expiry: expiry.getTime() }));
 }
 
-function loadAuxSession() {
+async function loadAuxSession() {
   try {
-    const raw = localStorage.getItem('nutri_session_v1');
+    const raw = await storageGetItem('nutri_session_v1');
     if (!raw) return null;
     const data = JSON.parse(raw);
     if (!data || data.role !== 'auxiliar' || !data.box || data.expiry <= Date.now()) {
-      localStorage.removeItem('nutri_session_v1');
+      storageRemoveItem('nutri_session_v1');
       return null;
     }
     return data;
   } catch(e) {
-    localStorage.removeItem('nutri_session_v1');
+    storageRemoveItem('nutri_session_v1');
     return null;
   }
 }
 
 function clearAuxSession() {
-  localStorage.removeItem('nutri_session_v1');
+  storageRemoveItem('nutri_session_v1');
 }
 
 const FORM_DATA_PREFIX = 'nutri_form_data_v1_box_';
@@ -3454,20 +3568,20 @@ function saveFormData(box) {
       },
       expiry: exp.getTime(),
     };
-    localStorage.setItem(formDataKey(box), JSON.stringify(data));
+    storageSetItem(formDataKey(box), JSON.stringify(data));
   } catch(e) {}
 }
 
-function restoreFormData(box) {
+async function restoreFormData(box) {
   if (!box) return;
   try {
     resetAuxiliarFormData();
     const key = formDataKey(box);
-    const raw = localStorage.getItem(key);
+    const raw = await storageGetItem(key);
     if (!raw) return;
     const data = JSON.parse(raw);
     if (!data || data.expiry <= Date.now()) {
-      localStorage.removeItem(key);
+      storageRemoveItem(key);
       return;
     }
     if ($('t-vol')  && data.tVol  !== undefined) $('t-vol').value  = data.tVol;
@@ -3487,14 +3601,14 @@ function restoreFormData(box) {
 }
 
 function persistCurrentAuxFormData() {
-  const session = loadAuxSession();
-  if (session && session.box) saveFormData(session.box);
+  const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
+  if (currentBox) saveFormData(currentBox);
 }
 
 function autoSaveAuxFormData() {
   if (!AUX_PERSIST_READY) return;
-  const session = loadAuxSession();
-  if (session && session.box) saveFormData(session.box);
+  const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
+  if (currentBox) saveFormData(currentBox);
 }
 
 function salir() {
@@ -3637,20 +3751,20 @@ function calcNutricScore() {
 
 function toggleTheme() {
   const isLight = document.body.classList.toggle('light-mode');
-  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  storageSetItem('theme', isLight ? 'light' : 'dark');
   $('theme-toggle').textContent = isLight ? '☀️' : '🌙';
 }
 
 /* ── Init ── */
-window.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('theme');
+window.addEventListener('DOMContentLoaded', async () => {
+  const savedTheme = await storageGetItem('theme');
   if (savedTheme !== 'dark') {
     document.body.classList.add('light-mode');
     $('theme-toggle').textContent = '☀️';
   } else {
     $('theme-toggle').textContent = '🌙';
   }
-  loadFormulasStorage();
+  await loadFormulasStorage();
   initTimelines();
   calcEnteral();
   calcParenteral();
@@ -3662,11 +3776,11 @@ window.addEventListener('DOMContentLoaded', () => {
   updateRenalChip('p');
   lockFormulaManager();
 
-  const savedAuxSession = loadAuxSession();
+  const savedAuxSession = await loadAuxSession();
   if (savedAuxSession) {
     $('role-overlay').classList.remove('open');
     applyAuxiliarRole(savedAuxSession.box);
-    restoreFormData(savedAuxSession.box);
+    await restoreFormData(savedAuxSession.box);
   }
   AUX_PERSIST_READY = true;
 });
