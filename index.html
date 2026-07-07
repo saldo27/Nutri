@@ -1594,6 +1594,10 @@
         onkeydown="if(event.key==='Enter')confirmAuxiliarBox()">
       <div id="role-box-error" style="display:none;font-size:.78rem;color:#f87171;margin-bottom:.55rem">Por favor, introduzca el número de box.</div>
       <button class="btn-calc-nutric" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding:.8rem; margin-bottom:.6rem" onclick="confirmAuxiliarBox()">Confirmar</button>
+      <!-- Restore from previously exported file -->
+      <input type="file" id="aux-import-input" accept=".json" style="display:none" onchange="handleAuxImportFile(this)">
+      <button class="btn-calc-nutric" style="background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.35);padding:.65rem;font-size:.82rem;margin-bottom:.4rem" onclick="$('aux-import-input').click()">📂 Cargar sesión guardada</button>
+      <div id="aux-import-error" style="display:none;font-size:.78rem;color:#f87171;margin-bottom:.4rem"></div>
       <button class="btn-calc-nutric" style="background:rgba(255,255,255,.06);color:var(--muted);padding:.55rem;font-size:.78rem" onclick="backToRoleSelect()">← Volver</button>
     </div>
   </div>
@@ -3494,6 +3498,8 @@ function selectRole(role) {
 
 function backToRoleSelect() {
   $('role-box-error').style.display = 'none';
+  const errEl = $('aux-import-error');
+  if (errEl) errEl.style.display = 'none';
   $('role-step-box').style.display = 'none';
   $('role-step-select').style.display = 'block';
 }
@@ -3637,9 +3643,73 @@ function autoSaveAuxFormData() {
   if (currentBox) void saveFormData(currentBox);
 }
 
+async function exportAuxSession(box) {
+  if (!box) return;
+  try {
+    const key = formDataKey(box);
+    const raw = await storageGetItem(key);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    const exportObj = { version: 1, box, ...data };
+    const blob = new Blob([JSON.stringify(exportObj)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `nutri_box${box}_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {}
+}
+
+async function importAuxSession(data) {
+  const errEl = $('aux-import-error');
+  try {
+    if (!data || data.version !== 1 || !data.box) throw new Error('invalid');
+    const { version, box, ...rest } = data;
+    if (rest.expiry && rest.expiry <= Date.now()) {
+      rest.expiry = nextAuxiliaryExpiry().getTime();
+    }
+    await storageSetItem(formDataKey(box), JSON.stringify(rest));
+    await saveAuxSession(box);
+    $('role-overlay').classList.remove('open');
+    if (errEl) errEl.style.display = 'none';
+    applyAuxiliarRole(box);
+    await restoreFormData(box);
+  } catch(e) {
+    if (errEl) {
+      errEl.textContent = 'Archivo no válido. Compruebe que es un fichero de sesión Nutri.';
+      errEl.style.display = 'block';
+    }
+  }
+}
+
+function handleAuxImportFile(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      await importAuxSession(data);
+    } catch(_) {
+      const errEl = $('aux-import-error');
+      if (errEl) {
+        errEl.textContent = 'Archivo no válido. Compruebe que es un fichero de sesión Nutri.';
+        errEl.style.display = 'block';
+      }
+    }
+  };
+  reader.readAsText(file);
+}
+
 async function salir() {
   const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
   await saveFormData(currentBox);
+  await exportAuxSession(currentBox);
   await clearAuxSession();
   const roleStep = $('role-step-select');
   const roleBox  = $('role-step-box');
