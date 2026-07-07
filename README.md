@@ -74,10 +74,10 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 - Pantalla de selección de rol al iniciar: **Médico** o **Auxiliar de Enfermería**
 - Rol **Auxiliar**: flujo en dos pasos — selección de rol → introducción del **número de box**
   - Badge visible en la cabecera con el box asignado (📦 Box N)
-  - Sesión persistida en localStorage hasta las 08:30 del día siguiente
+  - Sesión persistida en localStorage hasta las 08:10 del día siguiente
 - **Botón Salir** (🚪) en la cabecera — guarda datos del formulario y vuelve al selector de rol
-  - Persiste volúmenes objetivo (`t-vol`, `r3-vol`), estado yeyuno/SNY y todas las pausas (tol1/tol2/tol3/r3a/r3b) hasta las 08:20 del día siguiente
-  - Al reentrar con el mismo rol, los datos del turno anterior se restauran automáticamente
+  - Persiste volúmenes objetivo (`t-vol`, `r3-vol`), estado yeyuno/SNY y todas las pausas (tol1/tol2/tol3/tola/tolb/r3a/r3b) hasta las 08:10 del día siguiente
+  - Al reentrar y confirmar el mismo número de box, los datos del turno anterior se restauran automáticamente; si se introduce otro box, se muestran valores limpios para ese box
 
 ### 7. **NUTRIC Score**
 - Cálculo automático de riesgo nutricional
@@ -199,8 +199,8 @@ index.html
 
 ### LocalStorage
 - **nutri_enteral_formulas_v1** — array JSON de fórmulas personalizadas; se carga al iniciar y se sincroniza con el gestor
-- **nutri_session_v1** — sesión del rol auxiliar (box asignado); expira a las 08:30 del día siguiente
-- **nutri_form_data_v1_box_{N}** — datos del formulario del turno para el box N (volúmenes, pausas, yeyuno/SNY); expira a las 08:20 del día siguiente; se restaura automáticamente al introducir el mismo número de box
+- **nutri_session_v1** — sesión del rol auxiliar (box asignado); expira a las 08:10 del día siguiente
+- **nutri_form_data_v1_box_{N}** — datos del formulario del turno para el box N (volúmenes, pausas, yeyuno/SNY); expira a las 08:10 del día siguiente; se restaura automáticamente al introducir el mismo número de box
 
 ---
 

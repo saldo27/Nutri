@@ -1864,6 +1864,8 @@ const f2 = n => (isNaN(n)||!isFinite(n)) ? '—' : n.toFixed(2);
 const fi = n => (isNaN(n)||!isFinite(n)) ? '—' : Math.round(n).toString();
 const FORMULA_MANAGER_PASSWORD = 'Nutr1';
 const TL_BLOCK_HOURS = 20 / 60;
+const AUX_PERSIST_HOUR = 8;
+const AUX_PERSIST_MINUTE = 10;
 
 function isFormulaManagerUnlocked() {
   return $('fm-protected')?.style.display !== 'none';
@@ -3381,9 +3383,7 @@ function applyAuxiliarRole(box) {
 }
 
 function saveAuxSession(box) {
-  const expiry = new Date();
-  expiry.setDate(expiry.getDate() + 1);
-  expiry.setHours(8, 30, 0, 0);
+  const expiry = nextAuxiliaryExpiry();
   localStorage.setItem('nutri_session_v1', JSON.stringify({ role: 'auxiliar', box, expiry: expiry.getTime() }));
 }
 
@@ -3397,12 +3397,29 @@ function formDataKey(box) {
   return FORM_DATA_PREFIX + box;
 }
 
+function nextAuxiliaryExpiry() {
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate() + 1);
+  expiry.setHours(AUX_PERSIST_HOUR, AUX_PERSIST_MINUTE, 0, 0);
+  return expiry;
+}
+
+function resetAuxiliarFormData() {
+  if ($('t-vol')) $('t-vol').value = 500;
+  if ($('r3-vol')) $('r3-vol').value = 1200;
+  toggleYeyunoSNY(false);
+  Object.keys(S.tl).forEach(key => {
+    if (Array.isArray(S.tl[key])) S.tl[key].fill(false);
+  });
+  initTimelines();
+  calcTol();
+  calcRitmo();
+}
+
 function saveFormData(box) {
   if (!box) return;
   try {
-    const exp = new Date();
-    exp.setDate(exp.getDate() + 1);
-    exp.setHours(8, 20, 0, 0);
+    const exp = nextAuxiliaryExpiry();
     const data = {
       tVol:      $('t-vol')  ? $('t-vol').value  : '',
       r3Vol:     $('r3-vol') ? $('r3-vol').value : '',
@@ -3425,6 +3442,7 @@ function saveFormData(box) {
 function restoreFormData(box) {
   if (!box) return;
   try {
+    resetAuxiliarFormData();
     const key = formDataKey(box);
     const raw = localStorage.getItem(key);
     if (!raw) return;
