@@ -1601,7 +1601,6 @@
       <button class="btn-calc-nutric" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding:.8rem; margin-bottom:.6rem" onclick="confirmAuxiliarBox()">Confirmar</button>
       <!-- Restore from previously exported file -->
       <input type="file" id="aux-import-input" accept=".json" style="display:none" onchange="handleAuxImportFile(this)">
-      <button class="btn-calc-nutric" style="background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.35);padding:.65rem;font-size:.82rem;margin-bottom:.4rem" onclick="$('aux-import-input').click()">📂 Cargar sesión guardada</button>
       <div id="aux-import-error" style="display:none;font-size:.78rem;color:#f87171;margin-bottom:.4rem"></div>
       <button class="btn-calc-nutric" style="background:rgba(255,255,255,.06);color:var(--muted);padding:.55rem;font-size:.78rem" onclick="backToRoleSelect()">← Volver</button>
     </div>
@@ -3640,18 +3639,21 @@ async function selectRole(role) {
     $('role-step-select').style.display = 'none';
     $('role-step-box').style.display = 'block';
     const inp = $('role-box-input');
-    if (inp) { inp.value = ''; inp.focus(); }
-    const imported = await importLatestAuxSession();
-    if (imported) return;
-    const session = await loadAuxSession();
-    if (session) {
-      $('role-overlay').classList.remove('open');
-      applyAuxiliarRole(session.box);
-      await restoreFormData(session.box);
-      return;
+    if (inp) inp.value = '';
+    // Silently pre-load latest import data into per-box storage and pre-fill box number
+    const latest = await loadLatestAuxImport();
+    if (latest && latest.box) {
+      const { version, box, ...rest } = latest;
+      if (rest.expiry && rest.expiry <= Date.now()) {
+        rest.expiry = nextAuxiliaryExpiry().getTime();
+      }
+      await storageSetItem(formDataKey(box), JSON.stringify(rest));
+      if (inp) inp.value = box;
+    } else {
+      const session = await loadAuxSession();
+      if (session && inp) inp.value = session.box;
     }
-    const fileInput = $('aux-import-input');
-    if (fileInput) fileInput.click();
+    if (inp) inp.focus();
     return;
   }
   $('role-overlay').classList.remove('open');
