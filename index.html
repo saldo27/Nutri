@@ -1458,6 +1458,11 @@
         <button class="fm-btn" onclick="exportFormulasFile()">Exportar .json</button>
         <button class="fm-btn warn" onclick="resetFormulasToDefault()">Restaurar fórmulas base</button>
       </div>
+      <div class="fm-row" style="align-items:center;gap:.5rem;flex-wrap:wrap">
+        <button class="fm-btn" onclick="connectSyncFile()" title="Vincula el index.html del disco compartido para sincronizar volúmenes y pausas de auxiliar entre estaciones">🔗 Vincular archivo compartido</button>
+        <button class="fm-btn warn" onclick="disconnectSyncFile()" title="Elimina el vínculo con el archivo compartido">Desvincular</button>
+        <span id="fm-sync-status" class="fm-msg" style="flex:1;text-align:left"></span>
+      </div>
       <textarea id="fm-json" class="fm-json" spellcheck="false" aria-label="Editor JSON de fórmulas"></textarea>
       <input type="file" id="fm-file" accept="application/json,.json" style="display:none" onchange="handleImportFormulasFile(event)">
       <div id="fm-msg" class="fm-msg"></div>
@@ -1594,6 +1599,7 @@
         onkeydown="if(event.key==='Enter')confirmAuxiliarBox()">
       <div id="role-box-error" style="display:none;font-size:.78rem;color:#f87171;margin-bottom:.55rem">Por favor, introduzca el número de box.</div>
       <button class="btn-calc-nutric" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding:.8rem; margin-bottom:.6rem" onclick="confirmAuxiliarBox()">Confirmar</button>
+      <div id="aux-import-error" style="display:none;font-size:.78rem;color:#f87171;margin-bottom:.4rem"></div>
       <button class="btn-calc-nutric" style="background:rgba(255,255,255,.06);color:var(--muted);padding:.55rem;font-size:.78rem" onclick="backToRoleSelect()">← Volver</button>
     </div>
   </div>
@@ -1783,6 +1789,9 @@ const DEFAULT_FORMULAS = [
 
 let FORMULAS = DEFAULT_FORMULAS.map(f => ({ ...f }));
 const FORMULAS_STORAGE_KEY = 'nutri_enteral_formulas_v1';
+const SYNC_HTML_HANDLE_KEY  = 'nutri_sync_html_handle';
+const SYNC_JSON_SESSION_KEY = 'nutri_json_session_handle_v1';
+const SHARED_AUX_SYNC_TAG_ID = 'nutri-sync-data';
 
 const N2_RENAPRO = 2.88; // g N2 per RENAPRO unit
 const KCAL_RENAPRO_UNIT = 72; // kcal per RENAPRO unit (18 g prot x 4 kcal/g)
@@ -1864,6 +1873,146 @@ const f2 = n => (isNaN(n)||!isFinite(n)) ? '—' : n.toFixed(2);
 const fi = n => (isNaN(n)||!isFinite(n)) ? '—' : Math.round(n).toString();
 const FORMULA_MANAGER_PASSWORD = 'Nutr1';
 const TL_BLOCK_HOURS = 20 / 60;
+const AUX_PERSIST_HOUR = 8;
+const AUX_PERSIST_MINUTE = 10;
+const STORAGE_DB_NAME = 'nutri_storage_v1';
+const STORAGE_STORE_NAME = 'kv';
+let AUX_PERSIST_READY = false;
+let storageDbPromise = null;
+const pendingStorageOps = new Map();
+
+function canUseLocalStorage() {
+  try {
+    const probeKey = '__nutri_storage_probe__';
+    localStorage.setItem(probeKey, '1');
+    localStorage.removeItem(probeKey);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+const HAS_LOCAL_STORAGE = canUseLocalStorage();
+
+function openStorageDb() {
+  if (storageDbPromise) return storageDbPromise;
+  if (!('indexedDB' in window)) {
+    storageDbPromise = Promise.resolve(null);
+    return storageDbPromise;
+  }
+  storageDbPromise = new Promise(resolve => {
+    try {
+      const request = indexedDB.open(STORAGE_DB_NAME, 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(STORAGE_STORE_NAME)) {
+          db.createObjectStore(STORAGE_STORE_NAME);
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => resolve(null);
+    } catch (_) {
+      resolve(null);
+    }
+  });
+  return storageDbPromise;
+}
+
+async function idbGetItem(key) {
+  const db = await openStorageDb();
+  if (!db) return null;
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction(STORAGE_STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORAGE_STORE_NAME);
+      const request = store.get(key);
+      request.onsuccess = () => resolve(request.result ?? null);
+      request.onerror = () => resolve(null);
+    } catch (_) {
+      resolve(null);
+    }
+  });
+}
+
+async function idbSetItem(key, value) {
+  const db = await openStorageDb();
+  if (!db) return;
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction(STORAGE_STORE_NAME, 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+      tx.objectStore(STORAGE_STORE_NAME).put(value, key);
+    } catch (_) {
+      resolve();
+    }
+  });
+}
+
+async function idbRemoveItem(key) {
+  const db = await openStorageDb();
+  if (!db) return;
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction(STORAGE_STORE_NAME, 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+      tx.objectStore(STORAGE_STORE_NAME).delete(key);
+    } catch (_) {
+      resolve();
+    }
+  });
+}
+
+function queueStorageOp(key, operation) {
+  const previous = pendingStorageOps.get(key) || Promise.resolve();
+  const queued = previous
+    .catch(() => {})
+    .then(() => operation())
+    .catch(() => {});
+  pendingStorageOps.set(key, queued);
+  queued.finally(() => {
+    if (pendingStorageOps.get(key) === queued) pendingStorageOps.delete(key);
+  });
+  return queued;
+}
+
+async function waitForPendingStorageOp(key) {
+  const pending = pendingStorageOps.get(key);
+  if (pending) await pending;
+}
+
+function storageSetItem(key, value) {
+  if (HAS_LOCAL_STORAGE) {
+    try { localStorage.setItem(key, value); } catch (_) {}
+  }
+  return queueStorageOp(key, () => idbSetItem(key, value));
+}
+
+async function storageGetItem(key) {
+  if (HAS_LOCAL_STORAGE) {
+    try {
+      const localValue = localStorage.getItem(key);
+      if (localValue !== null) {
+        void queueStorageOp(key, () => idbSetItem(key, localValue));
+        return localValue;
+      }
+    } catch (_) {}
+  }
+  await waitForPendingStorageOp(key);
+  const persistedValue = await idbGetItem(key);
+  if (persistedValue !== null && HAS_LOCAL_STORAGE) {
+    try { localStorage.setItem(key, persistedValue); } catch (_) {}
+  }
+  return persistedValue;
+}
+
+function storageRemoveItem(key) {
+  if (HAS_LOCAL_STORAGE) {
+    try { localStorage.removeItem(key); } catch (_) {}
+  }
+  return queueStorageOp(key, () => idbRemoveItem(key));
+}
 
 function isFormulaManagerUnlocked() {
   return $('fm-protected')?.style.display !== 'none';
@@ -1897,6 +2046,7 @@ function unlockFormulaManager() {
   setFormulaLockMessage('');
   loadFormulasIntoEditor();
   setFormulaManagerMessage('Gestión desbloqueada.');
+  void updateSyncStatus();
 }
 
 function lockFormulaManager() {
@@ -1929,11 +2079,158 @@ function sanitizeFormula(raw, idx) {
 }
 
 function saveFormulasStorage() {
-  localStorage.setItem(FORMULAS_STORAGE_KEY, JSON.stringify(FORMULAS));
+  storageSetItem(FORMULAS_STORAGE_KEY, JSON.stringify(FORMULAS));
 }
 
-function loadFormulasStorage() {
-  const raw = localStorage.getItem(FORMULAS_STORAGE_KEY);
+/* ── Shared-file sync (Opción B: index.html se autoscribe) ──────────────
+   Sincroniza volúmenes/pausas del flujo Auxiliar dentro del propio HTML
+   (tag #nutri-sync-data) para compartir estado entre estaciones.
+   Interacción del auxiliar: cero. Solo el supervisor vincula el archivo
+   una primera vez desde el panel de gestión de fórmulas.
+   ─────────────────────────────────────────────────────────────────── */
+
+function readEmbeddedAuxSyncData(text) {
+  try {
+    const parsed = JSON.parse(String(text || '').trim() || '{}');
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') return {};
+    return parsed;
+  } catch (_) { return {}; }
+}
+
+function getEmbeddedAuxSyncMapFromDocument() {
+  const el = document.getElementById(SHARED_AUX_SYNC_TAG_ID);
+  if (!el) return {};
+  return readEmbeddedAuxSyncData(el.textContent);
+}
+
+function buildAuxFormDataPayload(expiryMs) {
+  return {
+    tVol:      $('t-vol')  ? $('t-vol').value  : '',
+    r3Vol:     $('r3-vol') ? $('r3-vol').value : '',
+    yeyunoSNY: S.yeyunoSNY,
+    tl: {
+      tol1: Array.from(S.tl.tol1),
+      tol2: Array.from(S.tl.tol2),
+      tol3: Array.from(S.tl.tol3),
+      tola: Array.from(S.tl.tola),
+      tolb: Array.from(S.tl.tolb),
+      r3a:  Array.from(S.tl.r3a),
+      r3b:  Array.from(S.tl.r3b),
+    },
+    expiry: typeof expiryMs === 'number' ? expiryMs : nextAuxiliaryExpiry().getTime(),
+  };
+}
+
+async function syncAuxDataToHtmlFile(box, data, { showPicker = false } = {}) {
+  const boxId = String(box || '').trim();
+  if (!boxId || !data) return false;
+  return syncToHtmlFile({ showPicker, box: boxId, data });
+}
+
+async function syncToHtmlFile({ showPicker = false, box = '', data = null } = {}) {
+  if (!('showOpenFilePicker' in window)) return false;
+
+  let handle = await idbGetItem(SYNC_HTML_HANDLE_KEY);
+
+  if (!handle) {
+    if (!showPicker) return false;
+    try {
+      const picks = await window.showOpenFilePicker({
+        types: [{ description: 'Nutri HTML', accept: { 'text/html': ['.html', '.htm'] } }],
+        multiple: false
+      });
+      handle = picks[0];
+      await idbSetItem(SYNC_HTML_HANDLE_KEY, handle);
+    } catch (_) { return false; }
+  }
+
+  let perm = await handle.queryPermission({ mode: 'readwrite' });
+  if (perm !== 'granted') {
+    perm = await handle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') return false;
+  }
+
+  try {
+    const file = await handle.getFile();
+    let html = await file.text();
+    const syncBox = String(box || '').trim();
+    let replaced = false;
+    html = html.replace(
+      /(<script[^>]+id="nutri-sync-data"[^>]*>)([\s\S]*?)(<\/script>)/,
+      (_, open, oldData, close) => {
+        const map = readEmbeddedAuxSyncData(oldData);
+        if (syncBox && data) map[syncBox] = data;
+        // Escape <\/script> sequences inside JSON to avoid premature tag close when browser parses the HTML
+        const payload = JSON.stringify(map).replace(/<\/script/gi, '<\\/script');
+        replaced = true;
+        return open + payload + close;
+      }
+    );
+    if (!replaced) return false;
+    const writable = await handle.createWritable();
+    await writable.write(html);
+    await writable.close();
+    return true;
+  } catch (err) {
+    console.error('[Nutri] syncToHtmlFile error:', err);
+    return false;
+  }
+}
+
+async function connectSyncFile() {
+  if (!('showOpenFilePicker' in window)) {
+    setFormulaManagerMessage('Tu navegador no soporta esta función. Usa Chrome o Edge.', true);
+    return;
+  }
+  setFormulaManagerMessage('Selecciona el archivo index.html del disco compartido…');
+  const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
+  const currentData = currentBox ? buildAuxFormDataPayload(nextAuxiliaryExpiry().getTime()) : null;
+  const ok = await syncToHtmlFile({ showPicker: true, box: currentBox, data: currentData });
+  if (ok) {
+    setFormulaManagerMessage('✅ Vinculado. Volúmenes y pausas de auxiliar se sincronizarán en el archivo compartido.');
+    void updateSyncStatus();
+  } else {
+    setFormulaManagerMessage('No se pudo vincular el archivo. Inténtalo de nuevo.', true);
+  }
+}
+
+async function disconnectSyncFile() {
+  await idbRemoveItem(SYNC_HTML_HANDLE_KEY);
+  void updateSyncStatus();
+  setFormulaManagerMessage('Vínculo con archivo compartido eliminado.');
+}
+
+async function updateSyncStatus() {
+  const el = $('fm-sync-status');
+  if (!el) return;
+  if (!('showOpenFilePicker' in window)) {
+    el.textContent = '⚠️ File System API no disponible (usa Chrome/Edge)';
+    el.style.color = '#fca5a5';
+    return;
+  }
+  const handle = await idbGetItem(SYNC_HTML_HANDLE_KEY);
+  if (!handle) {
+    el.textContent = '';
+    return;
+  }
+  try {
+    const perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm === 'granted') {
+      el.textContent = '🔗 Vinculado y activo';
+      el.style.color = '#86efac';
+    } else {
+      el.textContent = '🔗 Vinculado (se pedirá permiso al guardar)';
+      el.style.color = '#fbbf24';
+    }
+  } catch (_) {
+    el.textContent = '⚠️ Vínculo perdido — vuelve a vincular';
+    el.style.color = '#fca5a5';
+    await idbRemoveItem(SYNC_HTML_HANDLE_KEY);
+  }
+}
+
+async function loadFormulasStorage() {
+  const raw = await storageGetItem(FORMULAS_STORAGE_KEY);
   if (!raw) return;
 
   try {
@@ -2061,9 +2358,9 @@ function resetFormulasToDefault() {
 
   FORMULAS = DEFAULT_FORMULAS.map((f, idx) => sanitizeFormula(f, idx));
   saveFormulasStorage();
+  setFormulaManagerMessage('Se restauraron las fórmulas base.');
   refreshAfterFormulaUpdate();
   loadFormulasIntoEditor();
-  setFormulaManagerMessage('Se restauraron las fórmulas base.');
 }
 
 /* ── Patient Calc ── */
@@ -3013,6 +3310,7 @@ function calcTol() {
       </ul>
     </div>`;
   }
+  autoSaveAuxFormData();
 }
 
 function toggleYeyunoSNY(val) {
@@ -3131,6 +3429,7 @@ function calcRitmo() {
         </ul>
       </div>`;
   }
+  autoSaveAuxFormData();
 }
 
 /* ── Fase clínica ── */
@@ -3334,12 +3633,31 @@ function showTab(name) {
 }
 
 /* ── Formula Selection Helpers ── */
-function selectRole(role) {
+async function selectRole(role) {
   if (role === 'auxiliar') {
     $('role-step-select').style.display = 'none';
     $('role-step-box').style.display = 'block';
     const inp = $('role-box-input');
-    if (inp) { inp.value = ''; inp.focus(); }
+    if (inp) inp.value = '';
+    // Silently pre-load latest import data into per-box storage and pre-fill box number
+    const latest = await loadLatestAuxImport();
+    if (latest && latest.box) {
+      const { version, box, ...rest } = latest;
+      if (rest.expiry && rest.expiry <= Date.now()) {
+        rest.expiry = nextAuxiliaryExpiry().getTime();
+      }
+      await storageSetItem(formDataKey(box), JSON.stringify(rest));
+      if (inp) inp.value = box;
+    } else {
+      const jsonData = await readAuxJsonSession();
+      if (jsonData) {
+        await importAuxSession(jsonData, { silentError: true });
+      } else {
+        const session = await loadAuxSession();
+        if (session && inp) inp.value = session.box;
+      }
+    }
+    if (inp) inp.focus();
     return;
   }
   $('role-overlay').classList.remove('open');
@@ -3352,11 +3670,13 @@ function selectRole(role) {
 
 function backToRoleSelect() {
   $('role-box-error').style.display = 'none';
+  const errEl = $('aux-import-error');
+  if (errEl) errEl.style.display = 'none';
   $('role-step-box').style.display = 'none';
   $('role-step-select').style.display = 'block';
 }
 
-function confirmAuxiliarBox() {
+async function confirmAuxiliarBox() {
   const inp = $('role-box-input');
   const box = (inp ? inp.value : '').trim();
   if (!box) {
@@ -3365,10 +3685,10 @@ function confirmAuxiliarBox() {
     return;
   }
   $('role-box-error').style.display = 'none';
-  saveAuxSession(box);
+  await saveAuxSession(box);
   $('role-overlay').classList.remove('open');
   applyAuxiliarRole(box);
-  restoreFormData(box);
+  await restoreFormData(box);
 }
 
 function applyAuxiliarRole(box) {
@@ -3380,57 +3700,117 @@ function applyAuxiliarRole(box) {
   $('box-badge').style.display = 'flex';
 }
 
-function saveAuxSession(box) {
-  const expiry = new Date();
-  expiry.setDate(expiry.getDate() + 1);
-  expiry.setHours(8, 30, 0, 0);
-  localStorage.setItem('nutri_session_v1', JSON.stringify({ role: 'auxiliar', box, expiry: expiry.getTime() }));
+async function saveAuxSession(box) {
+  const expiry = nextAuxiliaryExpiry();
+  await storageSetItem('nutri_session_v1', JSON.stringify({ role: 'auxiliar', box, expiry: expiry.getTime() }));
 }
 
-function clearAuxSession() {
-  localStorage.removeItem('nutri_session_v1');
+async function loadAuxSession() {
+  try {
+    const raw = await storageGetItem('nutri_session_v1');
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || data.role !== 'auxiliar' || !data.box || data.expiry <= Date.now()) {
+      void storageRemoveItem('nutri_session_v1');
+      return null;
+    }
+    return data;
+  } catch(e) {
+    void storageRemoveItem('nutri_session_v1');
+    return null;
+  }
+}
+
+async function clearAuxSession() {
+  await storageRemoveItem('nutri_session_v1');
 }
 
 const FORM_DATA_PREFIX = 'nutri_form_data_v1_box_';
+const AUX_LATEST_IMPORT_KEY = 'nutri_aux_latest_import_v1';
 
 function formDataKey(box) {
   return FORM_DATA_PREFIX + box;
 }
 
-function saveFormData(box) {
-  if (!box) return;
+async function saveLatestAuxImport(data) {
+  if (!data || data.version !== 1 || !data.box) return;
   try {
-    const exp = new Date();
-    exp.setDate(exp.getDate() + 1);
-    exp.setHours(8, 20, 0, 0);
-    const data = {
-      tVol:      $('t-vol')  ? $('t-vol').value  : '',
-      r3Vol:     $('r3-vol') ? $('r3-vol').value : '',
-      yeyunoSNY: S.yeyunoSNY,
-      tl: {
-        tol1: Array.from(S.tl.tol1),
-        tol2: Array.from(S.tl.tol2),
-        tol3: Array.from(S.tl.tol3),
-        tola: Array.from(S.tl.tola),
-        tolb: Array.from(S.tl.tolb),
-        r3a:  Array.from(S.tl.r3a),
-        r3b:  Array.from(S.tl.r3b),
-      },
-      expiry: exp.getTime(),
-    };
-    localStorage.setItem(formDataKey(box), JSON.stringify(data));
+    await storageSetItem(AUX_LATEST_IMPORT_KEY, JSON.stringify({
+      savedAt: Date.now(),
+      data
+    }));
   } catch(e) {}
 }
 
-function restoreFormData(box) {
+async function loadLatestAuxImport() {
+  try {
+    const raw = await storageGetItem(AUX_LATEST_IMPORT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.data || parsed.data.version !== 1 || !parsed.data.box) return null;
+    return parsed.data;
+  } catch(e) {
+    return null;
+  }
+}
+
+async function importLatestAuxSession() {
+  const latest = await loadLatestAuxImport();
+  if (!latest) return false;
+  const ok = await importAuxSession(latest, { silentError: true });
+  return !!ok;
+}
+
+function nextAuxiliaryExpiry() {
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate() + 1);
+  expiry.setHours(AUX_PERSIST_HOUR, AUX_PERSIST_MINUTE, 0, 0);
+  return expiry;
+}
+
+function resetAuxiliarFormData() {
+  if ($('t-vol')) $('t-vol').value = 500;
+  if ($('r3-vol')) $('r3-vol').value = 1200;
+  toggleYeyunoSNY(false);
+  Object.keys(S.tl).forEach(key => {
+    if (Array.isArray(S.tl[key])) S.tl[key].fill(false);
+  });
+  initTimelines();
+  calcTol();
+  calcRitmo();
+}
+
+async function saveFormData(box) {
   if (!box) return;
   try {
+    const exp = nextAuxiliaryExpiry();
+    const data = buildAuxFormDataPayload(exp.getTime());
+    await storageSetItem(formDataKey(box), JSON.stringify(data));
+    void syncAuxDataToHtmlFile(box, data, { showPicker: false });
+  } catch(e) {}
+}
+
+async function restoreFormData(box) {
+  if (!box) return;
+  try {
+    const wasReady = AUX_PERSIST_READY;
+    AUX_PERSIST_READY = false;
+    resetAuxiliarFormData();
+    AUX_PERSIST_READY = wasReady;
     const key = formDataKey(box);
-    const raw = localStorage.getItem(key);
+    let raw = await storageGetItem(key);
+    if (!raw) {
+      const embeddedMap = getEmbeddedAuxSyncMapFromDocument();
+      const sharedData = embeddedMap[String(box)];
+      if (sharedData && typeof sharedData === 'object' && !Array.isArray(sharedData)) {
+        raw = JSON.stringify(sharedData);
+        await storageSetItem(key, raw);
+      }
+    }
     if (!raw) return;
     const data = JSON.parse(raw);
     if (!data || data.expiry <= Date.now()) {
-      localStorage.removeItem(key);
+      void storageRemoveItem(key);
       return;
     }
     if ($('t-vol')  && data.tVol  !== undefined) $('t-vol').value  = data.tVol;
@@ -3449,10 +3829,205 @@ function restoreFormData(box) {
   } catch(e) {}
 }
 
-function salir() {
+async function persistCurrentAuxFormData() {
   const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
-  saveFormData(currentBox);
-  clearAuxSession();
+  if (currentBox) await saveFormData(currentBox);
+}
+
+function autoSaveAuxFormData() {
+  if (!AUX_PERSIST_READY) return;
+  const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
+  if (currentBox) void saveFormData(currentBox);
+}
+
+async function exportAuxSession(box) {
+  if (!box) return;
+  try {
+    const key = formDataKey(box);
+    const raw = await storageGetItem(key);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    const exportObj = { version: 1, box, ...data };
+    const blob = new Blob([JSON.stringify(exportObj)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `nutri_box${box}_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {}
+}
+
+async function getAllBoxesData() {
+  const boxes = {};
+  const now = Date.now();
+  if (HAS_LOCAL_STORAGE) {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(FORM_DATA_PREFIX)) {
+        const box = key.slice(FORM_DATA_PREFIX.length);
+        try {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const data = JSON.parse(raw);
+            if (data && data.expiry > now) boxes[box] = data;
+          }
+        } catch(_) {}
+      }
+    }
+  }
+  return boxes;
+}
+
+async function exportAllBoxesSession() {
+  try {
+    const boxes = await getAllBoxesData();
+    if (Object.keys(boxes).length === 0) return;
+    const exportObj = { version: 2, boxes };
+    const blob = new Blob([JSON.stringify(exportObj)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `nutri_sesion_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {}
+}
+
+async function writeAuxJsonSession() {
+  if (!('showSaveFilePicker' in window)) {
+    await exportAllBoxesSession();
+    return;
+  }
+  try {
+    const boxes = await getAllBoxesData();
+    if (Object.keys(boxes).length === 0) return;
+    const exportObj = { version: 2, boxes };
+    let handle = await idbGetItem(SYNC_JSON_SESSION_KEY);
+    if (!handle) {
+      const htmlHandle = await idbGetItem(SYNC_HTML_HANDLE_KEY);
+      const pickerOpts = {
+        suggestedName: 'nutri_sesion.json',
+        types: [{ description: 'Nutri Session JSON', accept: { 'application/json': ['.json'] } }]
+      };
+      if (htmlHandle) pickerOpts.startIn = htmlHandle;
+      handle = await window.showSaveFilePicker(pickerOpts);
+      await idbSetItem(SYNC_JSON_SESSION_KEY, handle);
+    }
+    let perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') perm = await handle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') { await exportAllBoxesSession(); return; }
+    const writable = await handle.createWritable();
+    await writable.write(JSON.stringify(exportObj));
+    await writable.close();
+  } catch(e) {
+    if (e && e.name !== 'AbortError') await exportAllBoxesSession();
+  }
+}
+
+async function readAuxJsonSession() {
+  try {
+    const handle = await idbGetItem(SYNC_JSON_SESSION_KEY);
+    if (!handle) return null;
+    let perm = await handle.queryPermission({ mode: 'read' });
+    if (perm !== 'granted') perm = await handle.requestPermission({ mode: 'read' });
+    if (perm !== 'granted') return null;
+    const file = await handle.getFile();
+    const text = await file.text();
+    return JSON.parse(text);
+  } catch(e) {
+    return null;
+  }
+}
+
+async function importAuxSession(data, options = {}) {
+  const errEl = $('aux-import-error');
+  const silentError = !!options.silentError;
+  try {
+    if (!data || !data.version) throw new Error('invalid');
+
+    if (data.version === 2) {
+      // Multi-box format: store all boxes' data, let user pick their box
+      if (!data.boxes || typeof data.boxes !== 'object' || Array.isArray(data.boxes)) throw new Error('invalid');
+      const exp = nextAuxiliaryExpiry().getTime();
+      let stored = 0;
+      for (const [box, boxData] of Object.entries(data.boxes)) {
+        if (!box || !boxData || typeof boxData !== 'object') continue;
+        if (boxData.expiry && boxData.expiry <= Date.now()) boxData.expiry = exp;
+        await storageSetItem(formDataKey(box), JSON.stringify(boxData));
+        stored++;
+      }
+      if (stored === 0) throw new Error('invalid');
+      if (errEl) errEl.style.display = 'none';
+      // Show confirmation in the error element (styled as success) and pre-fill first box
+      const firstBox = Object.keys(data.boxes)[0];
+      const inp = $('role-box-input');
+      if (inp && firstBox) inp.value = firstBox;
+      if (errEl) {
+        errEl.textContent = `✅ Datos de ${stored} box(es) restaurados. Introduzca su número de box.`;
+        errEl.style.color = '#34d399';
+        errEl.style.display = 'block';
+      }
+      return true;
+    }
+
+    // v1: single-box format
+    if (data.version !== 1 || !data.box) throw new Error('invalid');
+    const { version, box, ...rest } = data;
+    if (rest.expiry && rest.expiry <= Date.now()) {
+      rest.expiry = nextAuxiliaryExpiry().getTime();
+    }
+    const normalized = { version: 1, box, ...rest };
+    await storageSetItem(formDataKey(box), JSON.stringify(rest));
+    await saveLatestAuxImport(normalized);
+    await saveAuxSession(box);
+    $('role-overlay').classList.remove('open');
+    if (errEl) errEl.style.display = 'none';
+    applyAuxiliarRole(box);
+    await restoreFormData(box);
+    return true;
+  } catch(e) {
+    if (!silentError && errEl) {
+      errEl.textContent = 'Archivo no válido. Compruebe que es un fichero de sesión Nutri.';
+      errEl.style.color = '';
+      errEl.style.display = 'block';
+    }
+    return false;
+  }
+}
+
+function handleAuxImportFile(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      await importAuxSession(data);
+    } catch(_) {
+      const errEl = $('aux-import-error');
+      if (errEl) {
+        errEl.textContent = 'Archivo no válido. Compruebe que es un fichero de sesión Nutri.';
+        errEl.style.color = '';
+        errEl.style.display = 'block';
+      }
+    }
+  };
+  reader.readAsText(file);
+}
+
+async function salir() {
+  const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
+  await saveFormData(currentBox);
+  await writeAuxJsonSession();
+  await clearAuxSession();
   const roleStep = $('role-step-select');
   const roleBox  = $('role-step-box');
   if (roleStep) roleStep.style.display = 'block';
@@ -3589,20 +4164,21 @@ function calcNutricScore() {
 
 function toggleTheme() {
   const isLight = document.body.classList.toggle('light-mode');
-  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  storageSetItem('theme', isLight ? 'light' : 'dark');
   $('theme-toggle').textContent = isLight ? '☀️' : '🌙';
 }
 
 /* ── Init ── */
-window.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('theme');
+window.addEventListener('DOMContentLoaded', async () => {
+  void openStorageDb();
+  const savedTheme = await storageGetItem('theme');
   if (savedTheme !== 'dark') {
     document.body.classList.add('light-mode');
     $('theme-toggle').textContent = '☀️';
   } else {
     $('theme-toggle').textContent = '🌙';
   }
-  loadFormulasStorage();
+  await loadFormulasStorage();
   initTimelines();
   calcEnteral();
   calcParenteral();
@@ -3614,10 +4190,24 @@ window.addEventListener('DOMContentLoaded', () => {
   updateRenalChip('p');
   lockFormulaManager();
 
-  // Always show the role-selection modal on (re-)entry — clear any stale session
-  clearAuxSession();
+  const savedAuxSession = await loadAuxSession();
+  if (savedAuxSession) {
+    $('role-overlay').classList.remove('open');
+    applyAuxiliarRole(savedAuxSession.box);
+    await restoreFormData(savedAuxSession.box);
+  }
+  AUX_PERSIST_READY = true;
+});
+
+window.addEventListener('beforeunload', () => { void persistCurrentAuxFormData(); });
+window.addEventListener('pagehide', () => { void persistCurrentAuxFormData(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') void persistCurrentAuxFormData();
 });
 </script>
+
+<!-- Datos de auxiliar (volúmenes/pausas) embebidos para sincronización entre estaciones -->
+<script type="application/json" id="nutri-sync-data">{}</script>
 
 <footer class="app-footer">Creado por luisherrerapara@gmail.com para UCI-H.Santa Lucía, con la colaboración del Servicio de Farmacia del H.Santa Lucía (Cartagena). Todos los derechos reservados.</footer>
 </body>

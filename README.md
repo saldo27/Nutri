@@ -74,10 +74,10 @@ CalcNutrición UCI es una herramienta web interactiva para calcular requerimient
 - Pantalla de selección de rol al iniciar: **Médico** o **Auxiliar de Enfermería**
 - Rol **Auxiliar**: flujo en dos pasos — selección de rol → introducción del **número de box**
   - Badge visible en la cabecera con el box asignado (📦 Box N)
-  - Sesión persistida en localStorage hasta las 08:30 del día siguiente
+  - Sesión persistida en almacenamiento local del navegador hasta las 08:10 del día siguiente
 - **Botón Salir** (🚪) en la cabecera — guarda datos del formulario y vuelve al selector de rol
-  - Persiste volúmenes objetivo (`t-vol`, `r3-vol`), estado yeyuno/SNY y todas las pausas (tol1/tol2/tol3/r3a/r3b) hasta las 08:20 del día siguiente
-  - Al reentrar con el mismo rol, los datos del turno anterior se restauran automáticamente
+  - Persiste volúmenes objetivo (`t-vol`, `r3-vol`), estado yeyuno/SNY y todas las pausas (tol1/tol2/tol3/tola/tolb/r3a/r3b) hasta las 08:10 del día siguiente
+  - Al reentrar y confirmar el mismo número de box, los datos del turno anterior se restauran automáticamente; si se introduce otro box, se muestran valores limpios para ese box
 
 ### 7. **NUTRIC Score**
 - Cálculo automático de riesgo nutricional
@@ -197,10 +197,11 @@ index.html
 
 ## 💾 Persistencia de Datos
 
-### LocalStorage
+### Persistencia en navegador
+- **localStorage + IndexedDB** — se usan en paralelo para mejorar la persistencia en navegadores Chromium (Edge/Chrome), especialmente al abrir el HTML en local
 - **nutri_enteral_formulas_v1** — array JSON de fórmulas personalizadas; se carga al iniciar y se sincroniza con el gestor
-- **nutri_session_v1** — sesión del rol auxiliar (box asignado); expira a las 08:30 del día siguiente
-- **nutri_form_data_v1_box_{N}** — datos del formulario del turno para el box N (volúmenes, pausas, yeyuno/SNY); expira a las 08:20 del día siguiente; se restaura automáticamente al introducir el mismo número de box
+- **nutri_session_v1** — sesión del rol auxiliar (box asignado); expira a las 08:10 del día siguiente
+- **nutri_form_data_v1_box_{N}** — datos del formulario del turno para el box N (volúmenes, pausas, yeyuno/SNY); expira a las 08:10 del día siguiente; se restaura automáticamente al introducir el mismo número de box
 
 ---
 
@@ -220,7 +221,7 @@ index.html
 
 - **Gestor de fórmulas protegido** con contraseña: `Nutr1`
 - No hay backend — todo cálculo en cliente
-- Datos persisten en navegador (localStorage)
+- Datos persisten en navegador (localStorage con respaldo en IndexedDB)
 
 ---
 
@@ -239,7 +240,7 @@ index.html
 ## 🚀 Inicialización
 
 Al cargar la página:
-1. Se restauran fórmulas desde localStorage (o usa defaults)
+1. Se restauran fórmulas desde el almacenamiento local del navegador (o usa defaults)
 2. Se calculan todos los tabs (calcEnteral, calcParenteral, etc.)
 3. Se establece fase clínica por defecto (aguda) en Enteral y Parenteral
 4. Se bloquea gestor de fórmulas
@@ -275,6 +276,52 @@ Al cargar la página:
 **Creado para:** UCI — H. Santa Lucía (Cartagena)  
 **Autor:** luisherrerapara@gmail.com  
 **Todos los derechos reservados.**
+
+---
+
+## 🖥️ App de Escritorio (Electron)
+
+La app puede ejecutarse como **aplicación de escritorio Windows** usando Electron, lo que permite el guardado automático del JSON al pulsar "Salir" sin restricciones de `file://`.
+
+### Requisitos
+
+- [Node.js](https://nodejs.org/) v18 o superior (incluye npm)
+
+### Instalación de dependencias
+
+```bash
+npm install
+```
+
+### Ejecutar en modo desarrollo
+
+```bash
+npm start
+```
+
+Esto abre directamente `index.html` como una aplicación de escritorio.
+
+### Generar instalador `.exe` para Windows
+
+```bash
+npm run dist
+```
+
+El instalador se genera en la carpeta `dist/`. Busca un archivo `Nutri Setup X.X.X.exe`.
+
+El instalador:
+- Permite elegir la carpeta de instalación
+- Crea acceso directo en el escritorio y menú inicio
+- Incluye desinstalador
+
+### Ventajas frente a abrir `index.html` en el navegador
+
+| Función | Navegador (`file://`) | Electron |
+|---|---|---|
+| Guardar/sobrescribir JSON automáticamente | ❌ Bloqueado | ✅ Funciona |
+| `localStorage` + `IndexedDB` | ✅ | ✅ |
+| Vincular archivo compartido (`index.html`) | ✅ (solo en `http://`) | ✅ |
+| Sin necesidad de servidor local | ❌ | ✅ |
 
 ---
 
