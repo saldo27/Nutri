@@ -1599,10 +1599,7 @@
         onkeydown="if(event.key==='Enter')confirmAuxiliarBox()">
       <div id="role-box-error" style="display:none;font-size:.78rem;color:#f87171;margin-bottom:.55rem">Por favor, introduzca el número de box.</div>
       <button class="btn-calc-nutric" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding:.8rem; margin-bottom:.6rem" onclick="confirmAuxiliarBox()">Confirmar</button>
-      <!-- Restore from previously exported file -->
-      <input type="file" id="aux-import-input" accept=".json" style="display:none" onchange="handleAuxImportFile(this)">
       <div id="aux-import-error" style="display:none;font-size:.78rem;color:#f87171;margin-bottom:.4rem"></div>
-      <button class="btn-calc-nutric" style="background:rgba(255,255,255,.06);color:var(--muted);padding:.55rem;font-size:.78rem;margin-bottom:.4rem" onclick="$('aux-import-input').click()">📂 Restaurar desde archivo</button>
       <button class="btn-calc-nutric" style="background:rgba(255,255,255,.06);color:var(--muted);padding:.55rem;font-size:.78rem" onclick="backToRoleSelect()">← Volver</button>
     </div>
   </div>
@@ -1793,6 +1790,7 @@ const DEFAULT_FORMULAS = [
 let FORMULAS = DEFAULT_FORMULAS.map(f => ({ ...f }));
 const FORMULAS_STORAGE_KEY = 'nutri_enteral_formulas_v1';
 const SYNC_HTML_HANDLE_KEY  = 'nutri_sync_html_handle';
+const SYNC_JSON_SESSION_KEY = 'nutri_json_session_handle_v1';
 const SHARED_AUX_SYNC_TAG_ID = 'nutri-sync-data';
 
 const N2_RENAPRO = 2.88; // g N2 per RENAPRO unit
@@ -3651,8 +3649,13 @@ async function selectRole(role) {
       await storageSetItem(formDataKey(box), JSON.stringify(rest));
       if (inp) inp.value = box;
     } else {
-      const session = await loadAuxSession();
-      if (session && inp) inp.value = session.box;
+      const jsonData = await readAuxJsonSession();
+      if (jsonData) {
+        await importAuxSession(jsonData, { silentError: true });
+      } else {
+        const session = await loadAuxSession();
+        if (session && inp) inp.value = session.box;
+      }
     }
     if (inp) inp.focus();
     return;
@@ -3897,6 +3900,49 @@ async function exportAllBoxesSession() {
   } catch(e) {}
 }
 
+async function writeAuxJsonSession() {
+  if (!('showSaveFilePicker' in window)) {
+    await exportAllBoxesSession();
+    return;
+  }
+  try {
+    const boxes = await getAllBoxesData();
+    if (Object.keys(boxes).length === 0) return;
+    const exportObj = { version: 2, boxes };
+    let handle = await idbGetItem(SYNC_JSON_SESSION_KEY);
+    if (!handle) {
+      handle = await window.showSaveFilePicker({
+        suggestedName: 'nutri_sesion.json',
+        types: [{ description: 'Nutri Session JSON', accept: { 'application/json': ['.json'] } }]
+      });
+      await idbSetItem(SYNC_JSON_SESSION_KEY, handle);
+    }
+    let perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') perm = await handle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') { await exportAllBoxesSession(); return; }
+    const writable = await handle.createWritable();
+    await writable.write(JSON.stringify(exportObj));
+    await writable.close();
+  } catch(e) {
+    if (e && e.name !== 'AbortError') await exportAllBoxesSession();
+  }
+}
+
+async function readAuxJsonSession() {
+  try {
+    const handle = await idbGetItem(SYNC_JSON_SESSION_KEY);
+    if (!handle) return null;
+    let perm = await handle.queryPermission({ mode: 'read' });
+    if (perm !== 'granted') perm = await handle.requestPermission({ mode: 'read' });
+    if (perm !== 'granted') return null;
+    const file = await handle.getFile();
+    const text = await file.text();
+    return JSON.parse(text);
+  } catch(e) {
+    return null;
+  }
+}
+
 async function importAuxSession(data, options = {}) {
   const errEl = $('aux-import-error');
   const silentError = !!options.silentError;
@@ -3977,7 +4023,7 @@ function handleAuxImportFile(input) {
 async function salir() {
   const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
   await saveFormData(currentBox);
-  await exportAllBoxesSession();
+  await writeAuxJsonSession();
   await clearAuxSession();
   const roleStep = $('role-step-select');
   const roleBox  = $('role-step-box');
