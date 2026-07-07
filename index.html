@@ -3595,7 +3595,10 @@ async function saveFormData(box) {
 async function restoreFormData(box) {
   if (!box) return;
   try {
+    const wasReady = AUX_PERSIST_READY;
+    AUX_PERSIST_READY = false;
     resetAuxiliarFormData();
+    AUX_PERSIST_READY = wasReady;
     const key = formDataKey(box);
     const raw = await storageGetItem(key);
     if (!raw) return;
