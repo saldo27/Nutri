@@ -3911,10 +3911,13 @@ async function writeAuxJsonSession() {
     const exportObj = { version: 2, boxes };
     let handle = await idbGetItem(SYNC_JSON_SESSION_KEY);
     if (!handle) {
-      handle = await window.showSaveFilePicker({
+      const htmlHandle = await idbGetItem(SYNC_HTML_HANDLE_KEY);
+      const pickerOpts = {
         suggestedName: 'nutri_sesion.json',
         types: [{ description: 'Nutri Session JSON', accept: { 'application/json': ['.json'] } }]
-      });
+      };
+      if (htmlHandle) pickerOpts.startIn = htmlHandle;
+      handle = await window.showSaveFilePicker(pickerOpts);
       await idbSetItem(SYNC_JSON_SESSION_KEY, handle);
     }
     let perm = await handle.queryPermission({ mode: 'readwrite' });
