@@ -1459,7 +1459,7 @@
         <button class="fm-btn warn" onclick="resetFormulasToDefault()">Restaurar fórmulas base</button>
       </div>
       <div class="fm-row" style="align-items:center;gap:.5rem;flex-wrap:wrap">
-        <button class="fm-btn" onclick="connectSyncFile()" title="Vincula el index.html del disco compartido para que todas las estaciones vean los mismos cambios">🔗 Vincular archivo compartido</button>
+        <button class="fm-btn" onclick="connectSyncFile()" title="Vincula el index.html del disco compartido para sincronizar volúmenes y pausas de auxiliar entre estaciones">🔗 Vincular archivo compartido</button>
         <button class="fm-btn warn" onclick="disconnectSyncFile()" title="Elimina el vínculo con el archivo compartido">Desvincular</button>
         <span id="fm-sync-status" class="fm-msg" style="flex:1;text-align:left"></span>
       </div>
@@ -1793,6 +1793,7 @@ const DEFAULT_FORMULAS = [
 let FORMULAS = DEFAULT_FORMULAS.map(f => ({ ...f }));
 const FORMULAS_STORAGE_KEY = 'nutri_enteral_formulas_v1';
 const SYNC_HTML_HANDLE_KEY  = 'nutri_sync_html_handle';
+const SHARED_AUX_SYNC_TAG_ID = 'nutri-sync-data';
 
 const N2_RENAPRO = 2.88; // g N2 per RENAPRO unit
 const KCAL_RENAPRO_UNIT = 72; // kcal per RENAPRO unit (18 g prot x 4 kcal/g)
@@ -2084,27 +2085,51 @@ function saveFormulasStorage() {
 }
 
 /* ── Shared-file sync (Opción B: index.html se autoscribe) ──────────────
-   Lee las fórmulas embebidas en el propio HTML al arrancar;
-   si hay un FileSystemFileHandle guardado, escribe de vuelta al
-   index.html del disco compartido cada vez que se guardan cambios.
+   Sincroniza volúmenes/pausas del flujo Auxiliar dentro del propio HTML
+   (tag #nutri-sync-data) para compartir estado entre estaciones.
    Interacción del auxiliar: cero. Solo el supervisor vincula el archivo
    una primera vez desde el panel de gestión de fórmulas.
    ─────────────────────────────────────────────────────────────────── */
 
-function loadEmbeddedFormulas() {
+function readEmbeddedAuxSyncData(text) {
   try {
-    const el = document.getElementById('nutri-sync-data');
-    if (!el) return false;
-    const parsed = JSON.parse(el.textContent.trim() || '[]');
-    if (!Array.isArray(parsed) || parsed.length === 0) return false;
-    const clean = parsed.map((f, idx) => sanitizeFormula(f, idx)).filter(f => f.name);
-    if (clean.length === 0) return false;
-    FORMULAS = clean;
-    return true;
-  } catch (_) { return false; }
+    const parsed = JSON.parse(String(text || '').trim() || '{}');
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') return {};
+    return parsed;
+  } catch (_) { return {}; }
 }
 
-async function syncToHtmlFile({ showPicker = false } = {}) {
+function getEmbeddedAuxSyncMapFromDocument() {
+  const el = document.getElementById(SHARED_AUX_SYNC_TAG_ID);
+  if (!el) return {};
+  return readEmbeddedAuxSyncData(el.textContent);
+}
+
+function buildAuxFormDataPayload(expiryMs) {
+  return {
+    tVol:      $('t-vol')  ? $('t-vol').value  : '',
+    r3Vol:     $('r3-vol') ? $('r3-vol').value : '',
+    yeyunoSNY: S.yeyunoSNY,
+    tl: {
+      tol1: Array.from(S.tl.tol1),
+      tol2: Array.from(S.tl.tol2),
+      tol3: Array.from(S.tl.tol3),
+      tola: Array.from(S.tl.tola),
+      tolb: Array.from(S.tl.tolb),
+      r3a:  Array.from(S.tl.r3a),
+      r3b:  Array.from(S.tl.r3b),
+    },
+    expiry: typeof expiryMs === 'number' ? expiryMs : nextAuxiliaryExpiry().getTime(),
+  };
+}
+
+async function syncAuxDataToHtmlFile(box, data, { showPicker = false } = {}) {
+  const boxId = String(box || '').trim();
+  if (!boxId || !data) return false;
+  return syncToHtmlFile({ showPicker, box: boxId, data });
+}
+
+async function syncToHtmlFile({ showPicker = false, box = '', data = null } = {}) {
   if (!('showOpenFilePicker' in window)) return false;
 
   let handle = await idbGetItem(SYNC_HTML_HANDLE_KEY);
@@ -2130,12 +2155,20 @@ async function syncToHtmlFile({ showPicker = false } = {}) {
   try {
     const file = await handle.getFile();
     let html = await file.text();
-    // Escape <\/script> sequences inside JSON to avoid premature tag close when browser parses the HTML
-    const formulasJson = JSON.stringify(FORMULAS).replace(/<\/script/gi, '<\\/script');
+    const syncBox = String(box || '').trim();
+    let replaced = false;
     html = html.replace(
       /(<script[^>]+id="nutri-sync-data"[^>]*>)([\s\S]*?)(<\/script>)/,
-      (_, open, _old, close) => open + formulasJson + close
+      (_, open, oldData, close) => {
+        const map = readEmbeddedAuxSyncData(oldData);
+        if (syncBox && data) map[syncBox] = data;
+        // Escape <\/script> sequences inside JSON to avoid premature tag close when browser parses the HTML
+        const payload = JSON.stringify(map).replace(/<\/script/gi, '<\\/script');
+        replaced = true;
+        return open + payload + close;
+      }
     );
+    if (!replaced) return false;
     const writable = await handle.createWritable();
     await writable.write(html);
     await writable.close();
@@ -2152,9 +2185,11 @@ async function connectSyncFile() {
     return;
   }
   setFormulaManagerMessage('Selecciona el archivo index.html del disco compartido…');
-  const ok = await syncToHtmlFile({ showPicker: true });
+  const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
+  const currentData = currentBox ? buildAuxFormDataPayload(nextAuxiliaryExpiry().getTime()) : null;
+  const ok = await syncToHtmlFile({ showPicker: true, box: currentBox, data: currentData });
   if (ok) {
-    setFormulaManagerMessage('✅ Vinculado. Las fórmulas se guardarán en el disco compartido al guardar.');
+    setFormulaManagerMessage('✅ Vinculado. Volúmenes y pausas de auxiliar se sincronizarán en el archivo compartido.');
     void updateSyncStatus();
   } else {
     setFormulaManagerMessage('No se pudo vincular el archivo. Inténtalo de nuevo.', true);
@@ -2197,9 +2232,6 @@ async function updateSyncStatus() {
 }
 
 async function loadFormulasStorage() {
-  // Embedded data (written by syncToHtmlFile) takes priority as shared truth
-  if (loadEmbeddedFormulas()) return;
-
   const raw = await storageGetItem(FORMULAS_STORAGE_KEY);
   if (!raw) return;
 
@@ -2254,9 +2286,6 @@ function applyFormulaArray(parsed) {
 
   FORMULAS = clean;
   saveFormulasStorage();
-  void syncToHtmlFile({ showPicker: false }).then(ok => {
-    if (ok) setFormulaManagerMessage('✅ Fórmulas guardadas y sincronizadas en archivo compartido.');
-  });
   refreshAfterFormulaUpdate();
   loadFormulasIntoEditor();
   return true;
@@ -2331,10 +2360,7 @@ function resetFormulasToDefault() {
 
   FORMULAS = DEFAULT_FORMULAS.map((f, idx) => sanitizeFormula(f, idx));
   saveFormulasStorage();
-  void syncToHtmlFile({ showPicker: false }).then(ok => {
-    if (ok) setFormulaManagerMessage('Fórmulas base restauradas y sincronizadas en archivo compartido. ✅');
-    else setFormulaManagerMessage('Se restauraron las fórmulas base.');
-  });
+  setFormulaManagerMessage('Se restauraron las fórmulas base.');
   refreshAfterFormulaUpdate();
   loadFormulasIntoEditor();
 }
@@ -3711,22 +3737,9 @@ async function saveFormData(box) {
   if (!box) return;
   try {
     const exp = nextAuxiliaryExpiry();
-    const data = {
-      tVol:      $('t-vol')  ? $('t-vol').value  : '',
-      r3Vol:     $('r3-vol') ? $('r3-vol').value : '',
-      yeyunoSNY: S.yeyunoSNY,
-      tl: {
-        tol1: Array.from(S.tl.tol1),
-        tol2: Array.from(S.tl.tol2),
-        tol3: Array.from(S.tl.tol3),
-        tola: Array.from(S.tl.tola),
-        tolb: Array.from(S.tl.tolb),
-        r3a:  Array.from(S.tl.r3a),
-        r3b:  Array.from(S.tl.r3b),
-      },
-      expiry: exp.getTime(),
-    };
+    const data = buildAuxFormDataPayload(exp.getTime());
     await storageSetItem(formDataKey(box), JSON.stringify(data));
+    void syncAuxDataToHtmlFile(box, data, { showPicker: false });
   } catch(e) {}
 }
 
@@ -3738,7 +3751,15 @@ async function restoreFormData(box) {
     resetAuxiliarFormData();
     AUX_PERSIST_READY = wasReady;
     const key = formDataKey(box);
-    const raw = await storageGetItem(key);
+    let raw = await storageGetItem(key);
+    if (!raw) {
+      const embeddedMap = getEmbeddedAuxSyncMapFromDocument();
+      const sharedData = embeddedMap[String(box)];
+      if (sharedData && typeof sharedData === 'object' && !Array.isArray(sharedData)) {
+        raw = JSON.stringify(sharedData);
+        await storageSetItem(key, raw);
+      }
+    }
     if (!raw) return;
     const data = JSON.parse(raw);
     if (!data || data.expiry <= Date.now()) {
@@ -4018,8 +4039,8 @@ document.addEventListener('visibilitychange', () => {
 });
 </script>
 
-<!-- Fórmulas embebidas para sincronización entre estaciones (gestionado automáticamente) -->
-<script type="application/json" id="nutri-sync-data">[]</script>
+<!-- Datos de auxiliar (volúmenes/pausas) embebidos para sincronización entre estaciones -->
+<script type="application/json" id="nutri-sync-data">{}</script>
 
 <footer class="app-footer">Creado por luisherrerapara@gmail.com para UCI-H.Santa Lucía, con la colaboración del Servicio de Farmacia del H.Santa Lucía (Cartagena). Todos los derechos reservados.</footer>
 </body>
