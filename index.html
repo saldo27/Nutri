@@ -3643,6 +3643,13 @@ async function selectRole(role) {
     if (inp) { inp.value = ''; inp.focus(); }
     const imported = await importLatestAuxSession();
     if (imported) return;
+    const session = await loadAuxSession();
+    if (session) {
+      $('role-overlay').classList.remove('open');
+      applyAuxiliarRole(session.box);
+      await restoreFormData(session.box);
+      return;
+    }
     const fileInput = $('aux-import-input');
     if (fileInput) fileInput.click();
     return;
