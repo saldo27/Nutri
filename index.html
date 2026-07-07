@@ -1870,6 +1870,7 @@ const STORAGE_DB_NAME = 'nutri_storage_v1';
 const STORAGE_STORE_NAME = 'kv';
 let AUX_PERSIST_READY = false;
 let storageDbPromise = null;
+const pendingStorageOps = new Map();
 
 function canUseLocalStorage() {
   try {
@@ -1954,11 +1955,29 @@ async function idbRemoveItem(key) {
   });
 }
 
+function queueStorageOp(key, operation) {
+  const previous = pendingStorageOps.get(key) || Promise.resolve();
+  const queued = previous
+    .catch(() => {})
+    .then(() => operation())
+    .catch(() => {});
+  pendingStorageOps.set(key, queued);
+  queued.finally(() => {
+    if (pendingStorageOps.get(key) === queued) pendingStorageOps.delete(key);
+  });
+  return queued;
+}
+
+async function waitForPendingStorageOp(key) {
+  const pending = pendingStorageOps.get(key);
+  if (pending) await pending;
+}
+
 function storageSetItem(key, value) {
   if (HAS_LOCAL_STORAGE) {
     try { localStorage.setItem(key, value); } catch (_) {}
   }
-  void idbSetItem(key, value);
+  return queueStorageOp(key, () => idbSetItem(key, value));
 }
 
 async function storageGetItem(key) {
@@ -1968,6 +1987,7 @@ async function storageGetItem(key) {
       if (localValue !== null) return localValue;
     } catch (_) {}
   }
+  await waitForPendingStorageOp(key);
   const persistedValue = await idbGetItem(key);
   if (persistedValue !== null && HAS_LOCAL_STORAGE) {
     try { localStorage.setItem(key, persistedValue); } catch (_) {}
@@ -1979,7 +1999,7 @@ function storageRemoveItem(key) {
   if (HAS_LOCAL_STORAGE) {
     try { localStorage.removeItem(key); } catch (_) {}
   }
-  void idbRemoveItem(key);
+  return queueStorageOp(key, () => idbRemoveItem(key));
 }
 
 function isFormulaManagerUnlocked() {
@@ -3484,7 +3504,7 @@ async function confirmAuxiliarBox() {
     return;
   }
   $('role-box-error').style.display = 'none';
-  saveAuxSession(box);
+  await saveAuxSession(box);
   $('role-overlay').classList.remove('open');
   applyAuxiliarRole(box);
   await restoreFormData(box);
@@ -3499,9 +3519,9 @@ function applyAuxiliarRole(box) {
   $('box-badge').style.display = 'flex';
 }
 
-function saveAuxSession(box) {
+async function saveAuxSession(box) {
   const expiry = nextAuxiliaryExpiry();
-  storageSetItem('nutri_session_v1', JSON.stringify({ role: 'auxiliar', box, expiry: expiry.getTime() }));
+  await storageSetItem('nutri_session_v1', JSON.stringify({ role: 'auxiliar', box, expiry: expiry.getTime() }));
 }
 
 async function loadAuxSession() {
@@ -3510,18 +3530,18 @@ async function loadAuxSession() {
     if (!raw) return null;
     const data = JSON.parse(raw);
     if (!data || data.role !== 'auxiliar' || !data.box || data.expiry <= Date.now()) {
-      storageRemoveItem('nutri_session_v1');
+      void storageRemoveItem('nutri_session_v1');
       return null;
     }
     return data;
   } catch(e) {
-    storageRemoveItem('nutri_session_v1');
+    void storageRemoveItem('nutri_session_v1');
     return null;
   }
 }
 
-function clearAuxSession() {
-  storageRemoveItem('nutri_session_v1');
+async function clearAuxSession() {
+  await storageRemoveItem('nutri_session_v1');
 }
 
 const FORM_DATA_PREFIX = 'nutri_form_data_v1_box_';
@@ -3549,7 +3569,7 @@ function resetAuxiliarFormData() {
   calcRitmo();
 }
 
-function saveFormData(box) {
+async function saveFormData(box) {
   if (!box) return;
   try {
     const exp = nextAuxiliaryExpiry();
@@ -3568,7 +3588,7 @@ function saveFormData(box) {
       },
       expiry: exp.getTime(),
     };
-    storageSetItem(formDataKey(box), JSON.stringify(data));
+    await storageSetItem(formDataKey(box), JSON.stringify(data));
   } catch(e) {}
 }
 
@@ -3581,7 +3601,7 @@ async function restoreFormData(box) {
     if (!raw) return;
     const data = JSON.parse(raw);
     if (!data || data.expiry <= Date.now()) {
-      storageRemoveItem(key);
+      void storageRemoveItem(key);
       return;
     }
     if ($('t-vol')  && data.tVol  !== undefined) $('t-vol').value  = data.tVol;
@@ -3600,21 +3620,21 @@ async function restoreFormData(box) {
   } catch(e) {}
 }
 
-function persistCurrentAuxFormData() {
+async function persistCurrentAuxFormData() {
   const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
-  if (currentBox) saveFormData(currentBox);
+  if (currentBox) await saveFormData(currentBox);
 }
 
 function autoSaveAuxFormData() {
   if (!AUX_PERSIST_READY) return;
   const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
-  if (currentBox) saveFormData(currentBox);
+  if (currentBox) void saveFormData(currentBox);
 }
 
-function salir() {
+async function salir() {
   const currentBox = $('box-badge-num') ? $('box-badge-num').textContent.trim() : '';
-  saveFormData(currentBox);
-  clearAuxSession();
+  await saveFormData(currentBox);
+  await clearAuxSession();
   const roleStep = $('role-step-select');
   const roleBox  = $('role-step-box');
   if (roleStep) roleStep.style.display = 'block';
@@ -3757,6 +3777,7 @@ function toggleTheme() {
 
 /* ── Init ── */
 window.addEventListener('DOMContentLoaded', async () => {
+  void openStorageDb();
   const savedTheme = await storageGetItem('theme');
   if (savedTheme !== 'dark') {
     document.body.classList.add('light-mode');
@@ -3785,8 +3806,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   AUX_PERSIST_READY = true;
 });
 
-window.addEventListener('beforeunload', persistCurrentAuxFormData);
-window.addEventListener('pagehide', persistCurrentAuxFormData);
+window.addEventListener('beforeunload', () => { void persistCurrentAuxFormData(); });
+window.addEventListener('pagehide', () => { void persistCurrentAuxFormData(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') void persistCurrentAuxFormData();
+});
 </script>
 
 <footer class="app-footer">Creado por luisherrerapara@gmail.com para UCI-H.Santa Lucía, con la colaboración del Servicio de Farmacia del H.Santa Lucía (Cartagena). Todos los derechos reservados.</footer>
