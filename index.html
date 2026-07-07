@@ -1984,7 +1984,10 @@ async function storageGetItem(key) {
   if (HAS_LOCAL_STORAGE) {
     try {
       const localValue = localStorage.getItem(key);
-      if (localValue !== null) return localValue;
+      if (localValue !== null) {
+        void queueStorageOp(key, () => idbSetItem(key, localValue));
+        return localValue;
+      }
     } catch (_) {}
   }
   await waitForPendingStorageOp(key);
