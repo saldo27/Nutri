@@ -1458,6 +1458,11 @@
         <button class="fm-btn" onclick="exportFormulasFile()">Exportar .json</button>
         <button class="fm-btn warn" onclick="resetFormulasToDefault()">Restaurar fórmulas base</button>
       </div>
+      <div class="fm-row" style="align-items:center;gap:.5rem;flex-wrap:wrap">
+        <button class="fm-btn" onclick="connectSyncFile()" title="Vincula el index.html del disco compartido para que todas las estaciones vean los mismos cambios">🔗 Vincular archivo compartido</button>
+        <button class="fm-btn warn" onclick="disconnectSyncFile()" title="Elimina el vínculo con el archivo compartido">Desvincular</button>
+        <span id="fm-sync-status" class="fm-msg" style="flex:1;text-align:left"></span>
+      </div>
       <textarea id="fm-json" class="fm-json" spellcheck="false" aria-label="Editor JSON de fórmulas"></textarea>
       <input type="file" id="fm-file" accept="application/json,.json" style="display:none" onchange="handleImportFormulasFile(event)">
       <div id="fm-msg" class="fm-msg"></div>
@@ -1787,6 +1792,7 @@ const DEFAULT_FORMULAS = [
 
 let FORMULAS = DEFAULT_FORMULAS.map(f => ({ ...f }));
 const FORMULAS_STORAGE_KEY = 'nutri_enteral_formulas_v1';
+const SYNC_HTML_HANDLE_KEY  = 'nutri_sync_html_handle';
 
 const N2_RENAPRO = 2.88; // g N2 per RENAPRO unit
 const KCAL_RENAPRO_UNIT = 72; // kcal per RENAPRO unit (18 g prot x 4 kcal/g)
@@ -2041,6 +2047,7 @@ function unlockFormulaManager() {
   setFormulaLockMessage('');
   loadFormulasIntoEditor();
   setFormulaManagerMessage('Gestión desbloqueada.');
+  void updateSyncStatus();
 }
 
 function lockFormulaManager() {
@@ -2076,7 +2083,123 @@ function saveFormulasStorage() {
   storageSetItem(FORMULAS_STORAGE_KEY, JSON.stringify(FORMULAS));
 }
 
+/* ── Shared-file sync (Opción B: index.html se autoscribe) ──────────────
+   Lee las fórmulas embebidas en el propio HTML al arrancar;
+   si hay un FileSystemFileHandle guardado, escribe de vuelta al
+   index.html del disco compartido cada vez que se guardan cambios.
+   Interacción del auxiliar: cero. Solo el supervisor vincula el archivo
+   una primera vez desde el panel de gestión de fórmulas.
+   ─────────────────────────────────────────────────────────────────── */
+
+function loadEmbeddedFormulas() {
+  try {
+    const el = document.getElementById('nutri-sync-data');
+    if (!el) return false;
+    const parsed = JSON.parse(el.textContent.trim() || '[]');
+    if (!Array.isArray(parsed) || parsed.length === 0) return false;
+    const clean = parsed.map((f, idx) => sanitizeFormula(f, idx)).filter(f => f.name);
+    if (clean.length === 0) return false;
+    FORMULAS = clean;
+    return true;
+  } catch (_) { return false; }
+}
+
+async function syncToHtmlFile({ showPicker = false } = {}) {
+  if (!('showOpenFilePicker' in window)) return false;
+
+  let handle = await idbGetItem(SYNC_HTML_HANDLE_KEY);
+
+  if (!handle) {
+    if (!showPicker) return false;
+    try {
+      const picks = await window.showOpenFilePicker({
+        types: [{ description: 'Nutri HTML', accept: { 'text/html': ['.html', '.htm'] } }],
+        multiple: false
+      });
+      handle = picks[0];
+      await idbSetItem(SYNC_HTML_HANDLE_KEY, handle);
+    } catch (_) { return false; }
+  }
+
+  let perm = await handle.queryPermission({ mode: 'readwrite' });
+  if (perm !== 'granted') {
+    perm = await handle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') return false;
+  }
+
+  try {
+    const file = await handle.getFile();
+    let html = await file.text();
+    // Escape </script> inside JSON to avoid premature tag close when browser parses the HTML
+    const formulasJson = JSON.stringify(FORMULAS).replace(/<\/script/gi, '<\\/script');
+    html = html.replace(
+      /(<script[^>]+id="nutri-sync-data"[^>]*>)([\s\S]*?)(<\/script>)/,
+      (_, open, _old, close) => open + formulasJson + close
+    );
+    const writable = await handle.createWritable();
+    await writable.write(html);
+    await writable.close();
+    return true;
+  } catch (err) {
+    console.error('[Nutri] syncToHtmlFile error:', err);
+    return false;
+  }
+}
+
+async function connectSyncFile() {
+  if (!('showOpenFilePicker' in window)) {
+    setFormulaManagerMessage('Tu navegador no soporta esta función. Usa Chrome o Edge.', true);
+    return;
+  }
+  setFormulaManagerMessage('Selecciona el archivo index.html del disco compartido…');
+  const ok = await syncToHtmlFile({ showPicker: true });
+  if (ok) {
+    setFormulaManagerMessage('✅ Vinculado. Las fórmulas se guardarán en el disco compartido al guardar.');
+    void updateSyncStatus();
+  } else {
+    setFormulaManagerMessage('No se pudo vincular el archivo. Inténtalo de nuevo.', true);
+  }
+}
+
+async function disconnectSyncFile() {
+  await idbRemoveItem(SYNC_HTML_HANDLE_KEY);
+  void updateSyncStatus();
+  setFormulaManagerMessage('Vínculo con archivo compartido eliminado.');
+}
+
+async function updateSyncStatus() {
+  const el = $('fm-sync-status');
+  if (!el) return;
+  if (!('showOpenFilePicker' in window)) {
+    el.textContent = '⚠️ File System API no disponible (usa Chrome/Edge)';
+    el.style.color = '#fca5a5';
+    return;
+  }
+  const handle = await idbGetItem(SYNC_HTML_HANDLE_KEY);
+  if (!handle) {
+    el.textContent = '';
+    return;
+  }
+  try {
+    const perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm === 'granted') {
+      el.textContent = '🔗 Vinculado y activo';
+      el.style.color = '#86efac';
+    } else {
+      el.textContent = '🔗 Vinculado (se pedirá permiso al guardar)';
+      el.style.color = '#fbbf24';
+    }
+  } catch (_) {
+    el.textContent = '⚠️ Vínculo perdido — vuelve a vincular';
+    el.style.color = '#fca5a5';
+    await idbRemoveItem(SYNC_HTML_HANDLE_KEY);
+  }
+}
+
 async function loadFormulasStorage() {
+  // Embedded data (written by syncToHtmlFile) takes priority as shared truth
+  if (loadEmbeddedFormulas()) return;
+
   const raw = await storageGetItem(FORMULAS_STORAGE_KEY);
   if (!raw) return;
 
@@ -2131,6 +2254,9 @@ function applyFormulaArray(parsed) {
 
   FORMULAS = clean;
   saveFormulasStorage();
+  void syncToHtmlFile({ showPicker: false }).then(ok => {
+    if (ok) setFormulaManagerMessage('✅ Fórmulas guardadas y sincronizadas en archivo compartido.');
+  });
   refreshAfterFormulaUpdate();
   loadFormulasIntoEditor();
   return true;
@@ -2205,9 +2331,12 @@ function resetFormulasToDefault() {
 
   FORMULAS = DEFAULT_FORMULAS.map((f, idx) => sanitizeFormula(f, idx));
   saveFormulasStorage();
+  void syncToHtmlFile({ showPicker: false }).then(ok => {
+    if (ok) setFormulaManagerMessage('Fórmulas base restauradas y sincronizadas en archivo compartido. ✅');
+    else setFormulaManagerMessage('Se restauraron las fórmulas base.');
+  });
   refreshAfterFormulaUpdate();
   loadFormulasIntoEditor();
-  setFormulaManagerMessage('Se restauraron las fórmulas base.');
 }
 
 /* ── Patient Calc ── */
@@ -3888,6 +4017,9 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') void persistCurrentAuxFormData();
 });
 </script>
+
+<!-- Fórmulas embebidas para sincronización entre estaciones (gestionado automáticamente) -->
+<script type="application/json" id="nutri-sync-data">[]</script>
 
 <footer class="app-footer">Creado por luisherrerapara@gmail.com para UCI-H.Santa Lucía, con la colaboración del Servicio de Farmacia del H.Santa Lucía (Cartagena). Todos los derechos reservados.</footer>
 </body>
